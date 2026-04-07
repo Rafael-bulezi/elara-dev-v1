@@ -47,7 +47,7 @@ const App = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   
   // UI State
-  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') !== 'light');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
