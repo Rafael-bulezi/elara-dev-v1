@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, CreditCard, ArrowLeft, Smartphone, Truck, ShieldCheck, MessageCircle, Globe, AlertCircle, Loader2, Copy, Upload, Check } from 'lucide-react';
 import { motion } from 'motion/react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { Product, UserProfile } from '../types';
+import imageCompression from 'browser-image-compression';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -47,12 +46,8 @@ const CheckoutModal = ({
     if (isOpen) {
       setStep(1);
       setSuccess(false);
-      if (hasImportProducts) {
-        setCheckoutType('whatsapp');
-        setFormData(prev => ({ ...prev, paymentMethod: 'whatsapp' }));
-      }
     }
-  }, [isOpen, hasImportProducts]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -113,28 +108,9 @@ const CheckoutModal = ({
     return `https://wa.me/${finalPhone}?text=${encodedMessage}`;
   };
 
-  const sendSilentEmail = async (orderData: Record<string, unknown>) => {
-    // Silently notify the admin as requested
-    console.log("Sending silent notification to 7dark7cloud7@gmail.com", orderData);
-    try {
-      // Using our new server-side API
-      await fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: '7dark7cloud7@gmail.com',
-          subject: 'Novo Pedido Confirmado - ELARA',
-          data: orderData
-        })
-      }).catch(() => {}); // Silent fail
-    } catch (e) {
-      // Ignore errors as it's a silent background task
-    }
-  };
-
   const handleConfirmOrder = async () => {
     try {
-      if (checkoutType === 'whatsapp' || hasImportProducts) {
+      if (checkoutType === 'whatsapp') {
         window.open(generateWhatsAppLink(), '_blank');
         onOrderComplete();
         return;
@@ -155,40 +131,72 @@ const CheckoutModal = ({
         let receiptUrl = '';
 
         if (receiptFile) {
-          const storageRef = ref(storage, `receipts/${userProfile?.uid}/${Date.now()}_${receiptFile.name}`);
-          const snapshot = await uploadBytes(storageRef, receiptFile);
-          receiptUrl = await getDownloadURL(snapshot.ref);
+          let fileToUpload: File | Blob = receiptFile;
+          
+          // Compress receipt image only if it's an image
+          if (receiptFile.type.startsWith('image/')) {
+            const options = {
+              maxSizeMB: 0.5, // Max 500KB
+              maxWidthOrHeight: 800,
+              useWebWorker: true,
+            };
+            fileToUpload = await imageCompression(receiptFile, options);
+          }
+
+          const fileExt = receiptFile.name.split('.').pop();
+          const fileName = `${userProfile?.uid}/${Date.now()}.${fileExt}`;
+          const filePath = `receipts/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('images')
+            .upload(filePath, fileToUpload);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('images')
+            .getPublicUrl(filePath);
+          
+          receiptUrl = publicUrl;
         }
 
-        // Create order in Firestore
-        const orderData = {
-          buyerId: userProfile?.uid,
-          buyerName: formData.name,
-          buyerEmail: formData.email,
-          buyerPhone: formData.phone,
-          shippingAddress: formData.address,
-          paymentMethod: formData.paymentMethod,
-          sellerId: cart[0]?.sellerId || '',
-          sellerIds: Array.from(new Set(cart.map(item => item.sellerId))),
-          products: cart,
-          total: total,
-          status: 'pending',
-          paymentStatus: formData.paymentMethod === 'entrega' ? 'pending' : 'verifying',
-          paymentReceipt: receiptUrl,
-          createdAt: serverTimestamp()
-        };
+        // Create order in Supabase
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .insert({
+            buyer_id: userProfile?.uid,
+            buyer_name: formData.name,
+            buyer_email: formData.email,
+            buyer_phone: formData.phone,
+            shipping_address: formData.address,
+            payment_method: formData.paymentMethod,
+            seller_id: cart[0]?.sellerId || '',
+            total: total,
+            status: 'pending',
+            payment_status: formData.paymentMethod === 'entrega' ? 'pending' : 'verifying',
+            payment_receipt: receiptUrl
+          })
+          .select()
+          .single();
 
-        await addDoc(collection(db, 'orders'), orderData);
-        
-        // Send silent email notification
-        sendSilentEmail(orderData);
+        if (orderError) throw orderError;
+
+        // Create order items
+        const orderItems = cart.map(item => ({
+          order_id: order.id,
+          product_id: item.id,
+          quantity: item.cartQuantity || 1,
+          price: item.price
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
+
+        if (itemsError) throw itemsError;
         
         setIsUploading(false);
-        setStep(4); // "Estamos checando..."
-        
-        // After some time, simulate confirmation or just leave it as "verifying"
-        // The user said: "Depois de algum tempo, ele vai confirmar... vai mostrar pagamento comprovado"
-        // For now, let's just show the "Checking" state.
+        setStep(4);
         return;
       }
 
@@ -197,9 +205,9 @@ const CheckoutModal = ({
         return;
       }
     } catch (error) {
+      console.error('Order error:', error);
       setIsUploading(false);
-      handleFirestoreError(error, OperationType.CREATE, 'orders');
-      setError("Erro ao processar pedido. Tente novamente.");
+      setError(error instanceof Error ? error.message : "Erro ao processar pedido. Tente novamente.");
     }
   };
 
@@ -426,7 +434,7 @@ const CheckoutModal = ({
                   <div className="relative group">
                     <input 
                       type="file" 
-                      accept="image/*"
+                      accept="image/*,application/pdf"
                       onChange={handleFileChange}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     />
@@ -436,10 +444,10 @@ const CheckoutModal = ({
                       </div>
                       <div className="text-center">
                         <p className="font-black dark:text-white">
-                          {receiptFile ? receiptFile.name : 'Clique ou arraste a foto do depósito'}
+                          {receiptFile ? receiptFile.name : 'Clique ou arraste a foto ou PDF do depósito'}
                         </p>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
-                          Formatos aceitos: JPG, PNG (Máx 5MB)
+                          Formatos aceitos: JPG, PNG, PDF (Máx 5MB)
                         </p>
                       </div>
                     </div>

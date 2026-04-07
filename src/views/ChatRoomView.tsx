@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Send, Image as ImageIcon, MoreVertical, Phone, Video, User, CheckCheck, ShieldCheck } from 'lucide-react';
-import { collection, query, where, onSnapshot, orderBy, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { Chat, Message, UserProfile } from '../types';
 
 interface ChatRoomViewProps {
@@ -23,33 +22,55 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
   useEffect(() => {
     if (!chat.id) return;
 
-    const q = query(
-      collection(db, 'messages'),
-      where('chatId', '==', chat.id),
-      orderBy('createdAt', 'asc')
-    );
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', chat.id)
+        .order('created_at', { ascending: true });
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Message));
-      setMessages(messagesData);
-      setLoading(false);
-      
-      // Mark as read
-      if ((chat.unreadCount?.[userProfile?.uid || ''] || 0) > 0) {
-        updateDoc(doc(db, 'chats', chat.id), {
-          [`unreadCount.${userProfile?.uid}`]: 0
-        });
+      if (error) {
+        console.error('Error fetching messages:', error);
+      } else {
+        setMessages(data.map((m: any) => ({
+          id: m.id,
+          chatId: m.chat_id,
+          senderId: m.sender_id,
+          text: m.text,
+          read: m.read,
+          createdAt: { toDate: () => new Date(m.created_at) }
+        } as unknown as Message)));
       }
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'messages');
       setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
-  }, [chat.id, userProfile?.uid, chat.unreadCount]);
+    fetchMessages();
+
+    // Real-time subscription
+    const channel = supabase
+      .channel(`chat_${chat.id}`)
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'messages',
+        filter: `chat_id=eq.${chat.id}`
+      }, (payload: any) => {
+        const newMsg = payload.new as { id: string; chat_id: string; sender_id: string; text: string; read: boolean; created_at: string };
+        setMessages(prev => [...prev, {
+          id: newMsg.id,
+          chatId: newMsg.chat_id,
+          senderId: newMsg.sender_id,
+          text: newMsg.text,
+          read: newMsg.read,
+          createdAt: { toDate: () => new Date(newMsg.created_at) }
+        } as unknown as Message]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chat.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -63,22 +84,30 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
     setNewMessage('');
 
     try {
-      await addDoc(collection(db, 'messages'), {
-        chatId: chat.id,
-        senderId: userProfile.uid,
-        text: messageText,
-        createdAt: serverTimestamp(),
-        read: false
-      });
+      const { error: msgError } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: chat.id,
+          sender_id: userProfile.uid,
+          text: messageText,
+          read: false
+        });
 
-      await updateDoc(doc(db, 'chats', chat.id), {
-        lastMessage: messageText,
-        lastMessageAt: serverTimestamp(),
-        lastSenderId: userProfile.uid,
-        [`unreadCount.${otherParticipantId}`]: increment(1)
-      });
+      if (msgError) throw msgError;
+
+      const { error: chatError } = await supabase
+        .from('chats')
+        .update({
+          last_message: messageText,
+          last_sender_id: userProfile.uid
+        })
+        .eq('id', chat.id);
+
+      if (chatError) throw chatError;
+
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'messages');
+      console.error('Error sending message:', error);
+      alert('Erro ao enviar mensagem.');
     }
   };
 

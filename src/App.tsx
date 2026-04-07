@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, getDoc, setDoc, onSnapshot, query, where, serverTimestamp, addDoc, updateDoc } from 'firebase/firestore';
-import { auth, db, handleFirestoreError, OperationType } from './firebase';
-import { ShoppingBag } from 'lucide-react';
+import { supabase } from './lib/supabase';
 import { motion } from 'motion/react';
 import { UserProfile, Product, Chat, CartItem } from './types';
-import { initialProducts } from './constants';
+import { initialProducts, categories } from './constants';
 
 // Components
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Categories from './components/Categories';
 import ProductCard from './components/ProductCard';
-import ProductSkeleton from './components/ProductSkeleton';
-import ImportSection from './components/ImportSection';
 import Footer from './components/Footer';
 import BottomNav from './components/BottomNav';
 import MobileMenu from './components/MobileMenu';
@@ -34,9 +29,20 @@ import ChatListView from './views/ChatListView';
 import ChatRoomView from './views/ChatRoomView';
 import ImportQuoteView from './views/ImportQuoteView';
 
+import { CheckCircle, Bell } from 'lucide-react';
+
+import { initOneSignal } from './lib/notifications';
+
 const App = () => {
   // Auth & Profile State
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  // Initialize OneSignal when userProfile is available
+  useEffect(() => {
+    if (userProfile) {
+      initOneSignal(userProfile);
+    }
+  }, [userProfile]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   
   // UI State
@@ -44,15 +50,15 @@ const App = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote' | 'category'>('home');
   const [activeTab, setActiveTab] = useState('home');
   
   // Data State
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'relevance' | 'price-asc' | 'price-desc' | 'promo'>('relevance');
   
   // Selection State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -74,43 +80,127 @@ const App = () => {
     }
   }, [isDark]);
 
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'info'} | null>(null);
+
+  const showNotification = (message: string, type: 'success' | 'info' = 'info') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
   // Auth Listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setUserProfile({ uid: user.uid, ...userDoc.data() } as UserProfile);
-        } else {
-          // If user exists in Auth but not Firestore (shouldn't happen with AuthModal logic)
-          setIsAuthModalOpen(true);
-        }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+      if (session?.user) {
+        // Fetch profile with a timeout to prevent hanging
+        const fetchProfile = async () => {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (error && error.code === 'PGRST116') {
+            // Profile doesn't exist, create it
+            const isAdmin = session.user.email === '7dark7cloud7@gmail.com';
+            const newProfile = {
+              id: session.user.id,
+              full_name: session.user.user_metadata.full_name || 'Usuário',
+              email: session.user.email || '',
+              avatar_url: session.user.user_metadata.avatar_url || '',
+              role: isAdmin ? 'admin' : 'buyer'
+            };
+            await supabase.from('profiles').insert(newProfile);
+            setUserProfile({ 
+              uid: newProfile.id, 
+              name: newProfile.full_name, 
+              email: newProfile.email,
+              avatar: newProfile.avatar_url, 
+              role: newProfile.role as 'buyer' | 'seller' | 'admin'
+            });
+          } else if (profile) {
+            setUserProfile({ 
+              uid: profile.id, 
+              name: profile.full_name, 
+              email: profile.email,
+              avatar: profile.avatar_url, 
+              role: profile.role as 'buyer' | 'seller',
+              phone: profile.phone,
+              address: profile.address
+            } as UserProfile);
+          }
+        };
+        fetchProfile();
       } else {
         setUserProfile(null);
       }
     });
-    return () => unsubscribe();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Products Listener
   useEffect(() => {
-    const q = query(collection(db, 'products'), where('status', '==', 'approved'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-      // Combine with initial products if Firestore is empty (for demo)
-      if (productsData.length === 0) {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, profiles:seller_id(full_name, avatar_url, phone)')
+        .eq('status', 'approved');
+
+      if (error) {
+        console.error('Error fetching products:', error);
         setProducts(initialProducts);
       } else {
-        setProducts(productsData);
+        if (data && data.length > 0) {
+          setProducts(data.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            price: p.price,
+            image: p.image_url || p.image,
+            category: p.category,
+            condition: p.condition,
+            sellerId: p.seller_id,
+            sellerName: p.profiles?.full_name || p.seller_name || 'Vendedor Desconhecido',
+            sellerAvatar: p.profiles?.avatar_url || p.seller_avatar || '',
+            sellerPhone: p.profiles?.phone || p.seller_phone || '',
+            sellerRating: 5.0,
+            emPromocao: false,
+            status: p.status,
+            stock: p.stock,
+            isImport: p.is_import,
+            createdAt: new Date(p.created_at).getTime()
+          } as Product)));
+        } else {
+          setProducts(initialProducts);
+        }
       }
-      setIsLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'products');
-      setProducts(initialProducts);
-      setIsLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    };
+
+    fetchProducts();
+
+    const productsChannel = supabase
+      .channel('products_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        fetchProducts();
+      })
+      .subscribe();
+
+    const ordersChannel = supabase
+      .channel('orders_notifications')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload: any) => {
+        const newOrder = payload.new;
+        // If the current user is the seller of the new order
+        if (userProfile && newOrder.seller_id === userProfile.uid) {
+          showNotification(`Nova compra recebida! Total: Kz ${newOrder.total.toLocaleString('pt-AO')}`, 'success');
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(productsChannel);
+      supabase.removeChannel(ordersChannel);
+    };
+  }, [userProfile]);
 
   // Cart Handlers
   const addToCart = (product: Product) => {
@@ -150,25 +240,47 @@ const App = () => {
     
     try {
       if (editingProduct) {
-        await updateDoc(doc(db, 'products', editingProduct.id), {
-          ...productData,
-          updatedAt: serverTimestamp()
-        });
+        const { error } = await supabase
+          .from('products')
+          .update({
+            title: productData.title,
+            description: productData.description,
+            price: productData.price,
+            image_url: productData.imageUrl,
+            category: productData.category,
+            condition: productData.condition,
+            stock: productData.stock,
+            is_import: productData.isImport
+          })
+          .eq('id', editingProduct.id);
+        
+        if (error) throw error;
       } else {
-        await addDoc(collection(db, 'products'), {
-          ...productData,
-          sellerId: userProfile.uid,
-          sellerName: userProfile.name,
-          sellerAvatar: userProfile.avatar || '',
-          sellerPhone: productData.sellerPhone || userProfile.phoneNumber || userProfile.phone || '',
-          status: 'pending',
-          createdAt: serverTimestamp()
-        });
+        const { error } = await supabase
+          .from('products')
+          .insert({
+            title: productData.title,
+            description: productData.description,
+            price: productData.price,
+            image_url: productData.imageUrl,
+            category: productData.category,
+            condition: productData.condition,
+            seller_id: userProfile.uid,
+            seller_name: userProfile.name,
+            seller_avatar: userProfile.avatar || '',
+            seller_phone: productData.sellerPhone || userProfile.phone || '',
+            status: 'pending',
+            stock: productData.stock || 1,
+            is_import: productData.isImport || false
+          });
+        
+        if (error) throw error;
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, 'products');
+      console.error('Error saving product:', error);
+      alert('Erro ao salvar produto.');
     }
   };
 
@@ -181,30 +293,61 @@ const App = () => {
 
     if (userProfile.uid === sellerId) return;
 
-    const chatId = [userProfile.uid, sellerId].sort().join('_');
-    const chatRef = doc(db, 'chats', chatId);
-    const chatSnap = await getDoc(chatRef);
+    // Check if chat exists
+    const { data: existingChats, error: fetchError } = await supabase
+      .from('chats')
+      .select('*')
+      .contains('participants', [userProfile.uid, sellerId]);
 
-    const chatData: Partial<Chat> = {
-      id: chatId,
-      participants: [userProfile.uid, sellerId],
-      updatedAt: serverTimestamp()
-    };
-
-    if (!chatSnap.exists()) {
-      await setDoc(chatRef, chatData);
+    if (fetchError) {
+      console.error('Error fetching chat:', fetchError);
+      return;
     }
 
-    setActiveChat(chatData as Chat);
+    let chat = existingChats?.[0];
+
+    if (!chat) {
+      const { data: newChat, error: insertError } = await supabase
+        .from('chats')
+        .insert({
+          participants: [userProfile.uid, sellerId]
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('Error creating chat:', insertError);
+        return;
+      }
+      chat = newChat;
+    }
+
+    setActiveChat({
+      id: chat.id,
+      participants: chat.participants,
+      lastMessage: chat.last_message,
+      lastMessageAt: chat.updated_at,
+      lastSenderId: chat.last_sender_id
+    } as Chat);
     setCurrentView('chat');
   };
 
   // Filtering
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         p.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = 
+      p.title.toLowerCase().includes(query) || 
+      (p.description && p.description.toLowerCase().includes(query)) ||
+      (p.category && p.category.toLowerCase().includes(query)) ||
+      (p.sellerName && p.sellerName.toLowerCase().includes(query));
+      
     const matchesCategory = !activeCategory || p.category === activeCategory;
     return matchesSearch && matchesCategory;
+  }).sort((a, b) => {
+    if (sortBy === 'price-asc') return a.price - b.price;
+    if (sortBy === 'price-desc') return b.price - a.price;
+    if (sortBy === 'promo') return (b.emPromocao ? 1 : 0) - (a.emPromocao ? 1 : 0);
+    return b.createdAt - a.createdAt;
   });
 
   // Navigation
@@ -232,6 +375,7 @@ const App = () => {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onSellProduct={() => userProfile ? setIsProductModalOpen(true) : setIsAuthModalOpen(true)}
+        onNavigate={navigateTo}
       />
 
       <main className="relative">
@@ -241,57 +385,77 @@ const App = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          {currentView === 'home' && (
-            <>
-              <Hero />
-              <Categories 
-                activeCategory={activeCategory}
-                onSelectCategory={setActiveCategory}
-              />
-              
-              <section className="container mx-auto px-4 py-16 md:py-24">
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-16 gap-6">
-                  <div>
-                    <h2 className="text-4xl md:text-7xl font-black dark:text-white tracking-tighter mb-4">Destaques</h2>
-                    <p className="text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 font-medium">Os produtos mais desejados do momento</p>
+          {currentView === 'home' ? (
+            searchQuery.trim() !== '' ? (
+              <div className="container mx-auto px-4 py-8">
+                <h2 className="text-2xl font-bold dark:text-white mb-6">Resultados para "{searchQuery}"</h2>
+                {filteredProducts.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {filteredProducts.map(p => (
+                      <ProductCard key={p.id} product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
+                    ))}
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="h-px w-12 bg-zinc-200 dark:bg-zinc-800 hidden md:block" />
-                    <span className="text-sm font-black uppercase tracking-widest text-zinc-400">{filteredProducts.length} Produtos</span>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-10">
-                  {isLoading ? (
-                    Array.from({ length: 10 }).map((_, i) => <ProductSkeleton key={i} />)
-                  ) : (
-                    filteredProducts.map(product => (
-                      <ProductCard 
-                        key={product.id}
-                        product={product}
-                        onAddToCart={addToCart}
-                        onProductClick={(p) => {
-                          setSelectedProduct(p);
-                          setIsProductDetailsOpen(true);
-                        }}
-                      />
-                    ))
-                  )}
-                </div>
-
-                {!isLoading && filteredProducts.length === 0 && (
-                  <div className="py-24 text-center">
-                    <div className="w-24 h-24 bg-zinc-100 dark:bg-zinc-900 rounded-[32px] flex items-center justify-center mx-auto mb-6 text-zinc-400">
-                      <ShoppingBag size={48} />
-                    </div>
-                    <h3 className="text-2xl font-black dark:text-white mb-2">Nenhum produto encontrado</h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 font-medium">Tente ajustar sua busca ou categoria.</p>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-zinc-500 dark:text-zinc-400">Nenhum produto encontrado para "{searchQuery}".</p>
                   </div>
                 )}
-              </section>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                <Hero />
+                
+                {/* Featured Products */}
+                <section className="px-4">
+                  <h2 className="text-xl font-bold dark:text-white mb-4">Destaques</h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    {products.slice(0, 4).map(p => (
+                      <ProductCard key={p.id} product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
+                    ))}
+                  </div>
+                </section>
 
-              <ImportSection onOpenQuote={() => navigateTo('quote')} />
-            </>
+                <Categories 
+                  activeCategory={activeCategory || ''}
+                  onSelectCategory={setActiveCategory}
+                />
+
+                {categories.map(cat => (
+                  <section key={cat.id} className="space-y-4">
+                    <div className="flex items-center justify-between px-4">
+                      <h2 className="text-xl font-bold dark:text-white">{cat.name}</h2>
+                      <button onClick={() => { setActiveCategory(cat.name); setCurrentView('category'); }} className="text-purple-600 font-semibold text-sm">Ver Mais</button>
+                    </div>
+                    <div className="flex gap-4 overflow-x-auto px-4 scroll-snap-x custom-scrollbar">
+                      {products.filter(p => p.category === cat.name).slice(0, 10).map(p => (
+                        <div key={p.id} className="min-w-[160px] scroll-snap-item">
+                          <ProductCard product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            )
+          ) : currentView === 'category' ? (
+            <div className="container mx-auto px-4 py-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold dark:text-white">{activeCategory}</h2>
+                <select onChange={(e) => setSortBy(e.target.value as 'relevance' | 'price-asc' | 'price-desc' | 'promo')} className="bg-white dark:bg-zinc-800 border rounded-lg px-3 py-1 text-sm">
+                  <option value="relevance">Relevância</option>
+                  <option value="price-asc">Mais Baratos</option>
+                  <option value="price-desc">Mais Caros</option>
+                  <option value="promo">Promoções</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {filteredProducts.map(p => (
+                  <ProductCard key={p.id} product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            null
           )}
 
           {currentView === 'orders' && (
@@ -399,7 +563,6 @@ const App = () => {
       <AuthModal 
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
-        onLogin={setUserProfile}
       />
 
       <CartDrawer 
@@ -458,8 +621,22 @@ const App = () => {
           setCart([]);
           setIsCheckoutOpen(false);
           navigateTo('orders');
+          showNotification('Pedido realizado com sucesso!', 'success');
         }}
       />
+
+      {notification && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] animate-in fade-in slide-in-from-top-4">
+          <div className={`px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold text-sm ${
+            notification.type === 'success' 
+              ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+              : 'bg-purple-500 text-white shadow-purple-500/20'
+          }`}>
+            {notification.type === 'success' ? <CheckCircle size={20} /> : <Bell size={20} />}
+            {notification.message}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

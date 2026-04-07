@@ -14,4 +14,17 @@ body {
 }
 
 @layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .custom-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+  }
+  .scroll-snap-item {
+    scroll-snap-align: start;
+  }
 }

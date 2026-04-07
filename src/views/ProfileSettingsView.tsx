@@ -1,9 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { ArrowLeft, User, Mail, Phone, MapPin, Shield, Bell, Moon, LogOut, Camera, CheckCircle, ChevronRight, Save, Loader2, AlertCircle } from 'lucide-react';
-import { updateDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { db, storage, handleFirestoreError, OperationType, logout } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
+import imageCompression from 'browser-image-compression';
 
 interface ProfileSettingsViewProps {
   userProfile: UserProfile | null;
@@ -18,59 +17,76 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
   const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
-    displayName: userProfile?.displayName || '',
-    phoneNumber: userProfile?.phoneNumber || '',
+    displayName: userProfile?.displayName || userProfile?.name || '',
+    phoneNumber: userProfile?.phoneNumber || userProfile?.phone || '',
     address: userProfile?.address || '',
-    bio: userProfile?.bio || ''
+    bio: userProfile?.bio || userProfile?.description || '',
+    role: userProfile?.role || 'buyer'
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log("ProfileSettingsView: handleImageUpload: File selected", file);
-    if (!file || !userProfile) {
-      console.log("ProfileSettingsView: handleImageUpload: No file or user profile", { file: !!file, userProfile: !!userProfile });
-      return;
-    }
+    if (!file || !userProfile) return;
 
     setIsUploading(true);
     setError(null);
-    console.log("ProfileSettingsView: handleImageUpload: Starting upload for", file.name);
 
     try {
-      const storageRef = ref(storage, `avatars/${userProfile.uid}/${Date.now()}_${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      console.log('DEBUG - Iniciando upload de avatar (SEM COMPRESSÃO)...');
+      
+      // Pula a compressão para teste
+      const compressedFile = file; 
 
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log("ProfileSettingsView: handleImageUpload: Upload progress", progress);
-        },
-        (error) => {
-          console.error('ProfileSettingsView: handleImageUpload: Upload error', error);
-          setIsUploading(false);
-          setError('Erro ao fazer upload da imagem. Tente novamente.');
-          setTimeout(() => setError(null), 3000);
-        },
-        async () => {
-          console.log("ProfileSettingsView: handleImageUpload: Upload completed");
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          console.log("ProfileSettingsView: handleImageUpload: Download URL obtained", downloadURL);
-          
-          // Update Firestore immediately
-          await updateDoc(doc(db, 'users', userProfile.uid), {
-            photoURL: downloadURL,
-            avatar: downloadURL
-          });
-          
-          onUpdateProfile({ photoURL: downloadURL, avatar: downloadURL });
-          setIsUploading(false);
-        }
-      );
-    } catch (error) {
-      console.error('ProfileSettingsView: handleImageUpload: Catch error', error);
+      const fileExt = compressedFile.name.split('.').pop();
+      const fileName = `${userProfile.uid}/${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      console.log('DEBUG - Caminho do arquivo:', filePath);
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, compressedFile);
+
+      if (uploadError) {
+        console.error('DEBUG - Erro no upload de avatar:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('DEBUG - Upload de avatar concluído.');
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+      
+      console.log('DEBUG - URL pública:', publicUrl);
+      
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          avatar_url: publicUrl
+        })
+        .eq('id', userProfile.uid);
+
+      if (updateError) {
+        console.error('DEBUG - Erro ao atualizar perfil:', updateError);
+        throw updateError;
+      }
+      
+      onUpdateProfile({ photoURL: publicUrl, avatar: publicUrl });
       setIsUploading(false);
-      setError('Erro ao processar imagem. Tente novamente.');
-      setTimeout(() => setError(null), 3000);
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      setIsUploading(false);
+      
+      // Tenta extrair a mensagem do erro do Supabase
+      let errorMessage = 'Erro ao fazer upload da imagem.';
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      setError(`Erro técnico: ${errorMessage}`);
     }
   };
 
@@ -80,17 +96,36 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
     
     setLoading(true);
     try {
-      await updateDoc(doc(db, 'users', userProfile.uid), formData);
-      onUpdateProfile(formData);
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.displayName,
+          phone: formData.phoneNumber,
+          address: formData.address,
+          bio: formData.bio,
+          role: formData.role
+        })
+        .eq('id', userProfile.uid);
+
+      if (error) throw error;
+      onUpdateProfile({
+        name: formData.displayName,
+        phone: formData.phoneNumber,
+        address: formData.address,
+        role: formData.role as any,
+      });
       setSuccess('Perfil atualizado com sucesso!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, 'users');
-      setError('Erro ao atualizar perfil. Tente novamente.');
-      setTimeout(() => setError(null), 3000);
+      console.error('Error updating profile:', error);
+      setError('Erro ao atualizar perfil.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
@@ -192,6 +227,25 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
             </div>
 
             <div className="space-y-2">
+              <label className="block text-sm font-black text-zinc-500 uppercase tracking-widest px-1">Tipo de Conta</label>
+              <div className="relative group">
+                <select 
+                  value={formData.role}
+                  onChange={(e) => setFormData({...formData, role: e.target.value as any})}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all appearance-none"
+                >
+                  <option value="buyer">Comprador</option>
+                  <option value="seller">Vendedor</option>
+                  <option value="intermediary">Intermediário (Micheiro)</option>
+                  {userProfile?.role === 'admin' && <option value="admin">Administrador</option>}
+                </select>
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                  ▼
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <label className="block text-sm font-black text-zinc-500 uppercase tracking-widest px-1">Endereço de Entrega</label>
               <div className="relative group">
                 <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-purple-500 transition-colors" size={20} />
@@ -236,7 +290,7 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
               <p className="text-sm font-bold text-rose-500/70">Deseja sair da sua conta em todos os dispositivos?</p>
             </div>
             <button 
-              onClick={logout}
+              onClick={handleLogout}
               className="w-full md:w-auto bg-rose-600 hover:bg-rose-700 text-white px-10 py-4 rounded-2xl font-black text-lg shadow-xl shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
             >
               <LogOut size={22} />

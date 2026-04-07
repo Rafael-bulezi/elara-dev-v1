@@ -1,62 +1,80 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
-import { signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../firebase';
+import { X, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { motion } from 'motion/react';
-import { UserProfile } from '../types';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (user: UserProfile) => void;
 }
 
-const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
+const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState<'buyer' | 'seller'>('buyer');
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
 
   if (!isOpen) return null;
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLogin && password !== confirmPassword) {
+      alert("As senhas não coincidem.");
+      return;
+    }
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: { 
+            data: { 
+              role,
+              full_name: fullName 
+            } 
+          }
+        });
+        if (error) throw error;
+        alert('Conta criada! Verifique seu e-mail para confirmar.');
+      }
+      onClose();
+    } catch (error) {
+      console.error("Auth error:", error);
+      alert(error instanceof Error ? error.message : "Erro na autenticação.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleAuth = async () => {
     setLoading(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) throw error;
       
-      const userRef = doc(db, 'users', user.uid);
-      let userSnap;
-      try {
-        userSnap = await getDoc(userRef);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.GET, 'users');
-      }
+      // Note: Supabase OAuth uses redirects. The actual profile creation 
+      // will happen in the App.tsx auth listener after the redirect back.
       
-      let userProfile: UserProfile;
-      
-      if (userSnap && userSnap.exists()) {
-        userProfile = userSnap.data() as UserProfile;
-      } else {
-        userProfile = {
-          uid: user.uid,
-          name: user.displayName || 'Usuário',
-          email: user.email || '',
-          role: role,
-          avatar: user.photoURL || '',
-          createdAt: serverTimestamp()
-        };
-        try {
-          await setDoc(userRef, userProfile);
-        } catch (error) {
-          handleFirestoreError(error, OperationType.WRITE, 'users');
-        }
-      }
-      
-      onLogin(userProfile);
-      onClose();
     } catch (error) {
       console.error("Auth error:", error);
+      alert("Erro na autenticação. Verifique se o domínio está autorizado no Supabase.");
     } finally {
       setLoading(false);
     }
@@ -108,6 +126,66 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
               </div>
             </div>
           )}
+
+          <form onSubmit={handleEmailAuth} className="space-y-4 mb-6">
+            {!isLogin && (
+              <input 
+                type="text" 
+                placeholder="Nome Completo" 
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
+                required
+              />
+            )}
+            <input 
+              type="email" 
+              placeholder="E-mail" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
+              required
+            />
+            <input 
+              type="password" 
+              placeholder="Senha" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
+              required
+            />
+            {!isLogin && (
+              <input 
+                type="password" 
+                placeholder="Confirmar Senha" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
+                required
+              />
+            )}
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Autenticando...
+                </>
+              ) : (isLogin ? 'Entrar' : 'Criar Conta')}
+            </button>
+          </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white dark:bg-zinc-900 px-2 text-zinc-400">Ou</span>
+            </div>
+          </div>
 
           <button 
             onClick={handleGoogleAuth}

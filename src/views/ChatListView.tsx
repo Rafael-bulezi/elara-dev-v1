@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MessageCircle, Clock, User, Trash2, CheckCheck } from 'lucide-react';
-import { collection, query, where, onSnapshot, orderBy, deleteDoc, doc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { Chat, UserProfile } from '../types';
 
 interface ChatListViewProps {
@@ -19,34 +18,59 @@ const ChatListView = ({ userProfile, onSelectChat }: ChatListViewProps) => {
   useEffect(() => {
     if (!userProfile) return;
 
-    const q = query(
-      collection(db, 'chats'),
-      where('participants', 'array-contains', userProfile.uid),
-      orderBy('lastMessageAt', 'desc')
-    );
+    const fetchChats = async () => {
+      const { data, error } = await supabase
+        .from('chats')
+        .select('*')
+        .contains('participants', [userProfile.uid])
+        .order('updated_at', { ascending: false });
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const chatsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Chat));
-      setChats(chatsData);
+      if (error) {
+        console.error('Error fetching chats:', error);
+      } else {
+        setChats(data.map((chat: any) => ({
+          id: chat.id,
+          participants: chat.participants,
+          lastMessage: chat.last_message,
+          lastMessageAt: { toDate: () => new Date(chat.updated_at) },
+          lastSenderId: chat.last_sender_id
+        } as unknown as Chat)));
+      }
       setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'chats');
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchChats();
+
+    const channel = supabase
+      .channel('chats_changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'chats',
+        filter: `participants=cs.{${userProfile.uid}}`
+      }, () => {
+        fetchChats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userProfile]);
 
   const handleDeleteChat = async (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     try {
-      await deleteDoc(doc(db, 'chats', chatId));
+      const { error } = await supabase
+        .from('chats')
+        .delete()
+        .eq('id', chatId);
+      
+      if (error) throw error;
       setConfirmDeleteId(null);
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, 'chats');
+      console.error('Error deleting chat:', error);
+      alert('Erro ao excluir conversa.');
     }
   };
 

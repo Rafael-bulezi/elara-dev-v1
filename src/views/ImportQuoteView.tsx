@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Globe, Zap, ShieldCheck, Send, Link as LinkIcon, AlertCircle } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
 
 interface ImportQuoteViewProps {
@@ -27,17 +26,26 @@ const ImportQuoteView = ({ userProfile, onBack }: ImportQuoteViewProps) => {
     
     setLoading(true);
     try {
-      await addDoc(collection(db, 'quotes'), {
-        ...formData,
-        userId: userProfile.uid,
-        userEmail: userProfile.email,
-        userName: userProfile.displayName,
-        status: 'pending',
-        createdAt: serverTimestamp()
-      });
+      const { error } = await supabase
+        .from('quotes')
+        .insert({
+          product_name: formData.productName,
+          product_link: formData.productLink,
+          description: formData.description,
+          quantity: parseInt(formData.quantity),
+          budget: formData.budget,
+          urgency: formData.urgency,
+          user_id: userProfile.uid,
+          user_email: userProfile.email,
+          user_name: userProfile.displayName,
+          status: 'pending'
+        });
+
+      if (error) throw error;
       setSuccess(true);
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'quotes');
+      console.error('Error creating quote:', error);
+      alert('Erro ao enviar solicitação.');
     } finally {
       setLoading(false);
     }

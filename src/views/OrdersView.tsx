@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ShoppingBag, Package, Truck, MessageCircle, CreditCard, ChevronRight, X } from 'lucide-react';
-import { collection, query, where, onSnapshot, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { Order, UserProfile } from '../types';
 
 interface OrdersViewProps {
@@ -19,33 +18,70 @@ const OrdersView = ({ userProfile, onBack, onContactUser }: OrdersViewProps) => 
   useEffect(() => {
     if (!userProfile) return;
 
-    const q = orderType === 'purchases' 
-      ? query(collection(db, 'orders'), where('buyerId', '==', userProfile.uid))
-      : query(collection(db, 'orders'), where('sellerIds', 'array-contains', userProfile.uid));
+    const fetchOrders = async () => {
+      setLoading(true);
+      let query = supabase
+        .from('orders')
+        .select('*, order_items!inner(*, products(*))');
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const ordersData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Order));
-      setOrders(ordersData.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
-      setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'orders');
-      setLoading(false);
-    });
+      if (orderType === 'purchases') {
+        query = query.eq('buyer_id', userProfile.uid);
+      } else {
+        query = query.eq('order_items.seller_id', userProfile.uid);
+      }
 
-    return () => unsubscribe();
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching orders:', error);
+      } else {
+        setOrders(data.map((o: any) => ({
+          id: o.id,
+          buyerId: o.buyer_id,
+          buyerName: o.buyer_name,
+          buyerEmail: o.buyer_email,
+          buyerPhone: o.buyer_phone,
+          shippingAddress: o.shipping_address,
+          paymentMethod: o.payment_method,
+          total: o.total,
+          status: o.status,
+          paymentStatus: o.payment_status,
+          paymentReceipt: o.payment_receipt,
+          products: o.order_items.map((oi: { products: unknown; quantity: number; seller_id: string }) => ({
+            ...(oi.products as object),
+            cartQuantity: oi.quantity,
+            sellerId: oi.seller_id
+          })),
+          createdAt: { toDate: () => new Date(o.created_at) }
+        } as unknown as Order)));
+      }
+      setLoading(false);
+    };
+
+    fetchOrders();
+
+    const channel = supabase
+      .channel('orders_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchOrders())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userProfile, orderType]);
 
   const handleStatusUpdate = async (orderId: string, newStatus: Order['status']) => {
     try {
-      await updateDoc(doc(db, 'orders', orderId), {
-        status: newStatus,
-        updatedAt: serverTimestamp()
-      });
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: newStatus
+        })
+        .eq('id', orderId);
+      
+      if (error) throw error;
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, 'orders');
+      console.error('Error updating order status:', error);
     }
   };
 
@@ -205,7 +241,7 @@ const OrdersView = ({ userProfile, onBack, onContactUser }: OrdersViewProps) => 
                       <img src={p.image} alt={p.title} className="w-12 h-12 rounded-xl object-cover" />
                       <div className="flex-1 min-w-0">
                         <h5 className="font-bold dark:text-white text-sm truncate">{p.title}</h5>
-                        <p className="text-xs font-bold text-zinc-500">Qtd: {p.cartQuantity || 1} • Kz {p.price.toLocaleString('pt-AO')}</p>
+                        <p className="text-xs font-bold text-zinc-500">Qtd: {(p as any).cartQuantity || 1} • Kz {p.price.toLocaleString('pt-AO')}</p>
                       </div>
                     </div>
                   ))}

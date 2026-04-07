@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Edit2, Trash2, Search, Tag } from 'lucide-react';
-import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { Product, UserProfile } from '../types';
 
 interface ProductsViewProps {
@@ -21,32 +20,66 @@ const ProductsView = ({ userProfile, onBack, onEditProduct, onAddProduct }: Prod
   useEffect(() => {
     if (!userProfile) return;
 
-    const q = query(
-      collection(db, 'products'),
-      where('sellerId', '==', userProfile.uid)
-    );
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('seller_id', userProfile.uid)
+        .order('created_at', { ascending: false });
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const productsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Product));
-      setProducts(productsData.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
+      if (error) {
+        console.error('Error fetching products:', error);
+      } else {
+        setProducts(data.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          price: p.price,
+          category: p.category,
+          description: p.description,
+          image: p.image,
+          stock: p.stock,
+          status: p.status,
+          condition: p.condition,
+          isImport: p.is_import,
+          sellerId: p.seller_id,
+          sellerPhone: p.seller_phone,
+          createdAt: { seconds: new Date(p.created_at).getTime() / 1000 }
+        } as unknown as Product)));
+      }
       setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'products');
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchProducts();
+
+    const channel = supabase
+      .channel('products_changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'products',
+        filter: `seller_id=eq.${userProfile.uid}`
+      }, () => {
+        fetchProducts();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userProfile]);
 
   const handleDeleteProduct = async (productId: string) => {
     try {
-      await deleteDoc(doc(db, 'products', productId));
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+      
+      if (error) throw error;
       setConfirmDeleteId(null);
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, 'products');
+      console.error('Error deleting product:', error);
+      alert('Erro ao excluir produto.');
     }
   };
 

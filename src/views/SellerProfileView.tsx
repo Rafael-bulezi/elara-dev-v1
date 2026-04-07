@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Star, MapPin, Calendar, MessageCircle, ShoppingBag, ShieldCheck, CheckCircle } from 'lucide-react';
-import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { Product, UserProfile } from '../types';
 import ProductCard from '../components/ProductCard';
 
@@ -22,40 +21,79 @@ const SellerProfileView = ({ sellerId, onBack, onProductClick, onAddToCart, onCo
   useEffect(() => {
     const fetchSeller = async () => {
       try {
-        const sellerDoc = await getDoc(doc(db, 'users', sellerId));
-        if (sellerDoc.exists()) {
-          setSeller({ uid: sellerDoc.id, ...sellerDoc.data() } as UserProfile);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', sellerId)
+          .single();
+
+        if (error) throw error;
+        if (data) {
+          setSeller({
+            uid: data.id,
+            email: data.email,
+            displayName: data.display_name,
+            photoURL: data.photo_url,
+            role: data.role,
+            phoneNumber: data.phone_number,
+            address: data.address,
+            bio: data.bio,
+            rating: data.rating,
+            reviewsCount: data.reviews_count,
+            createdAt: { toDate: () => new Date(data.created_at) }
+          } as unknown as UserProfile);
         }
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, 'users');
+        console.error('Error fetching seller:', error);
       }
     };
 
-    const fetchProducts = () => {
-      const q = query(
-        collection(db, 'products'),
-        where('sellerId', '==', sellerId),
-        where('status', '==', 'approved')
-      );
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('seller_id', sellerId)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
 
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const productsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Product));
-        setProducts(productsData);
-        setLoading(false);
-      }, (error) => {
-        handleFirestoreError(error, OperationType.GET, 'products');
-        setLoading(false);
-      });
-
-      return unsubscribe;
+      if (error) {
+        console.error('Error fetching products:', error);
+      } else {
+        setProducts(data.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          price: p.price,
+          category: p.category,
+          description: p.description,
+          image: p.image,
+          stock: p.stock,
+          status: p.status,
+          condition: p.condition,
+          isImport: p.is_import,
+          sellerId: p.seller_id,
+          sellerPhone: p.seller_phone,
+          createdAt: { toDate: () => new Date(p.created_at) }
+        } as unknown as Product)));
+      }
+      setLoading(false);
     };
 
     fetchSeller();
-    const unsubscribe = fetchProducts();
-    return () => unsubscribe();
+    fetchProducts();
+
+    const channel = supabase
+      .channel('seller_products')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'products',
+        filter: `seller_id=eq.${sellerId}`
+      }, () => fetchProducts())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [sellerId]);
 
   if (loading) {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, XCircle, Clock, ShieldCheck, Search, Package, CreditCard, AlertCircle } from 'lucide-react';
-import { collection, query, where, onSnapshot, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { Product, UserProfile, Order } from '../types';
 
 interface AdminViewProps {
@@ -17,87 +16,164 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [confirmRejectId, setConfirmRejectId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userProfile || userProfile.email !== '7dark7cloud7@gmail.com') return;
+    console.log('DEBUG - AdminView - userProfile:', userProfile);
+    if (!userProfile) return;
+    
+    // Verifica se é admin pelo e-mail ou pelo role
+    const isAdmin = userProfile.email === '7dark7cloud7@gmail.com' || userProfile.role === 'admin';
+    console.log('DEBUG - isAdmin:', isAdmin);
+    
+    if (!isAdmin) return;
 
     setLoading(true);
     
-    // Products Listener
-    const productsQ = query(
-      collection(db, 'products'),
-      where('status', '==', 'pending')
-    );
+    const fetchPendingProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, profiles:seller_id(full_name, avatar_url)')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
 
-    const unsubscribeProducts = onSnapshot(productsQ, (snapshot) => {
-      const productsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Product));
-      setPendingProducts(productsData.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
+      if (error) {
+        console.error('Error fetching pending products:', error);
+      } else {
+        setPendingProducts(data.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          price: p.price,
+          category: p.category,
+          description: p.description,
+          image: p.image_url || p.image,
+          stock: p.stock,
+          status: p.status,
+          condition: p.condition,
+          isImport: p.is_import,
+          sellerId: p.seller_id,
+          sellerPhone: p.seller_phone,
+          sellerName: p.profiles?.full_name || 'Vendedor Desconhecido',
+          sellerAvatar: p.profiles?.avatar_url || '',
+          createdAt: { toDate: () => new Date(p.created_at) }
+        } as unknown as Product)));
+      }
       if (activeTab === 'products') setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'products');
-    });
+    };
 
-    // Payments Listener
-    const paymentsQ = query(
-      collection(db, 'orders'),
-      where('paymentStatus', '==', 'verifying')
-    );
+    const fetchPendingPayments = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*, products(*))')
+        .eq('payment_status', 'verifying')
+        .order('created_at', { ascending: false });
 
-    const unsubscribePayments = onSnapshot(paymentsQ, (snapshot) => {
-      const paymentsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Order));
-      setPendingPayments(paymentsData.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
+      if (error) {
+        console.error('Error fetching pending payments:', error);
+      } else {
+        setPendingPayments(data.map((o: any) => ({
+          id: o.id,
+          buyerId: o.buyer_id,
+          buyerName: o.buyer_name,
+          buyerEmail: o.buyer_email,
+          buyerPhone: o.buyer_phone,
+          shippingAddress: o.shipping_address,
+          paymentMethod: o.payment_method,
+          total: o.total,
+          status: o.status,
+          paymentStatus: o.payment_status,
+          paymentReceipt: o.payment_receipt,
+          products: o.order_items.map((oi: { products: unknown; quantity: number }) => ({
+            ...(oi.products as object),
+            cartQuantity: oi.quantity
+          })),
+          createdAt: { toDate: () => new Date(o.created_at) }
+        } as unknown as Order)));
+      }
       if (activeTab === 'payments') setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'orders');
-    });
+    };
+
+    fetchPendingProducts();
+    fetchPendingPayments();
+
+    const productsChannel = supabase
+      .channel('admin_products')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products', filter: 'status=eq.pending' }, () => fetchPendingProducts())
+      .subscribe();
+
+    const paymentsChannel = supabase
+      .channel('admin_payments')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: 'payment_status=eq.verifying' }, () => fetchPendingPayments())
+      .subscribe();
 
     return () => {
-      unsubscribeProducts();
-      unsubscribePayments();
+      supabase.removeChannel(productsChannel);
+      supabase.removeChannel(paymentsChannel);
     };
   }, [userProfile, activeTab]);
 
   const handleApprove = async (productId: string) => {
+    setApprovingId(productId);
+    
+    if (!supabase) {
+      console.error('Erro: Supabase não inicializado!');
+      setApprovingId(null);
+      return;
+    }
+
     try {
-      await updateDoc(doc(db, 'products', productId), {
-        status: 'approved',
-        approvedAt: serverTimestamp(),
-        approvedBy: userProfile?.uid
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, 'products');
+      const { error } = await supabase
+        .from('products')
+        .update({
+          status: 'approved'
+        })
+        .eq('id', productId);
+
+      if (error) {
+        console.error(`Erro do Supabase: ${error.message}`);
+        alert(`Erro ao aprovar: ${error.message}`);
+        setApprovingId(null);
+        return;
+      }
+      
+      // Remove from local state to update UI immediately
+      setPendingProducts(prev => prev.filter(p => p.id !== productId));
+      setApprovingId(null);
+    } catch (error: any) {
+      console.error(`Erro inesperado: ${error.message || error}`);
+      setApprovingId(null);
     }
   };
 
   const handleVerifyPayment = async (orderId: string, status: 'verified' | 'rejected') => {
     try {
-      await updateDoc(doc(db, 'orders', orderId), {
-        paymentStatus: status,
-        status: status === 'verified' ? 'held' : 'pending', // Move to escrow if verified
-        updatedAt: serverTimestamp(),
-        verifiedBy: userProfile?.uid
-      });
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          payment_status: status,
+          status: status === 'verified' ? 'held' : 'pending'
+        })
+        .eq('id', orderId);
+      
+      if (error) throw error;
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, 'orders');
+      console.error('Error verifying payment:', error);
     }
   };
 
   const handleReject = async (productId: string) => {
     try {
-      await updateDoc(doc(db, 'products', productId), {
-        status: 'rejected',
-        rejectedAt: serverTimestamp(),
-        rejectedBy: userProfile?.uid
-      });
+      const { error } = await supabase
+        .from('products')
+        .update({
+          status: 'rejected'
+        })
+        .eq('id', productId);
+      
+      if (error) throw error;
       setConfirmRejectId(null);
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, 'products');
+      console.error('Error rejecting product:', error);
     }
   };
 
@@ -128,7 +204,7 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
           <ShieldCheck size={24} className="text-emerald-500" />
           <div className="text-left">
             <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Sessão Segura</p>
-            <p className="text-sm font-black dark:text-white">Admin: {userProfile?.displayName}</p>
+            <p className="text-sm font-black dark:text-white">Admin: {userProfile?.name || userProfile?.email}</p>
           </div>
         </div>
       </div>
@@ -223,31 +299,46 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Data</p>
-                        <p className="text-sm font-black dark:text-white">{product.createdAt?.toDate().toLocaleDateString('pt-AO')}</p>
+                        <p className="text-sm font-black dark:text-white">{new Date(product.createdAt).toLocaleDateString('pt-AO')}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex flex-row lg:flex-col gap-4 justify-center">
+                  <div className="flex flex-row lg:flex-col gap-4 justify-center mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                     <button 
-                      onClick={() => handleApprove(product.id)}
-                      className="flex-1 lg:w-48 bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleApprove(product.id);
+                      }}
+                      disabled={approvingId === product.id}
+                      style={{ position: 'relative', zIndex: 9999, pointerEvents: 'auto' }}
+                      className={`w-full bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3 ${approvingId === product.id ? 'opacity-75 cursor-not-allowed' : ''}`}
                     >
-                      <CheckCircle size={24} />
-                      Aprovar
+                      {approvingId === product.id ? (
+                        <>
+                          <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                          Aprovando...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle size={24} />
+                          Aprovar Produto
+                        </>
+                      )}
                     </button>
                     {confirmRejectId === product.id ? (
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2 w-full">
                         <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest text-center">Confirmar Rejeição?</p>
                         <div className="flex gap-2">
                           <button 
-                            onClick={() => handleReject(product.id)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleReject(product.id); }}
                             className="flex-1 bg-rose-500 hover:bg-rose-600 text-white px-4 py-3 rounded-xl font-black text-sm transition-all"
                           >
                             Sim
                           </button>
                           <button 
-                            onClick={() => setConfirmRejectId(null)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmRejectId(null); }}
                             className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-4 py-3 rounded-xl font-black text-sm transition-all"
                           >
                             Não
@@ -256,8 +347,9 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                       </div>
                     ) : (
                       <button 
-                        onClick={() => setConfirmRejectId(product.id)}
-                        className="flex-1 lg:w-48 bg-rose-500 hover:bg-rose-600 text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmRejectId(product.id); }}
+                        style={{ position: 'relative', zIndex: 9999, pointerEvents: 'auto' }}
+                        className="w-full bg-rose-500 hover:bg-rose-600 text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
                       >
                         <XCircle size={24} />
                         Rejeitar

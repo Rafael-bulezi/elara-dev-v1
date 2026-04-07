@@ -27,17 +27,21 @@ const Header = ({
   onOpenAuth, 
   searchQuery, 
   setSearchQuery, 
-  onSellProduct 
-}: HeaderProps) => {
+  onSellProduct,
+  onNavigate
+}: HeaderProps & { onNavigate: (view: 'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote') => void }) => {
   const [localSearch, setLocalSearch] = React.useState(searchQuery);
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
       setSearchQuery(localSearch);
+      if (localSearch.trim() !== '') {
+        onNavigate('home');
+      }
     }, 300);
 
     return () => clearTimeout(handler);
-  }, [localSearch, setSearchQuery]);
+  }, [localSearch, setSearchQuery, onNavigate]);
 
   return (
   <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800">

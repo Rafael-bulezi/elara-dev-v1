@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShoppingBag, Tag, CreditCard, Settings, LogOut, Shield, ArrowLeft, User, ChevronRight } from 'lucide-react';
 import { UserProfile } from '../types';
-import { auth } from '../firebase';
+import { supabase } from '../lib/supabase';
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -40,7 +40,7 @@ const ProfileDrawer = ({
               <h3 className="font-black text-2xl dark:text-white truncate tracking-tighter leading-none mb-2">{userProfile.name}</h3>
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-900 text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest rounded-md border border-zinc-200 dark:border-zinc-800">
-                  {userProfile.role === 'seller' ? 'Vendedor' : 'Comprador'}
+                  {userProfile.role === 'seller' ? 'Vendedor' : userProfile.role === 'intermediary' ? 'Intermediário' : 'Comprador'}
                 </span>
                 {userProfile.email === '7dark7cloud7@gmail.com' && (
                   <span className="px-2 py-0.5 bg-rose-500 text-[9px] font-black text-white uppercase tracking-widest rounded-md">Admin</span>
@@ -125,7 +125,7 @@ const ProfileDrawer = ({
           )}
           
           {userProfile && (
-            <button onClick={() => { auth.signOut(); onClose(); }} className="w-full flex items-center gap-5 p-4 rounded-[24px] text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all mt-8 group">
+            <button onClick={() => { supabase.auth.signOut(); onClose(); }} className="w-full flex items-center gap-5 p-4 rounded-[24px] text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all mt-8 group">
               <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 group-hover:text-rose-500 group-hover:bg-rose-50 dark:group-hover:bg-rose-900/20 transition-all">
                 <LogOut size={22} />
               </div>

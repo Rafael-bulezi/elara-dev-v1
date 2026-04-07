@@ -1,133 +1,40 @@
 import { Product } from './types';
 
-export const initialProducts: Product[] = [
-  {
-    id: '1',
-    title: 'Smartphone Yango Pro 5G - 256GB',
-    price: 350000.00,
-    originalPrice: 420000.00,
-    image: 'https://picsum.photos/seed/phone/400/400',
-    condition: 'Novo',
-    sellerId: 'seller1',
-    sellerName: 'VB Express',
-    sellerAvatar: 'https://picsum.photos/seed/vb/100/100',
-    productRating: 4.8,
-    productReviews: 124,
-    sellerRating: 4.9,
-    sellerReviews: 3000,
-    deliveryStatus: 'Pronto para envio',
-    buyerProtection: 'Alta',
-    createdAt: new Date(),
-    category: 'Eletrónicos',
-    location: 'Luanda, Angola',
-    sellerPhone: '244900000000',
-    sku: 'YP5G-256',
-    isImport: true,
-    status: 'approved'
-  },
-  {
-    id: '2',
-    title: 'MacBook Air M2 13" - 8GB/256GB',
-    price: 1250000.00,
-    originalPrice: 1400000.00,
-    image: 'https://picsum.photos/seed/laptop/400/400',
-    condition: 'Novo',
-    sellerId: 'seller2',
-    sellerName: 'Tech Store AO',
-    sellerAvatar: 'https://picsum.photos/seed/tech/100/100',
-    productRating: 4.9,
-    productReviews: 56,
-    sellerRating: 4.7,
-    sellerReviews: 850,
-    deliveryStatus: 'Envio em 24h',
-    buyerProtection: 'Premium',
-    createdAt: new Date(),
-    category: 'Computadores',
-    location: 'Talatona, Luanda',
-    sellerPhone: '244911111111',
-    sku: 'MBA-M2-256',
-    isImport: true,
-    status: 'approved'
-  },
-  {
-    id: '3',
-    title: 'Tênis Nike Air Force 1 - Branco',
-    price: 85000.00,
-    originalPrice: 95000.00,
-    image: 'https://picsum.photos/seed/shoes/400/400',
-    condition: 'Novo',
-    sellerId: 'seller3',
-    sellerName: 'Fashion Hub',
-    sellerAvatar: 'https://picsum.photos/seed/fashion/100/100',
-    productRating: 4.7,
-    productReviews: 210,
-    sellerRating: 4.8,
-    sellerReviews: 1200,
-    deliveryStatus: 'Pronto para envio',
-    buyerProtection: 'Padrão',
-    createdAt: new Date(),
-    category: 'Moda',
-    location: 'Maianga, Luanda',
-    sellerPhone: '244922222222',
-    sku: 'NAF1-WHT',
-    isImport: false,
-    status: 'approved'
-  },
-  {
-    id: '4',
-    title: 'Câmera Sony Alpha a7 IV',
-    price: 2100000.00,
-    originalPrice: 2350000.00,
-    image: 'https://picsum.photos/seed/camera/400/400',
-    condition: 'Novo',
-    sellerId: 'seller4',
-    sellerName: 'Photo Pro AO',
-    sellerAvatar: 'https://picsum.photos/seed/photo/100/100',
-    productRating: 5.0,
-    productReviews: 12,
-    sellerRating: 5.0,
-    sellerReviews: 45,
-    deliveryStatus: 'Envio imediato',
-    buyerProtection: 'Máxima',
-    createdAt: new Date(),
-    category: 'Fotografia',
-    location: 'Viana, Luanda',
-    sellerPhone: '244933333333',
-    sku: 'SA74-BODY',
-    isImport: true,
-    status: 'approved'
-  },
-  {
-    id: '5',
-    title: 'PlayStation 5 Slim - 1TB',
-    price: 480000.00,
-    originalPrice: 550000.00,
-    image: 'https://picsum.photos/seed/ps5/400/400',
-    condition: 'Novo',
-    sellerId: 'seller5',
-    sellerName: 'Game Center',
-    sellerAvatar: 'https://picsum.photos/seed/game/100/100',
-    productRating: 4.9,
-    productReviews: 89,
-    sellerRating: 4.6,
-    sellerReviews: 600,
-    deliveryStatus: 'Pronto para envio',
-    buyerProtection: 'Alta',
-    createdAt: new Date(),
-    category: 'Jogos',
-    location: 'Cazenga, Luanda',
-    sellerPhone: '244944444444',
-    sku: 'PS5-SLIM-1TB',
-    isImport: true,
-    status: 'approved'
+const generateProducts = (): Product[] => {
+  const categories = ['Smartphones', 'Moda', 'Eletrónicos', 'Computadores', 'Casa', 'Beleza', 'Esportes'];
+  const products: Product[] = [];
+  
+  for (let i = 1; i <= 40; i++) {
+    const cat = categories[i % categories.length];
+    products.push({
+      id: `${i}`,
+      title: `${cat} Produto ${i}`,
+      price: Math.floor(Math.random() * 500000) + 10000,
+      originalPrice: Math.random() > 0.5 ? Math.floor(Math.random() * 600000) + 50000 : undefined,
+      image: `https://picsum.photos/seed/${cat}${i}/400/400`,
+      condition: 'Novo',
+      sellerId: 's1',
+      sellerName: 'Loja Exemplo',
+      sellerAvatar: 'https://picsum.photos/seed/s1/100/100',
+      sellerRating: (Math.random() * 2 + 3).toFixed(1) as unknown as number,
+      category: cat,
+      isImport: Math.random() > 0.5,
+      status: 'approved',
+      emPromocao: Math.random() > 0.7,
+      createdAt: Date.now() - Math.floor(Math.random() * 10000000000),
+    });
   }
-];
+  return products;
+};
+
+export const initialProducts: Product[] = generateProducts();
 
 export const categories = [
-  { id: '1', name: 'Eletrónicos', icon: 'Smartphone' },
-  { id: '2', name: 'Computadores', icon: 'Cpu' },
-  { id: '3', name: 'Moda', icon: 'Shirt' },
-  { id: '4', name: 'Casa', icon: 'Home' },
-  { id: '5', name: 'Ferramentas', icon: 'Wrench' },
-  { id: '6', name: 'Outros', icon: 'LayoutGrid' }
+  { id: '1', name: 'Smartphones', icon: 'Smartphone' },
+  { id: '2', name: 'Moda', icon: 'Shirt' },
+  { id: '3', name: 'Eletrónicos', icon: 'Cpu' },
+  { id: '4', name: 'Computadores', icon: 'Laptop' },
+  { id: '5', name: 'Casa', icon: 'Home' },
+  { id: '6', name: 'Beleza', icon: 'Sparkles' },
+  { id: '7', name: 'Esportes', icon: 'Dumbbell' }
 ];

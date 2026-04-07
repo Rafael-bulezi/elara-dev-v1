@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type UserRole = 'buyer' | 'seller' | 'admin';
+export type UserRole = 'buyer' | 'seller' | 'admin' | 'intermediary';
 
 export type UserProfile = {
   uid: string;
@@ -27,33 +27,28 @@ export type ProductStatus = 'pending' | 'approved' | 'rejected';
 export type Product = {
   id: string;
   title: string;
-  name?: string; // For compatibility
   price: number;
   originalPrice?: number;
   image: string;
-  imageUrl?: string; // For compatibility
+  imageUrl?: string;
   condition: ProductCondition;
-  verified?: boolean;
   sellerId: string;
   sellerName: string;
   sellerAvatar: string;
+  sellerRating: number; // Novo campo
+  sellerPhone?: string;
+  sellerReviews?: number;
+  category: string;
+  isImport: boolean;
+  status: ProductStatus;
+  emPromocao: boolean; // Novo campo
+  stock?: number;
+  createdAt: number; // Timestamp
+  description?: string;
+  verified?: boolean;
   productRating?: number;
   productReviews?: number;
-  sellerRating?: number;
-  sellerReviews?: number;
   deliveryStatus?: string;
-  buyerProtection?: string;
-  createdAt?: any;
-  quantity?: number;
-  stock?: number; // For compatibility
-  category?: string;
-  location?: string;
-  sellerPhone?: string;
-  sku?: string;
-  isImport?: boolean;
-  cartQuantity?: number;
-  status?: ProductStatus;
-  description?: string;
 };
 
 export type OrderStatus = 'pending' | 'held' | 'shipped' | 'received';

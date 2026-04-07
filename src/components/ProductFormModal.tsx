@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Tag, DollarSign, Package, LayoutGrid, Image as ImageIcon, Save, AlertCircle, Upload, Loader2, CheckCircle, MessageCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { Product, UserProfile, ProductCondition } from '../types';
+import imageCompression from 'browser-image-compression';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -64,51 +64,61 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log("ProductFormModal: handleImageUpload: File selected", file);
-    if (!file || !userProfile) {
-      console.log("ProductFormModal: handleImageUpload: No file or user profile", { file: !!file, userProfile: !!userProfile });
+    if (!file || !userProfile) return;
+
+    if (!supabase) {
+      setError('Supabase não está inicializado. Verifique as configurações.');
       return;
     }
 
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(10);
     setError(null);
-    console.log("ProductFormModal: handleImageUpload: Starting upload for", file.name);
 
     try {
-      const storageRef = ref(storage, `products/${userProfile.uid}/${Date.now()}_${file.name}`);
-      console.log("ProductFormModal: handleImageUpload: Storage ref created", storageRef.fullPath);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-      console.log("ProductFormModal: handleImageUpload: Upload task created");
+      console.log('DEBUG - Iniciando upload para bucket images...');
+      // Compress image
+      const options = {
+        maxSizeMB: 0.5, // Max 500KB
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+      };
+      const compressedFile = await imageCompression(file, options);
 
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log("ProductFormModal: handleImageUpload: Upload progress", progress);
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error('ProductFormModal: handleImageUpload: Upload error', error);
-          setIsUploading(false);
-          setError('Erro ao fazer upload da imagem. Tente novamente.');
-        },
-        async () => {
-          console.log("ProductFormModal: handleImageUpload: Upload completed");
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            console.log("ProductFormModal: handleImageUpload: Download URL obtained", downloadURL);
-            setFormData(prev => ({ ...prev, image: downloadURL }));
-          } catch (urlError) {
-            console.error("ProductFormModal: handleImageUpload: Error getting download URL", urlError);
-            setError("Erro ao obter URL da imagem.");
-          }
-          setIsUploading(false);
-        }
-      );
+      const fileExt = compressedFile.name.split('.').pop();
+      const fileName = `${userProfile.uid}/${Date.now()}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      console.log('DEBUG - Caminho do arquivo:', filePath);
+
+      const { data, error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, compressedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('DEBUG - Erro no upload:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('DEBUG - Upload concluído:', data);
+      setUploadProgress(90);
+
+      const { data: publicUrlData } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+      
+      console.log('DEBUG - URL pública:', publicUrlData.publicUrl);
+
+      setFormData(prev => ({ ...prev, imageUrl: publicUrlData.publicUrl }));
+      setUploadProgress(100);
     } catch (error) {
-      console.error('ProductFormModal: handleImageUpload: Catch error', error);
+      console.error('Upload error:', error);
+      setError(error instanceof Error ? error.message : 'Erro ao fazer upload da imagem.');
+    } finally {
       setIsUploading(false);
-      setError('Erro ao processar imagem. Tente novamente.');
     }
   };
 
@@ -323,8 +333,8 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
                   <input 
                     type="url" 
                     placeholder="Link da imagem (URL)"
-                    value={formData.image}
-                    onChange={(e) => setFormData({...formData, image: e.target.value})}
+                    value={formData.imageUrl || ''}
+                    onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
                     className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 focus:border-zinc-900 dark:focus:border-white py-5 pl-16 pr-8 rounded-[24px] text-zinc-900 dark:text-white font-black text-lg outline-none transition-all placeholder:text-zinc-400"
                   />
                 </div>
