@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MessageCircle, Clock, User, Trash2, CheckCheck } from 'lucide-react';
+import { Search, MessageCircle, Clock, Trash2, CheckCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Chat, UserProfile } from '../types';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface ChatListViewProps {
   userProfile: UserProfile | null;
