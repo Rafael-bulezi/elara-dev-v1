@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, ShoppingCart, Star, ShieldCheck, Zap, Package, Truck, MessageCircle, User } from 'lucide-react';
 import { Product } from '../types';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface ProductDetailsModalProps {
   isOpen: boolean;
@@ -97,7 +98,7 @@ const ProductDetailsModal = ({
             >
               <div className="flex items-center gap-3 md:gap-4">
                 <div className="relative">
-                  <img src={product.sellerAvatar} alt={product.sellerName} className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl object-cover border-2 border-white dark:border-zinc-800 shadow-lg" />
+                  <img src={getAvatarUrl(product.sellerAvatar, product.sellerName)} alt={product.sellerName} className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl object-cover border-2 border-white dark:border-zinc-800 shadow-lg" />
                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 md:w-5 md:h-5 bg-emerald-500 border-2 border-white dark:border-zinc-800 rounded-full" />
                 </div>
                 <div>

@@ -28,12 +28,15 @@ const ChatListView = ({ userProfile, onSelectChat }: ChatListViewProps) => {
       if (error) {
         console.error('Error fetching chats:', error);
       } else {
-        setChats(data.map((chat: any) => ({
+        setChats((data || []).map((chat) => ({
           id: chat.id,
           participants: chat.participants,
           lastMessage: chat.last_message,
-          lastMessageAt: { toDate: () => new Date(chat.updated_at) },
-          lastSenderId: chat.last_sender_id
+          lastMessageAt: new Date(chat.updated_at).getTime(),
+          lastSenderId: chat.last_sender_id,
+          participantNames: chat.participant_names,
+          participantAvatars: chat.participant_avatars,
+          unreadCount: chat.unread_count
         } as unknown as Chat)));
       }
       setLoading(false);
@@ -128,13 +131,7 @@ const ChatListView = ({ userProfile, onSelectChat }: ChatListViewProps) => {
               >
                 <div className="relative flex-shrink-0">
                   <div className="w-14 h-14 md:w-16 md:h-16 bg-zinc-100 dark:bg-zinc-800 rounded-2xl overflow-hidden border-2 border-white dark:border-zinc-900 shadow-sm">
-                    {otherParticipantAvatar ? (
-                      <img src={otherParticipantAvatar} alt={otherParticipantName} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-400">
-                        <User size={28} />
-                      </div>
-                    )}
+                    <img src={getAvatarUrl(otherParticipantAvatar, otherParticipantName)} alt={otherParticipantName} className="w-full h-full object-cover" />
                   </div>
                   {unreadCount > 0 && (
                     <div className="absolute -top-1 -right-1 w-6 h-6 bg-purple-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-zinc-900 shadow-lg animate-pulse">
@@ -148,7 +145,7 @@ const ChatListView = ({ userProfile, onSelectChat }: ChatListViewProps) => {
                     <h3 className={`font-black text-zinc-900 dark:text-white truncate ${unreadCount > 0 ? 'text-lg' : 'text-base'}`}>{otherParticipantName}</h3>
                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1">
                       <Clock size={10} />
-                      {chat.lastMessageAt?.toDate().toLocaleTimeString('pt-AO', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(chat.lastMessageAt).toLocaleTimeString('pt-AO', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                   

@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingBag, Tag, CreditCard, Settings, LogOut, Shield, ArrowLeft, User, ChevronRight } from 'lucide-react';
 import { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ const ProfileDrawer = ({
           <div className="flex items-center gap-6 group cursor-pointer" onClick={() => onNavigate('settings')}>
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-tr from-purple-600 to-pink-600 rounded-[28px] blur opacity-20 group-hover:opacity-40 transition-opacity" />
-              <img src={userProfile.avatar || `https://ui-avatars.com/api/?name=${userProfile.name}`} alt={userProfile.name} className="relative w-20 h-20 rounded-[24px] object-cover border-4 border-white dark:border-zinc-950 shadow-2xl" />
+              <img src={getAvatarUrl(userProfile.avatar, userProfile.name)} alt={userProfile.name} className="relative w-20 h-20 rounded-[24px] object-cover border-4 border-white dark:border-zinc-950 shadow-2xl" />
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white dark:border-zinc-950 rounded-full shadow-lg" />
             </div>
             <div className="min-w-0">

@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { motion } from 'motion/react';
-import { UserProfile, Product, Chat, CartItem } from './types';
+import { UserProfile, Product, Chat, CartItem, BeforeInstallPromptEvent } from './types';
 import { initialProducts, categories } from './constants';
 
 // Components
 import Header from './components/Header';
 import Hero from './components/Hero';
-import Categories from './components/Categories';
 import ProductCard from './components/ProductCard';
 import Footer from './components/Footer';
 import BottomNav from './components/BottomNav';
@@ -32,6 +31,8 @@ import ImportQuoteView from './views/ImportQuoteView';
 import { CheckCircle, Bell } from 'lucide-react';
 
 import { initOneSignal } from './lib/notifications';
+
+import ErrorBoundary from './components/ErrorBoundary';
 
 const App = () => {
   // Auth & Profile State
@@ -81,6 +82,24 @@ const App = () => {
   }, [isDark]);
 
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'info'} | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  useEffect(() => {
+    const handler = (e: BeforeInstallPromptEvent) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler as EventListener);
+    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    setDeferredPrompt(null);
+  };
 
   const showNotification = (message: string, type: 'success' | 'info' = 'info') => {
     setNotification({ message, type });
@@ -89,44 +108,48 @@ const App = () => {
 
   // Auth Listener
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         // Fetch profile with a timeout to prevent hanging
         const fetchProfile = async () => {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
 
-          if (error && error.code === 'PGRST116') {
-            // Profile doesn't exist, create it
-            const isAdmin = session.user.email === '7dark7cloud7@gmail.com';
-            const newProfile = {
-              id: session.user.id,
-              full_name: session.user.user_metadata.full_name || 'Usuário',
-              email: session.user.email || '',
-              avatar_url: session.user.user_metadata.avatar_url || '',
-              role: isAdmin ? 'admin' : 'buyer'
-            };
-            await supabase.from('profiles').insert(newProfile);
-            setUserProfile({ 
-              uid: newProfile.id, 
-              name: newProfile.full_name, 
-              email: newProfile.email,
-              avatar: newProfile.avatar_url, 
-              role: newProfile.role as 'buyer' | 'seller' | 'admin'
-            });
-          } else if (profile) {
-            setUserProfile({ 
-              uid: profile.id, 
-              name: profile.full_name, 
-              email: profile.email,
-              avatar: profile.avatar_url, 
-              role: profile.role as 'buyer' | 'seller',
-              phone: profile.phone,
-              address: profile.address
-            } as UserProfile);
+            if (error && error.code === 'PGRST116') {
+              // Profile doesn't exist, create it
+              const isAdmin = session.user.email === '7dark7cloud7@gmail.com';
+              const newProfile = {
+                id: session.user.id,
+                full_name: session.user.user_metadata?.full_name || 'Usuário',
+                email: session.user.email || '',
+                avatar_url: session.user.user_metadata?.avatar_url || '',
+                role: isAdmin ? 'admin' : 'buyer'
+              };
+              await supabase.from('profiles').insert(newProfile);
+              setUserProfile({ 
+                uid: newProfile.id, 
+                name: newProfile.full_name, 
+                email: newProfile.email,
+                avatar: newProfile.avatar_url, 
+                role: newProfile.role as 'buyer' | 'seller' | 'admin'
+              });
+            } else if (profile) {
+              setUserProfile({ 
+                uid: profile.id, 
+                name: profile.full_name, 
+                email: profile.email,
+                avatar: profile.avatar_url, 
+                role: profile.role as 'buyer' | 'seller' | 'admin',
+                phone: profile.phone,
+                address: profile.address
+              } as UserProfile);
+            }
+          } catch (err) {
+            console.error('Error in auth listener profile fetch:', err);
           }
         };
         fetchProfile();
@@ -151,24 +174,24 @@ const App = () => {
         setProducts(initialProducts);
       } else {
         if (data && data.length > 0) {
-          setProducts(data.map((p: any) => ({
-            id: p.id,
-            title: p.title,
-            description: p.description,
-            price: p.price,
-            image: p.image_url || p.image,
-            category: p.category,
-            condition: p.condition,
-            sellerId: p.seller_id,
-            sellerName: p.profiles?.full_name || p.seller_name || 'Vendedor Desconhecido',
-            sellerAvatar: p.profiles?.avatar_url || p.seller_avatar || '',
-            sellerPhone: p.profiles?.phone || p.seller_phone || '',
+          setProducts(((data || []) as Record<string, unknown>[]).map((p) => ({
+            id: p.id as string,
+            title: p.title as string,
+            description: p.description as string,
+            price: p.price as number,
+            image: (p.image_url || p.image) as string,
+            category: p.category as string,
+            condition: p.condition as string,
+            sellerId: p.seller_id as string,
+            sellerName: ((p.profiles as Record<string, unknown>)?.full_name || p.seller_name || 'Vendedor Desconhecido') as string,
+            sellerAvatar: ((p.profiles as Record<string, unknown>)?.avatar_url || p.seller_avatar || '') as string,
+            sellerPhone: ((p.profiles as Record<string, unknown>)?.phone || p.seller_phone || '') as string,
             sellerRating: 5.0,
             emPromocao: false,
-            status: p.status,
-            stock: p.stock,
-            isImport: p.is_import,
-            createdAt: new Date(p.created_at).getTime()
+            status: p.status as Product['status'],
+            stock: p.stock as number,
+            isImport: p.is_import as boolean,
+            createdAt: new Date(p.created_at as string).getTime()
           } as Product)));
         } else {
           setProducts(initialProducts);
@@ -179,16 +202,27 @@ const App = () => {
     fetchProducts();
 
     const productsChannel = supabase
-      .channel('products_changes')
+      ?.channel('products_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
         fetchProducts();
       })
       .subscribe();
 
+    return () => {
+      if (supabase) {
+        supabase.removeChannel(productsChannel);
+      }
+    };
+  }, []);
+
+  // Orders Listener
+  useEffect(() => {
+    if (!userProfile) return;
+
     const ordersChannel = supabase
-      .channel('orders_notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload: any) => {
-        const newOrder = payload.new;
+      ?.channel('orders_notifications')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+        const newOrder = payload.new as { seller_id: string, total: number };
         // If the current user is the seller of the new order
         if (userProfile && newOrder.seller_id === userProfile.uid) {
           showNotification(`Nova compra recebida! Total: Kz ${newOrder.total.toLocaleString('pt-AO')}`, 'success');
@@ -197,8 +231,9 @@ const App = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(productsChannel);
-      supabase.removeChannel(ordersChannel);
+      if (supabase) {
+        supabase.removeChannel(ordersChannel);
+      }
     };
   }, [userProfile]);
 
@@ -235,10 +270,12 @@ const App = () => {
   };
 
   // Product Handlers
-  const handleSaveProduct = async (productData: Partial<Product>) => {
+  const handleSaveProduct = async (productData: Partial<Product> & { imageUrl?: string }) => {
     if (!userProfile) return;
     
     try {
+      const finalImageUrl = productData.imageUrl || productData.image;
+
       if (editingProduct) {
         const { error } = await supabase
           .from('products')
@@ -246,7 +283,7 @@ const App = () => {
             title: productData.title,
             description: productData.description,
             price: productData.price,
-            image_url: productData.imageUrl,
+            image_url: finalImageUrl,
             category: productData.category,
             condition: productData.condition,
             stock: productData.stock,
@@ -262,7 +299,7 @@ const App = () => {
             title: productData.title,
             description: productData.description,
             price: productData.price,
-            image_url: productData.imageUrl,
+            image_url: finalImageUrl,
             category: productData.category,
             condition: productData.condition,
             seller_id: userProfile.uid,
@@ -414,11 +451,6 @@ const App = () => {
                     ))}
                   </div>
                 </section>
-
-                <Categories 
-                  activeCategory={activeCategory || ''}
-                  onSelectCategory={setActiveCategory}
-                />
 
                 {categories.map(cat => (
                   <section key={cat.id} className="space-y-4">
@@ -637,8 +669,32 @@ const App = () => {
           </div>
         </div>
       )}
+
+      {deferredPrompt && (
+        <div className="fixed bottom-20 left-4 right-4 z-[9999] bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4 animate-in slide-in-from-bottom-10">
+          <div className="flex items-center gap-4">
+            <img src="/logo.png" alt="Elara" className="w-12 h-12 rounded-xl" />
+            <div>
+              <h4 className="font-black dark:text-white">Instalar Elara</h4>
+              <p className="text-xs text-zinc-500">Tenha uma experiência mais rápida</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleInstallClick}
+            className="bg-purple-600 text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-purple-700 transition-colors"
+          >
+            Instalar
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default App;
+export default function AppWrapper() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}

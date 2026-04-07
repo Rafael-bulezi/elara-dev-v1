@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, ShoppingCart, Moon, Sun, Menu, PlusCircle } from 'lucide-react';
 import { UserProfile } from '../types';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface HeaderProps {
   isDark: boolean;
@@ -50,12 +51,12 @@ const Header = ({
         {/* Logo */}
         <button 
           onClick={() => window.location.href = '/'}
-          className="flex items-center gap-2 group shrink-0"
+          className="flex items-center gap-3 group shrink-0"
         >
-          <div className="w-7 h-7 md:w-10 md:h-10 bg-purple-600 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform">
-            <span className="font-black text-lg md:text-2xl">E</span>
+          <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform">
+            <img src="/logo.png" alt="Elara" className="w-full h-full object-cover scale-125" />
           </div>
-          <span className="text-lg md:text-2xl font-black tracking-tighter dark:text-white hidden sm:block">ELARA</span>
+          <span className="text-2xl md:text-3xl font-black tracking-tighter dark:text-white">Elara</span>
         </button>
 
         {/* Search Bar - Desktop */}
@@ -109,7 +110,7 @@ const Header = ({
               className="flex items-center gap-1.5 md:gap-2 p-0.5 md:p-1 md:pr-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors group"
             >
               <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg overflow-hidden border-2 border-zinc-100 dark:border-zinc-800 group-hover:border-purple-500 transition-colors">
-                <img src={userProfile.avatar || `https://ui-avatars.com/api/?name=${userProfile.name}`} alt={userProfile.name} className="w-full h-full object-cover" />
+                <img src={getAvatarUrl(userProfile.avatar, userProfile.name)} alt={userProfile.name} className="w-full h-full object-cover" />
               </div>
               <div className="hidden lg:block text-left">
                 <p className="text-xs font-black dark:text-white leading-none mb-1">{userProfile.name.split(' ')[0]}</p>

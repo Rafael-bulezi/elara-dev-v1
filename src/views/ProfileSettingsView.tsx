@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { ArrowLeft, User, Mail, Phone, MapPin, Shield, Bell, Moon, LogOut, Camera, CheckCircle, ChevronRight, Save, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
-import imageCompression from 'browser-image-compression';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface ProfileSettingsViewProps {
   userProfile: UserProfile | null;
@@ -74,13 +74,13 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
       
       onUpdateProfile({ photoURL: publicUrl, avatar: publicUrl });
       setIsUploading(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading avatar:', error);
       setIsUploading(false);
       
       // Tenta extrair a mensagem do erro do Supabase
       let errorMessage = 'Erro ao fazer upload da imagem.';
-      if (error && typeof error === 'object' && 'message' in error) {
+      if (error instanceof Error) {
         errorMessage = error.message;
       } else if (typeof error === 'string') {
         errorMessage = error;
@@ -112,7 +112,7 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
         name: formData.displayName,
         phone: formData.phoneNumber,
         address: formData.address,
-        role: formData.role as any,
+        role: formData.role as UserProfile['role'],
       });
       setSuccess('Perfil atualizado com sucesso!');
       setTimeout(() => setSuccess(null), 3000);
@@ -168,12 +168,8 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
                     <div className="w-full h-full flex items-center justify-center bg-zinc-200 dark:bg-zinc-800">
                       <Loader2 size={32} className="text-purple-500 animate-spin" />
                     </div>
-                  ) : userProfile?.photoURL || userProfile?.avatar ? (
-                    <img src={userProfile.photoURL || userProfile.avatar} alt={userProfile.displayName || userProfile.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-zinc-400">
-                      <User size={48} />
-                    </div>
+                    <img src={getAvatarUrl(userProfile?.photoURL || userProfile?.avatar, userProfile?.displayName || userProfile?.name)} alt={userProfile?.displayName || userProfile?.name} className="w-full h-full object-cover" />
                   )}
                 </div>
                 <button 
@@ -231,7 +227,7 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
               <div className="relative group">
                 <select 
                   value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value as any})}
+                  onChange={(e) => setFormData({...formData, role: e.target.value as UserProfile['role']})}
                   className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all appearance-none"
                 >
                   <option value="buyer">Comprador</option>

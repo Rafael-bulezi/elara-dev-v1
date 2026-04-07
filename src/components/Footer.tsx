@@ -1,5 +1,6 @@
 import React from 'react';
 import { Facebook, Instagram, Twitter, Globe, Shield } from 'lucide-react';
+import { evangelisticVerses } from '../constants/verses';
 
 const Footer = () => (
   <footer className="bg-zinc-950 text-white pt-20 pb-10">
@@ -14,6 +15,9 @@ const Footer = () => (
           </div>
           <p className="text-zinc-400 text-lg leading-relaxed font-medium">
             O maior marketplace de Angola, conectando compradores e vendedores com segurança e rapidez.
+          </p>
+          <p className="text-purple-400 text-sm italic font-medium">
+            "{evangelisticVerses[1]}"
           </p>
           <div className="flex items-center gap-4">
             {[Facebook, Instagram, Twitter].map((Icon, i) => (

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, XCircle, Clock, ShieldCheck, Search, Package, CreditCard, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Product, UserProfile, Order } from '../types';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface AdminViewProps {
   userProfile: UserProfile | null;
@@ -10,12 +11,14 @@ interface AdminViewProps {
 
 const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
   const [activeTab, setActiveTab] = useState<'products' | 'payments'>('products');
-  const [pendingProducts, setPendingProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [pendingPayments, setPendingPayments] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [productFilter, setProductFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
 
   const [confirmRejectId, setConfirmRejectId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,17 +33,16 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
 
     setLoading(true);
     
-    const fetchPendingProducts = async () => {
+    const fetchAllProducts = async () => {
       const { data, error } = await supabase
         .from('products')
         .select('*, profiles:seller_id(full_name, avatar_url)')
-        .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching pending products:', error);
+        console.error('Error fetching products:', error);
       } else {
-        setPendingProducts(data.map((p: any) => ({
+        setAllProducts((data || []).map((p) => ({
           id: p.id,
           title: p.title,
           price: p.price,
@@ -50,12 +52,12 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
           stock: p.stock,
           status: p.status,
           condition: p.condition,
-          isImport: p.is_import,
+          isImport: (p as { is_import?: boolean }).is_import,
           sellerId: p.seller_id,
-          sellerPhone: p.seller_phone,
-          sellerName: p.profiles?.full_name || 'Vendedor Desconhecido',
-          sellerAvatar: p.profiles?.avatar_url || '',
-          createdAt: { toDate: () => new Date(p.created_at) }
+          sellerPhone: (p as { seller_phone?: string }).seller_phone,
+          sellerName: (p as { profiles?: { full_name?: string }, seller_name?: string }).profiles?.full_name || (p as { seller_name?: string }).seller_name || 'Vendedor Desconhecido',
+          sellerAvatar: (p as { profiles?: { avatar_url?: string }, seller_avatar?: string }).profiles?.avatar_url || (p as { seller_avatar?: string }).seller_avatar || '',
+          createdAt: new Date(p.created_at).getTime()
         } as unknown as Product)));
       }
       if (activeTab === 'products') setLoading(false);
@@ -71,7 +73,7 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
       if (error) {
         console.error('Error fetching pending payments:', error);
       } else {
-        setPendingPayments(data.map((o: any) => ({
+        setPendingPayments((data || []).map((o) => ({
           id: o.id,
           buyerId: o.buyer_id,
           buyerName: o.buyer_name,
@@ -83,22 +85,22 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
           status: o.status,
           paymentStatus: o.payment_status,
           paymentReceipt: o.payment_receipt,
-          products: o.order_items.map((oi: { products: unknown; quantity: number }) => ({
+          products: (o as { order_items: { products: unknown; quantity: number }[] }).order_items.map((oi: { products: unknown; quantity: number }) => ({
             ...(oi.products as object),
             cartQuantity: oi.quantity
           })),
-          createdAt: { toDate: () => new Date(o.created_at) }
+          createdAt: new Date(o.created_at).getTime()
         } as unknown as Order)));
       }
       if (activeTab === 'payments') setLoading(false);
     };
 
-    fetchPendingProducts();
+    fetchAllProducts();
     fetchPendingPayments();
 
     const productsChannel = supabase
       .channel('admin_products')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products', filter: 'status=eq.pending' }, () => fetchPendingProducts())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => fetchAllProducts())
       .subscribe();
 
     const paymentsChannel = supabase
@@ -137,10 +139,10 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
       }
       
       // Remove from local state to update UI immediately
-      setPendingProducts(prev => prev.filter(p => p.id !== productId));
+      setAllProducts(prev => prev.map(p => p.id === productId ? { ...p, status: 'approved' } : p));
       setApprovingId(null);
-    } catch (error: any) {
-      console.error(`Erro inesperado: ${error.message || error}`);
+    } catch (error: unknown) {
+      console.error(`Erro inesperado: ${error instanceof Error ? error.message : error}`);
       setApprovingId(null);
     }
   };
@@ -171,16 +173,34 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
         .eq('id', productId);
       
       if (error) throw error;
+      setAllProducts(prev => prev.map(p => p.id === productId ? { ...p, status: 'rejected' } : p));
       setConfirmRejectId(null);
     } catch (error) {
       console.error('Error rejecting product:', error);
     }
   };
 
-  const filteredProducts = pendingProducts.filter(p => 
-    p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    p.sellerName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleDelete = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+      
+      if (error) throw error;
+      setAllProducts(prev => prev.filter(p => p.id !== productId));
+      setConfirmDeleteId(null);
+    } catch (error) {
+      console.error('Error deleting product:', error);
+    }
+  };
+
+  const filteredProducts = allProducts.filter(p => {
+    const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          p.sellerName?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = productFilter === 'all' || p.status === productFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const filteredPayments = pendingPayments.filter(o => 
     o.buyerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -215,7 +235,7 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
           className={`px-8 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'products' ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-lg' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
         >
           <Package size={18} />
-          Produtos Pendentes ({pendingProducts.length})
+          Produtos ({allProducts.length})
         </button>
         <button 
           onClick={() => setActiveTab('payments')}
@@ -225,6 +245,20 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
           Pagamentos ({pendingPayments.length})
         </button>
       </div>
+
+      {activeTab === 'products' && (
+        <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 mb-8 w-full md:w-fit overflow-x-auto">
+          {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
+            <button 
+              key={status}
+              onClick={() => setProductFilter(status)}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${productFilter === status ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-lg' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            >
+              {status === 'all' ? 'Todos' : status === 'pending' ? 'Pendentes' : status === 'approved' ? 'Aprovados' : 'Rejeitados'}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="relative group mb-8">
         <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-purple-500 transition-colors" size={20} />
@@ -247,8 +281,8 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
             <div className="w-24 h-24 bg-zinc-100 dark:bg-zinc-800 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-300 dark:text-zinc-700">
               <Clock size={48} />
             </div>
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Nenhum produto pendente</h3>
-            <p className="text-zinc-500 dark:text-zinc-400 max-w-md mx-auto font-medium">Todos os produtos submetidos já foram revisados.</p>
+            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Nenhum produto encontrado</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 max-w-md mx-auto font-medium">Não há produtos que correspondam aos filtros selecionados.</p>
           </div>
         ) : (
           <div className="grid gap-6">
@@ -261,7 +295,9 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                   <div className="w-full lg:w-48 h-48 bg-zinc-100 dark:bg-zinc-800 rounded-[32px] overflow-hidden flex-shrink-0 relative group-hover:scale-105 transition-transform">
                     <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
                     <div className="absolute top-3 left-3">
-                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500 text-white rounded-xl shadow-lg">Pendente</span>
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 text-white rounded-xl shadow-lg ${product.status === 'approved' ? 'bg-emerald-500' : product.status === 'rejected' ? 'bg-rose-500' : 'bg-amber-500'}`}>
+                        {product.status === 'approved' ? 'Aprovado' : product.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
+                      </span>
                     </div>
                   </div>
                   
@@ -292,7 +328,7 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Vendedor</p>
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden">
-                            <img src={product.sellerAvatar} alt={product.sellerName} className="w-full h-full object-cover" />
+                            <img src={getAvatarUrl(product.sellerAvatar, product.sellerName)} alt={product.sellerName} className="w-full h-full object-cover" />
                           </div>
                           <p className="text-sm font-black dark:text-white truncate">{product.sellerName}</p>
                         </div>
@@ -305,40 +341,74 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                   </div>
                   
                   <div className="flex flex-row lg:flex-col gap-4 justify-center mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                    <button 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleApprove(product.id);
-                      }}
-                      disabled={approvingId === product.id}
-                      style={{ position: 'relative', zIndex: 9999, pointerEvents: 'auto' }}
-                      className={`w-full bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3 ${approvingId === product.id ? 'opacity-75 cursor-not-allowed' : ''}`}
-                    >
-                      {approvingId === product.id ? (
-                        <>
-                          <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-                          Aprovando...
-                        </>
+                    {product.status !== 'approved' && (
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleApprove(product.id);
+                        }}
+                        disabled={approvingId === product.id}
+                        style={{ position: 'relative', zIndex: 9999, pointerEvents: 'auto' }}
+                        className={`w-full bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3 ${approvingId === product.id ? 'opacity-75 cursor-not-allowed' : ''}`}
+                      >
+                        {approvingId === product.id ? (
+                          <>
+                            <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                            Aprovando...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle size={24} />
+                            Aprovar
+                          </>
+                        )}
+                      </button>
+                    )}
+                    
+                    {product.status !== 'rejected' && (
+                      confirmRejectId === product.id ? (
+                        <div className="flex flex-col gap-2 w-full">
+                          <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest text-center">Confirmar Rejeição?</p>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleReject(product.id); }}
+                              className="flex-1 bg-rose-500 hover:bg-rose-600 text-white px-4 py-3 rounded-xl font-black text-sm transition-all"
+                            >
+                              Sim
+                            </button>
+                            <button 
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmRejectId(null); }}
+                              className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-4 py-3 rounded-xl font-black text-sm transition-all"
+                            >
+                              Não
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <>
-                          <CheckCircle size={24} />
-                          Aprovar Produto
-                        </>
-                      )}
-                    </button>
-                    {confirmRejectId === product.id ? (
+                        <button 
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmRejectId(product.id); }}
+                          style={{ position: 'relative', zIndex: 9999, pointerEvents: 'auto' }}
+                          className="w-full bg-amber-500 hover:bg-amber-600 text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl shadow-amber-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                        >
+                          <XCircle size={24} />
+                          Rejeitar
+                        </button>
+                      )
+                    )}
+
+                    {confirmDeleteId === product.id ? (
                       <div className="flex flex-col gap-2 w-full">
-                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest text-center">Confirmar Rejeição?</p>
+                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest text-center">Excluir Permanentemente?</p>
                         <div className="flex gap-2">
                           <button 
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleReject(product.id); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(product.id); }}
                             className="flex-1 bg-rose-500 hover:bg-rose-600 text-white px-4 py-3 rounded-xl font-black text-sm transition-all"
                           >
                             Sim
                           </button>
                           <button 
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmRejectId(null); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(null); }}
                             className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-4 py-3 rounded-xl font-black text-sm transition-all"
                           >
                             Não
@@ -347,12 +417,12 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                       </div>
                     ) : (
                       <button 
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmRejectId(product.id); }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(product.id); }}
                         style={{ position: 'relative', zIndex: 9999, pointerEvents: 'auto' }}
                         className="w-full bg-rose-500 hover:bg-rose-600 text-white px-8 py-5 rounded-2xl font-black text-lg shadow-xl shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
                       >
-                        <XCircle size={24} />
-                        Rejeitar
+                        <AlertCircle size={24} />
+                        Excluir
                       </button>
                     )}
                   </div>

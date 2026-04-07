@@ -1,6 +1,7 @@
 import React from 'react';
 import { Home, MessageCircle, ShoppingCart, User, PlusCircle } from 'lucide-react';
 import { UserProfile } from '../types';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface BottomNavProps {
   activeTab: string;
@@ -75,7 +76,7 @@ const BottomNav = ({
       >
         <div className={`p-0.5 rounded-xl border-2 transition-colors ${userProfile ? 'border-zinc-200 dark:border-zinc-800' : 'p-1.5'}`}>
           {userProfile ? (
-            <img src={userProfile.avatar || `https://ui-avatars.com/api/?name=${userProfile.name}`} alt={userProfile.name} className="w-5 h-5 rounded-lg object-cover" />
+            <img src={getAvatarUrl(userProfile.avatar, userProfile.name)} alt={userProfile.name} className="w-5 h-5 rounded-lg object-cover" />
           ) : (
             <User size={20} />
           )}

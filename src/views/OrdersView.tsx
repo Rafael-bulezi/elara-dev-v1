@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ShoppingBag, Package, Truck, MessageCircle, CreditCard, ChevronRight, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { Order, UserProfile } from '../types';
+import { Order, UserProfile, Product } from '../types';
 
 interface OrdersViewProps {
   userProfile: UserProfile | null;
@@ -35,7 +35,7 @@ const OrdersView = ({ userProfile, onBack, onContactUser }: OrdersViewProps) => 
       if (error) {
         console.error('Error fetching orders:', error);
       } else {
-        setOrders(data.map((o: any) => ({
+        setOrders((data || []).map((o) => ({
           id: o.id,
           buyerId: o.buyer_id,
           buyerName: o.buyer_name,
@@ -47,12 +47,12 @@ const OrdersView = ({ userProfile, onBack, onContactUser }: OrdersViewProps) => 
           status: o.status,
           paymentStatus: o.payment_status,
           paymentReceipt: o.payment_receipt,
-          products: o.order_items.map((oi: { products: unknown; quantity: number; seller_id: string }) => ({
+          products: (o as { order_items: { products: unknown; quantity: number; seller_id: string }[] }).order_items.map((oi: { products: unknown; quantity: number; seller_id: string }) => ({
             ...(oi.products as object),
             cartQuantity: oi.quantity,
             sellerId: oi.seller_id
           })),
-          createdAt: { toDate: () => new Date(o.created_at) }
+          createdAt: new Date(o.created_at).getTime()
         } as unknown as Order)));
       }
       setLoading(false);
@@ -181,7 +181,7 @@ const OrdersView = ({ userProfile, onBack, onContactUser }: OrdersViewProps) => 
                 <div className="flex items-center justify-between md:justify-end gap-4">
                   <div className="text-right hidden sm:block">
                     <p className="text-xs font-black text-zinc-400 uppercase tracking-widest">Data</p>
-                    <p className="font-bold dark:text-white text-sm">{order.createdAt?.toDate().toLocaleDateString('pt-AO')}</p>
+                    <p className="font-bold dark:text-white text-sm">{new Date(order.createdAt).toLocaleDateString('pt-AO')}</p>
                   </div>
                   <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded-xl text-zinc-400 group-hover:text-purple-600 group-hover:bg-purple-50 dark:group-hover:bg-purple-900/20 transition-all">
                     <ChevronRight size={20} />
@@ -241,7 +241,7 @@ const OrdersView = ({ userProfile, onBack, onContactUser }: OrdersViewProps) => 
                       <img src={p.image} alt={p.title} className="w-12 h-12 rounded-xl object-cover" />
                       <div className="flex-1 min-w-0">
                         <h5 className="font-bold dark:text-white text-sm truncate">{p.title}</h5>
-                        <p className="text-xs font-bold text-zinc-500">Qtd: {(p as any).cartQuantity || 1} • Kz {p.price.toLocaleString('pt-AO')}</p>
+                        <p className="text-xs font-bold text-zinc-500">Qtd: {(p as Product & { cartQuantity?: number }).cartQuantity || 1} • Kz {p.price.toLocaleString('pt-AO')}</p>
                       </div>
                     </div>
                   ))}

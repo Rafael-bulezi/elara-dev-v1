@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
 import { Product } from '../types';
 import ImageWithFallback from './ImageWithFallback';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface ProductCardProps {
   product: Product;
@@ -39,7 +40,7 @@ const ProductCard = ({ product, onAddToCart, onProductClick }: ProductCardProps)
       </div>
 
       <div className="flex items-center gap-2 mb-3">
-        <img src={product.sellerAvatar} alt={product.sellerName} className="w-5 h-5 rounded-full" />
+        <img src={getAvatarUrl(product.sellerAvatar, product.sellerName)} alt={product.sellerName} className="w-5 h-5 rounded-full object-cover" />
         <span className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate flex-1">{product.sellerName}</span>
         <div className="flex items-center gap-0.5 text-amber-500">
           <Star size={10} fill="currentColor" />

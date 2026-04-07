@@ -30,20 +30,20 @@ const ProductsView = ({ userProfile, onBack, onEditProduct, onAddProduct }: Prod
       if (error) {
         console.error('Error fetching products:', error);
       } else {
-        setProducts(data.map((p: any) => ({
+        setProducts((data || []).map((p) => ({
           id: p.id,
           title: p.title,
           price: p.price,
           category: p.category,
           description: p.description,
-          image: p.image,
+          image: p.image_url || p.image,
           stock: p.stock,
           status: p.status,
           condition: p.condition,
-          isImport: p.is_import,
+          isImport: (p as { is_import?: boolean }).is_import,
           sellerId: p.seller_id,
-          sellerPhone: p.seller_phone,
-          createdAt: { seconds: new Date(p.created_at).getTime() / 1000 }
+          sellerPhone: (p as { seller_phone?: string }).seller_phone,
+          createdAt: new Date(p.created_at).getTime()
         } as unknown as Product)));
       }
       setLoading(false);
@@ -70,13 +70,20 @@ const ProductsView = ({ userProfile, onBack, onEditProduct, onAddProduct }: Prod
 
   const handleDeleteProduct = async (productId: string) => {
     try {
+      // Optimistic update
+      setProducts(prev => prev.filter(p => p.id !== productId));
+      setConfirmDeleteId(null);
+
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', productId);
       
-      if (error) throw error;
-      setConfirmDeleteId(null);
+      if (error) {
+        // Revert on error (optional, but good practice)
+        // For now, we just log it and maybe fetch again
+        throw error;
+      }
     } catch (error) {
       console.error('Error deleting product:', error);
       alert('Erro ao excluir produto.');

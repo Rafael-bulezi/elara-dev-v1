@@ -32,13 +32,13 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
       if (error) {
         console.error('Error fetching messages:', error);
       } else {
-        setMessages(data.map((m: any) => ({
+        setMessages((data || []).map((m) => ({
           id: m.id,
           chatId: m.chat_id,
           senderId: m.sender_id,
           text: m.text,
           read: m.read,
-          createdAt: { toDate: () => new Date(m.created_at) }
+          createdAt: new Date(m.created_at).getTime()
         } as unknown as Message)));
       }
       setLoading(false);
@@ -54,7 +54,7 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
         schema: 'public', 
         table: 'messages',
         filter: `chat_id=eq.${chat.id}`
-      }, (payload: any) => {
+      }, (payload) => {
         const newMsg = payload.new as { id: string; chat_id: string; sender_id: string; text: string; read: boolean; created_at: string };
         setMessages(prev => [...prev, {
           id: newMsg.id,
@@ -62,7 +62,7 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
           senderId: newMsg.sender_id,
           text: newMsg.text,
           read: newMsg.read,
-          createdAt: { toDate: () => new Date(newMsg.created_at) }
+          createdAt: new Date(newMsg.created_at).getTime()
         } as unknown as Message]);
       })
       .subscribe();
@@ -187,7 +187,7 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
                   <p className="text-sm md:text-base font-medium leading-relaxed">{msg.text}</p>
                   <div className={`flex items-center gap-2 mt-2 ${isMe ? 'justify-end text-white/60' : 'justify-start text-zinc-400'}`}>
                     <span className="text-[10px] font-black uppercase tracking-widest">
-                      {msg.createdAt?.toDate().toLocaleTimeString('pt-AO', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(msg.createdAt).toLocaleTimeString('pt-AO', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {isMe && <CheckCheck size={14} className={msg.read ? 'text-emerald-400' : 'text-white/40'} />}
                   </div>

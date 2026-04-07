@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, CreditCard, ArrowLeft, Smartphone, Truck, ShieldCheck, MessageCircle, Globe, AlertCircle, Loader2, Copy, Upload, Check } from 'lucide-react';
 import { motion } from 'motion/react';
+import imageCompression from 'browser-image-compression';
 import { supabase } from '../lib/supabase';
 import { Product, UserProfile } from '../types';
-import imageCompression from 'browser-image-compression';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -40,7 +40,7 @@ const CheckoutModal = ({
   const EXPRESS = "921044212";
 
   const total = cart.reduce((sum, item) => sum + (item.price * (item.cartQuantity || 1)), 0);
-  const hasImportProducts = cart.some(item => item.isImport);
+  // const hasImportProducts = cart.some(item => item.isImport);
 
   useEffect(() => {
     if (isOpen) {

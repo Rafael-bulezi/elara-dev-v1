@@ -3,6 +3,7 @@ import { ArrowLeft, User, Star, MapPin, Calendar, MessageCircle, ShoppingBag, Sh
 import { supabase } from '../lib/supabase';
 import { Product, UserProfile } from '../types';
 import ProductCard from '../components/ProductCard';
+import { getAvatarUrl } from '../utils/avatar';
 
 interface SellerProfileViewProps {
   sellerId: string;
@@ -32,15 +33,15 @@ const SellerProfileView = ({ sellerId, onBack, onProductClick, onAddToCart, onCo
           setSeller({
             uid: data.id,
             email: data.email,
-            displayName: data.display_name,
-            photoURL: data.photo_url,
+            displayName: data.full_name || data.display_name,
+            photoURL: data.avatar_url || data.photo_url,
             role: data.role,
-            phoneNumber: data.phone_number,
+            phoneNumber: data.phone,
             address: data.address,
             bio: data.bio,
             rating: data.rating,
             reviewsCount: data.reviews_count,
-            createdAt: { toDate: () => new Date(data.created_at) }
+            createdAt: new Date(data.created_at).getTime()
           } as unknown as UserProfile);
         }
       } catch (error) {
@@ -59,20 +60,20 @@ const SellerProfileView = ({ sellerId, onBack, onProductClick, onAddToCart, onCo
       if (error) {
         console.error('Error fetching products:', error);
       } else {
-        setProducts(data.map((p: any) => ({
+        setProducts((data || []).map((p) => ({
           id: p.id,
           title: p.title,
           price: p.price,
           category: p.category,
           description: p.description,
-          image: p.image,
+          image: p.image_url || p.image,
           stock: p.stock,
           status: p.status,
           condition: p.condition,
-          isImport: p.is_import,
+          isImport: (p as { is_import?: boolean }).is_import,
           sellerId: p.seller_id,
-          sellerPhone: p.seller_phone,
-          createdAt: { toDate: () => new Date(p.created_at) }
+          sellerPhone: (p as { seller_phone?: string }).seller_phone,
+          createdAt: new Date(p.created_at).getTime()
         } as unknown as Product)));
       }
       setLoading(false);
@@ -118,13 +119,7 @@ const SellerProfileView = ({ sellerId, onBack, onProductClick, onAddToCart, onCo
             
             <div className="relative z-10">
               <div className="w-32 h-32 md:w-40 md:h-40 bg-zinc-100 dark:bg-zinc-800 rounded-[48px] overflow-hidden border-8 border-white dark:border-zinc-900 shadow-2xl mx-auto mb-8">
-                {seller?.photoURL || seller?.avatar ? (
-                  <img src={seller.photoURL || seller.avatar} alt={seller.displayName || seller.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-400">
-                    <User size={64} />
-                  </div>
-                )}
+                <img src={getAvatarUrl(seller?.photoURL || seller?.avatar, seller?.displayName || seller?.name)} alt={seller?.displayName || seller?.name} className="w-full h-full object-cover" />
               </div>
               
               <div className="space-y-4">
@@ -149,7 +144,7 @@ const SellerProfileView = ({ sellerId, onBack, onProductClick, onAddToCart, onCo
                   </div>
                   <div className="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-800 px-4 py-2 rounded-xl text-zinc-500 dark:text-zinc-400 text-xs font-bold border border-zinc-100 dark:border-zinc-700">
                     <Calendar size={14} />
-                    Desde {seller?.createdAt?.toDate().getFullYear() || '2026'}
+                    Desde {seller?.createdAt ? new Date(seller.createdAt).getFullYear() : '2026'}
                   </div>
                 </div>
 
