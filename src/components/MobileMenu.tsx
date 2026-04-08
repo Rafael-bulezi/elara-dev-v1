@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Home, ShoppingBag, MessageCircle, User, Globe, Shield, Zap, Download } from 'lucide-react';
-import logo from '../assets/elara-logo.png';
+import { CLOUD_LOGO } from '../constants/logo';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -18,17 +18,15 @@ const MobileMenu = ({ isOpen, onClose, onNavigate, onInstallClick, appLogo }: Mo
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-black shrink-0 overflow-hidden">
             <img 
-              src={appLogo || logo} 
+              src={appLogo || CLOUD_LOGO} 
               alt="Elara" 
               className="w-full h-full object-cover" 
               referrerPolicy="no-referrer"
               onError={(e) => {
                 const target = e.currentTarget;
-                if (target.src !== window.location.origin + logo && target.src !== logo) {
-                  target.src = logo;
-                } else {
-                  target.style.display = 'none';
-                  target.parentElement!.innerHTML = 'E';
+                const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%239333ea'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='300' font-weight='bold' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'%3EE%3C/text%3E%3C/svg%3E";
+                if (target.src !== fallbackSvg) {
+                  target.src = fallbackSvg;
                 }
               }} 
             />

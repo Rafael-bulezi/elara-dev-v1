@@ -2,7 +2,7 @@ import React from 'react';
 import { Search, ShoppingCart, Moon, Sun, Menu, PlusCircle } from 'lucide-react';
 import { UserProfile } from '../types';
 import { getAvatarUrl } from '../utils/avatar';
-import logo from '../assets/elara-logo.png';
+import { CLOUD_LOGO } from '../constants/logo';
 
 interface HeaderProps {
   isDark: boolean;
@@ -58,17 +58,15 @@ const Header = ({
         >
           <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform bg-purple-600 text-white font-black text-2xl shrink-0">
             <img 
-              src={appLogo || logo} 
+              src={appLogo || CLOUD_LOGO} 
               alt="Elara" 
               className="w-full h-full object-cover scale-125" 
               referrerPolicy="no-referrer"
               onError={(e) => {
                 const target = e.currentTarget;
-                if (target.src !== window.location.origin + logo && target.src !== logo) {
-                  target.src = logo;
-                } else {
-                  target.style.display = 'none';
-                  target.parentElement!.innerHTML = 'E';
+                const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%239333ea'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='300' font-weight='bold' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'%3EE%3C/text%3E%3C/svg%3E";
+                if (target.src !== fallbackSvg) {
+                  target.src = fallbackSvg;
                 }
               }} 
             />
