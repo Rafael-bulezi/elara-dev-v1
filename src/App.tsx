@@ -117,7 +117,21 @@ const App = () => {
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handler as EventListener);
-    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
+
+    // Show install prompt after 30 seconds if not installed
+    const isStandAlone = window.matchMedia('(display-mode: standalone)').matches || 
+                         ('standalone' in window.navigator && !!window.navigator.standalone);
+    let timer: NodeJS.Timeout;
+    if (!isStandAlone) {
+      timer = setTimeout(() => {
+        setForceShowInstall(true);
+      }, 30000); // 30 seconds
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler as EventListener);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const showNotification = (message: string, type: 'success' | 'info' = 'info') => {
@@ -166,15 +180,6 @@ const App = () => {
                 phone: profile.phone,
                 address: profile.address
               } as UserProfile);
-            }
-
-            // Trigger install prompt after successful login if not already installed
-            const isStandAlone = window.matchMedia('(display-mode: standalone)').matches || 
-                                 ('standalone' in window.navigator && !!window.navigator.standalone);
-            if (!isStandAlone) {
-              setTimeout(() => {
-                setForceShowInstall(true);
-              }, 2000); // Small delay so it feels natural after login
             }
 
           } catch (err) {

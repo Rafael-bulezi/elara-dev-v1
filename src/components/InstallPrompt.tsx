@@ -58,15 +58,20 @@ const InstallPrompt = ({ deferredPrompt, clearPrompt, forceShow, appLogo }: Inst
       </button>
       
       <div className="flex items-start gap-4 pr-6">
-        <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-black text-3xl">
+        <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-black text-3xl overflow-hidden">
           <img 
             src={appLogo || logo} 
             alt="Elara" 
-            className="w-full h-full rounded-2xl object-cover" 
+            className="w-full h-full object-cover" 
             referrerPolicy="no-referrer" 
             onError={(e) => { 
-              e.currentTarget.style.display = 'none'; 
-              e.currentTarget.parentElement!.innerHTML = 'E';
+              const target = e.currentTarget;
+              if (target.src !== window.location.origin + logo && target.src !== logo) {
+                target.src = logo;
+              } else {
+                target.style.display = 'none';
+                target.parentElement!.innerHTML = 'E';
+              }
             }} 
           />
         </div>

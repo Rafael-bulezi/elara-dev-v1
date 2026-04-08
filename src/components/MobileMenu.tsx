@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Home, ShoppingBag, MessageCircle, User, Globe, Shield, Zap, Download } from 'lucide-react';
+import logo from '../assets/elara-logo.png';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -15,11 +16,23 @@ const MobileMenu = ({ isOpen, onClose, onNavigate, onInstallClick, appLogo }: Mo
     <div className={`fixed top-0 left-0 bottom-0 w-[280px] bg-white dark:bg-zinc-950 z-[70] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {appLogo ? (
-            <img src={appLogo} alt="Elara" className="w-8 h-8 rounded-lg object-cover" />
-          ) : (
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-black">E</div>
-          )}
+          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-black shrink-0 overflow-hidden">
+            <img 
+              src={appLogo || logo} 
+              alt="Elara" 
+              className="w-full h-full object-cover" 
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== window.location.origin + logo && target.src !== logo) {
+                  target.src = logo;
+                } else {
+                  target.style.display = 'none';
+                  target.parentElement!.innerHTML = 'E';
+                }
+              }} 
+            />
+          </div>
           <span className="font-black dark:text-white">ELARA</span>
           <span className="text-[10px] bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">BETA</span>
         </div>

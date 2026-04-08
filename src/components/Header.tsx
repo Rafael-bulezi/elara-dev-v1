@@ -56,15 +56,20 @@ const Header = ({
           onClick={() => window.location.href = '/'}
           className="flex items-center gap-3 group shrink-0"
         >
-          <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform bg-purple-600 text-white font-black text-2xl">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform bg-purple-600 text-white font-black text-2xl shrink-0">
             <img 
               src={appLogo || logo} 
               alt="Elara" 
               className="w-full h-full object-cover scale-125" 
               referrerPolicy="no-referrer"
               onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement!.innerHTML = 'E';
+                const target = e.currentTarget;
+                if (target.src !== window.location.origin + logo && target.src !== logo) {
+                  target.src = logo;
+                } else {
+                  target.style.display = 'none';
+                  target.parentElement!.innerHTML = 'E';
+                }
               }} 
             />
           </div>
