@@ -674,7 +674,7 @@ const App = () => {
       {deferredPrompt && (
         <div className="fixed bottom-20 left-4 right-4 z-[9999] bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4 animate-in slide-in-from-bottom-10">
           <div className="flex items-center gap-4">
-            <img src="/elara-logo.png" alt="Elara" className="w-12 h-12 rounded-xl" />
+            <img src={logo} alt="Elara" className="w-12 h-12 rounded-xl" referrerPolicy="no-referrer" />
             <div>
               <h4 className="font-black dark:text-white">Instalar Elara</h4>
               <p className="text-xs text-zinc-500">Tenha uma experiência mais rápida</p>
