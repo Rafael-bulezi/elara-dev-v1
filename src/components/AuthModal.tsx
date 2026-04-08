@@ -85,10 +85,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white dark:bg-zinc-900 rounded-[40px] w-full max-w-md overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] border border-zinc-200 dark:border-zinc-800 my-auto max-h-[90vh] flex flex-col"
+        className="bg-white dark:bg-zinc-900 rounded-[40px] w-full max-w-md overflow-hidden border border-zinc-200 dark:border-zinc-800 my-auto max-h-[90vh] flex flex-col"
       >
         <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar">
-          <div className="flex justify-between items-start mb-10">
+          <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="text-4xl font-black dark:text-white tracking-tighter mb-2">
                 {isLogin ? 'Bem-vindo' : 'Criar Conta'}
@@ -103,6 +103,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             >
               <X size={24} />
             </button>
+          </div>
+
+          <div className="mb-8 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/30 rounded-2xl">
+            <p className="text-sm text-purple-800 dark:text-purple-300 font-medium">
+              <strong className="font-black uppercase tracking-wider">Fase de Testes:</strong> Você não precisa confirmar seu e-mail ou número agora. Basta inserir seus dados e acessar!
+            </p>
           </div>
 
           {!isLogin && (

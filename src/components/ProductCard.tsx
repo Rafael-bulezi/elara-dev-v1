@@ -13,7 +13,7 @@ interface ProductCardProps {
 const ProductCard = ({ product, onAddToCart, onProductClick }: ProductCardProps) => (
   <div 
     onClick={() => onProductClick(product)}
-    className="group bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full"
+    className="group bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all duration-300 cursor-pointer flex flex-col h-full"
   >
     <div className="relative aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-800">
       <ImageWithFallback 

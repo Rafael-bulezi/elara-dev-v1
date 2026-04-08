@@ -399,29 +399,30 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 transition-colors duration-500 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 font-sans selection:bg-purple-500/30">
-      <Header 
-        isDark={isDark}
-        toggleTheme={() => setIsDark(!isDark)}
-        toggleMobileMenu={() => setIsMobileMenuOpen(true)}
-        cartCount={cart.reduce((acc, item) => acc + (item.cartQuantity || 1), 0)}
-        onOpenCart={() => setIsCartOpen(true)}
-        onOpenProfile={() => setIsProfileOpen(true)}
-        userProfile={userProfile}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onSellProduct={() => userProfile ? setIsProductModalOpen(true) : setIsAuthModalOpen(true)}
-        onNavigate={navigateTo}
-      />
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors duration-500 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 font-sans selection:bg-purple-500/30 relative">
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <Header 
+          isDark={isDark}
+          toggleTheme={() => setIsDark(!isDark)}
+          toggleMobileMenu={() => setIsMobileMenuOpen(true)}
+          cartCount={cart.reduce((acc, item) => acc + (item.cartQuantity || 1), 0)}
+          onOpenCart={() => setIsCartOpen(true)}
+          onOpenProfile={() => setIsProfileOpen(true)}
+          userProfile={userProfile}
+          onOpenAuth={() => setIsAuthModalOpen(true)}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onSellProduct={() => userProfile ? setIsProductModalOpen(true) : setIsAuthModalOpen(true)}
+          onNavigate={navigateTo}
+        />
 
-      <main className="relative">
-        <motion.div
-          key={currentView}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
+        <main className="relative flex-1">
+          <motion.div
+            key={currentView}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
           {currentView === 'home' ? (
             searchQuery.trim() !== '' ? (
               <div className="container mx-auto px-4 py-8">
@@ -673,7 +674,7 @@ const App = () => {
       {deferredPrompt && (
         <div className="fixed bottom-20 left-4 right-4 z-[9999] bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4 animate-in slide-in-from-bottom-10">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="Elara" className="w-12 h-12 rounded-xl" />
+            <img src="/elara-logo.png" alt="Elara" className="w-12 h-12 rounded-xl" />
             <div>
               <h4 className="font-black dark:text-white">Instalar Elara</h4>
               <p className="text-xs text-zinc-500">Tenha uma experiência mais rápida</p>
@@ -687,6 +688,7 @@ const App = () => {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 };
