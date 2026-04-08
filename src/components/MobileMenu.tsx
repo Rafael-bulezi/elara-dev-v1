@@ -1,13 +1,14 @@
 import React from 'react';
-import { X, Home, ShoppingBag, MessageCircle, User, Globe, Shield, Zap } from 'lucide-react';
+import { X, Home, ShoppingBag, MessageCircle, User, Globe, Shield, Zap, Download } from 'lucide-react';
 
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (view: string) => void;
+  onInstallClick?: () => void;
 }
 
-const MobileMenu = ({ isOpen, onClose, onNavigate }: MobileMenuProps) => (
+const MobileMenu = ({ isOpen, onClose, onNavigate, onInstallClick }: MobileMenuProps) => (
   <>
     <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose} />
     <div className={`fixed top-0 left-0 bottom-0 w-[280px] bg-white dark:bg-zinc-950 z-[70] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -22,6 +23,19 @@ const MobileMenu = ({ isOpen, onClose, onNavigate }: MobileMenuProps) => (
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
+        {onInstallClick && (
+          <button 
+            onClick={() => {
+              onInstallClick();
+              onClose();
+            }}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-2xl font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-purple-500/20"
+          >
+            <Download size={20} />
+            Instalar Aplicativo
+          </button>
+        )}
+
         <nav className="space-y-2">
           {[
             { icon: Home, label: 'Início', view: 'home' },

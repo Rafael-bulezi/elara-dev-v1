@@ -53,8 +53,17 @@ const Header = ({
           onClick={() => window.location.href = '/'}
           className="flex items-center gap-3 group shrink-0"
         >
-          <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform">
-            <img src="/elara-logo.png" alt="Elara" className="w-full h-full object-cover scale-125" referrerPolicy="no-referrer" />
+          <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform bg-purple-600 text-white font-black text-2xl">
+            <img 
+              src="/elara-logo.png" 
+              alt="Elara" 
+              className="w-full h-full object-cover scale-125" 
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.innerHTML = 'E';
+              }} 
+            />
           </div>
           <span className="text-2xl md:text-3xl font-black tracking-tighter dark:text-white">Elara</span>
         </button>

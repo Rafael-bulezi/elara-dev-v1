@@ -17,6 +17,7 @@ import ProfileDrawer from './components/ProfileDrawer';
 import ProductDetailsModal from './components/ProductDetailsModal';
 import ProductFormModal from './components/ProductFormModal';
 import CheckoutModal from './components/CheckoutModal';
+import InstallPrompt from './components/InstallPrompt';
 
 // Views
 import OrdersView from './views/OrdersView';
@@ -83,6 +84,7 @@ const App = () => {
 
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'info'} | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [forceShowInstall, setForceShowInstall] = useState(false);
 
   useEffect(() => {
     const handler = (e: BeforeInstallPromptEvent) => {
@@ -591,6 +593,7 @@ const App = () => {
         onClose={() => setIsMobileMenuOpen(false)}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onNavigate={(view) => navigateTo(view as any)}
+        onInstallClick={() => setForceShowInstall(true)}
       />
 
       <AuthModal 
@@ -671,23 +674,15 @@ const App = () => {
         </div>
       )}
 
-      {deferredPrompt && (
-        <div className="fixed bottom-20 left-4 right-4 z-[9999] bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4 animate-in slide-in-from-bottom-10">
-          <div className="flex items-center gap-4">
-            <img src="/elara-logo.png" alt="Elara" className="w-12 h-12 rounded-xl" referrerPolicy="no-referrer" />
-            <div>
-              <h4 className="font-black dark:text-white">Instalar Elara</h4>
-              <p className="text-xs text-zinc-500">Tenha uma experiência mais rápida</p>
-            </div>
-          </div>
-          <button 
-            onClick={handleInstallClick}
-            className="bg-purple-600 text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-purple-700 transition-colors"
-          >
-            Instalar
-          </button>
-        </div>
-      )}
+      {/* Install Prompt */}
+      <InstallPrompt 
+        deferredPrompt={deferredPrompt} 
+        clearPrompt={() => {
+          setDeferredPrompt(null);
+          setForceShowInstall(false);
+        }}
+        forceShow={forceShowInstall}
+      />
       </div>
     </div>
   );

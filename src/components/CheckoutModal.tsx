@@ -110,6 +110,11 @@ const CheckoutModal = ({
 
   const handleConfirmOrder = async () => {
     try {
+      if (!userProfile && checkoutType === 'app') {
+        setError("Por favor, faça login para finalizar a compra pelo App.");
+        return;
+      }
+
       if (checkoutType === 'whatsapp') {
         window.open(generateWhatsAppLink(), '_blank');
         onOrderComplete();
@@ -197,11 +202,6 @@ const CheckoutModal = ({
         
         setIsUploading(false);
         setStep(4);
-        return;
-      }
-
-      if (!userProfile) {
-        setError("Por favor, faça login para finalizar a compra pelo App.");
         return;
       }
     } catch (error) {
