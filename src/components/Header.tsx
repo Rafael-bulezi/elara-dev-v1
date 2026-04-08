@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, ShoppingCart, Moon, Sun, Menu, PlusCircle } from 'lucide-react';
 import { UserProfile } from '../types';
 import { getAvatarUrl } from '../utils/avatar';
+import logo from '../assets/elara-logo.png';
 
 interface HeaderProps {
   isDark: boolean;
@@ -55,7 +56,7 @@ const Header = ({
         >
           <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform bg-purple-600 text-white font-black text-2xl">
             <img 
-              src="/elara-logo.png" 
+              src={logo} 
               alt="Elara" 
               className="w-full h-full object-cover scale-125" 
               referrerPolicy="no-referrer"

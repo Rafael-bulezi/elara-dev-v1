@@ -95,14 +95,6 @@ const App = () => {
     return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
 
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to the install prompt: ${outcome}`);
-    setDeferredPrompt(null);
-  };
-
   const showNotification = (message: string, type: 'success' | 'info' = 'info') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 5000);
@@ -240,7 +232,7 @@ const App = () => {
   }, [userProfile]);
 
   // Cart Handlers
-  const addToCart = (product: Product) => {
+  const addToCart = React.useCallback((product: Product) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -255,9 +247,9 @@ const App = () => {
       return [...prev, { ...product, cartQuantity: 1 }];
     });
     setIsCartOpen(true);
-  };
+  }, []);
 
-  const updateCartQuantity = (id: string, delta: number) => {
+  const updateCartQuantity = React.useCallback((id: string, delta: number) => {
     setCart(prev => prev.map(item => {
       if (item.id === id) {
         const newQty = Math.min(item.stock || 1, Math.max(1, (item.cartQuantity || 1) + delta));
@@ -265,11 +257,11 @@ const App = () => {
       }
       return item;
     }));
-  };
+  }, []);
 
-  const removeFromCart = (id: string) => {
+  const removeFromCart = React.useCallback((id: string) => {
     setCart(prev => prev.filter(item => item.id !== id));
-  };
+  }, []);
 
   // Product Handlers
   const handleSaveProduct = async (productData: Partial<Product> & { imageUrl?: string }) => {
@@ -372,25 +364,27 @@ const App = () => {
   };
 
   // Filtering
-  const filteredProducts = products.filter(p => {
-    const query = searchQuery.toLowerCase();
-    const matchesSearch = 
-      p.title.toLowerCase().includes(query) || 
-      (p.description && p.description.toLowerCase().includes(query)) ||
-      (p.category && p.category.toLowerCase().includes(query)) ||
-      (p.sellerName && p.sellerName.toLowerCase().includes(query));
-      
-    const matchesCategory = !activeCategory || p.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  }).sort((a, b) => {
-    if (sortBy === 'price-asc') return a.price - b.price;
-    if (sortBy === 'price-desc') return b.price - a.price;
-    if (sortBy === 'promo') return (b.emPromocao ? 1 : 0) - (a.emPromocao ? 1 : 0);
-    return b.createdAt - a.createdAt;
-  });
+  const filteredProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        p.title.toLowerCase().includes(query) || 
+        (p.description && p.description.toLowerCase().includes(query)) ||
+        (p.category && p.category.toLowerCase().includes(query)) ||
+        (p.sellerName && p.sellerName.toLowerCase().includes(query));
+        
+      const matchesCategory = !activeCategory || p.category === activeCategory;
+      return matchesSearch && matchesCategory;
+    }).sort((a, b) => {
+      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-desc') return b.price - a.price;
+      if (sortBy === 'promo') return (b.emPromocao ? 1 : 0) - (a.emPromocao ? 1 : 0);
+      return b.createdAt - a.createdAt;
+    });
+  }, [products, searchQuery, activeCategory, sortBy]);
 
   // Navigation
-  const navigateTo = (view: typeof currentView) => {
+  const navigateTo = React.useCallback((view: typeof currentView) => {
     setCurrentView(view);
     if (view === 'home' || view === 'messages') {
       setActiveTab(view);
@@ -398,7 +392,7 @@ const App = () => {
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
     window.scrollTo(0, 0);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors duration-500 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 font-sans selection:bg-purple-500/30 relative">
