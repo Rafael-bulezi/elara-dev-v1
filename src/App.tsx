@@ -85,6 +85,31 @@ const App = () => {
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'info'} | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [forceShowInstall, setForceShowInstall] = useState(false);
+  const [appLogo, setAppLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAdminLogo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('email', '7dark7cloud7@gmail.com')
+          .single();
+        
+        if (error) {
+          console.error('Error fetching admin logo:', error);
+          return;
+        }
+
+        if (data && data.avatar_url) {
+          setAppLogo(data.avatar_url);
+        }
+      } catch (err) {
+        console.error('Failed to fetch admin logo', err);
+      }
+    };
+    fetchAdminLogo();
+  }, []);
 
   useEffect(() => {
     const handler = (e: BeforeInstallPromptEvent) => {
@@ -142,6 +167,16 @@ const App = () => {
                 address: profile.address
               } as UserProfile);
             }
+
+            // Trigger install prompt after successful login if not already installed
+            const isStandAlone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 ('standalone' in window.navigator && !!window.navigator.standalone);
+            if (!isStandAlone) {
+              setTimeout(() => {
+                setForceShowInstall(true);
+              }, 2000); // Small delay so it feels natural after login
+            }
+
           } catch (err) {
             console.error('Error in auth listener profile fetch:', err);
           }
@@ -410,6 +445,7 @@ const App = () => {
           setSearchQuery={setSearchQuery}
           onSellProduct={() => userProfile ? setIsProductModalOpen(true) : setIsAuthModalOpen(true)}
           onNavigate={navigateTo}
+          appLogo={appLogo}
         />
 
         <main className="relative flex-1">
@@ -588,6 +624,7 @@ const App = () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onNavigate={(view) => navigateTo(view as any)}
         onInstallClick={() => setForceShowInstall(true)}
+        appLogo={appLogo}
       />
 
       <AuthModal 
@@ -676,6 +713,7 @@ const App = () => {
           setForceShowInstall(false);
         }}
         forceShow={forceShowInstall}
+        appLogo={appLogo}
       />
       </div>
     </div>

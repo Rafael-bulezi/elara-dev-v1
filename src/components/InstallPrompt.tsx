@@ -7,9 +7,10 @@ interface InstallPromptProps {
   deferredPrompt: BeforeInstallPromptEvent | null;
   clearPrompt: () => void;
   forceShow?: boolean;
+  appLogo?: string | null;
 }
 
-const InstallPrompt = ({ deferredPrompt, clearPrompt, forceShow }: InstallPromptProps) => {
+const InstallPrompt = ({ deferredPrompt, clearPrompt, forceShow, appLogo }: InstallPromptProps) => {
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -59,7 +60,7 @@ const InstallPrompt = ({ deferredPrompt, clearPrompt, forceShow }: InstallPrompt
       <div className="flex items-start gap-4 pr-6">
         <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-black text-3xl">
           <img 
-            src={logo} 
+            src={appLogo || logo} 
             alt="Elara" 
             className="w-full h-full rounded-2xl object-cover" 
             referrerPolicy="no-referrer" 
