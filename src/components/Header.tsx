@@ -67,6 +67,7 @@ const Header = ({
             />
           </div>
           <span className="text-2xl md:text-3xl font-black tracking-tighter dark:text-white">Elara</span>
+          <span className="text-[10px] bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-full font-black uppercase tracking-wider ml-1">Beta</span>
         </button>
 
         {/* Search Bar - Desktop */}

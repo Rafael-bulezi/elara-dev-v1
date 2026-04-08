@@ -16,6 +16,7 @@ const MobileMenu = ({ isOpen, onClose, onNavigate, onInstallClick }: MobileMenuP
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-black">E</div>
           <span className="font-black dark:text-white">ELARA</span>
+          <span className="text-[10px] bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">BETA</span>
         </div>
         <button onClick={onClose} className="p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl transition-colors">
           <X size={20} />

@@ -71,7 +71,9 @@ const InstallPrompt = ({ deferredPrompt, clearPrompt, forceShow }: InstallPrompt
         </div>
         
         <div className="flex-1">
-          <h4 className="font-black text-lg dark:text-white leading-tight mb-1">Instalar o App Elara</h4>
+          <h4 className="font-black text-lg dark:text-white leading-tight mb-1">
+            Instalar o App Elara <span className="text-purple-600 text-sm">Beta</span>
+          </h4>
           
           {isIOS ? (
             <div className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2 mt-2">
