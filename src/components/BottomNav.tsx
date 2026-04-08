@@ -49,7 +49,7 @@ const BottomNav = ({
       <div className="relative -translate-y-5">
         <button 
           onClick={onSellProduct} 
-          className="w-14 h-14 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl flex items-center justify-center shadow-2xl shadow-black/20 dark:shadow-white/20 active:scale-90 transition-all duration-500 border-4 border-white dark:border-zinc-950"
+          className="w-14 h-14 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl flex items-center justify-center active:scale-90 transition-all duration-500 border-4 border-white dark:border-zinc-950"
         >
           <PlusCircle size={28} />
         </button>

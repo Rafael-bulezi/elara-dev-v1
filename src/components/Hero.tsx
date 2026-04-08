@@ -80,9 +80,9 @@ const Hero = () => (
             </div>
             
             {/* Floating Badges */}
-            <div className="absolute -top-6 -right-6 md:-top-12 md:-right-12 bg-white dark:bg-zinc-900 p-4 md:p-8 rounded-2xl md:rounded-[32px] shadow-2xl border border-zinc-100 dark:border-zinc-800 animate-bounce duration-[4000ms]">
+            <div className="absolute -top-6 -right-6 md:-top-12 md:-right-12 bg-white dark:bg-zinc-900 p-4 md:p-8 rounded-2xl md:rounded-[32px] border border-zinc-100 dark:border-zinc-800 animate-bounce duration-[4000ms]">
               <div className="flex items-center gap-3 md:gap-5">
-                <div className="w-10 h-10 md:w-14 md:h-14 bg-emerald-500 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+                <div className="w-10 h-10 md:w-14 md:h-14 bg-emerald-500 rounded-xl md:rounded-2xl flex items-center justify-center text-white">
                   <ShieldCheck size={20} className="md:size-8" />
                 </div>
                 <div>
@@ -92,7 +92,7 @@ const Hero = () => (
               </div>
             </div>
             
-            <div className="absolute -bottom-6 -left-6 md:-bottom-12 md:-left-12 bg-purple-600 p-4 md:p-8 rounded-2xl md:rounded-[32px] shadow-2xl animate-pulse duration-[3000ms]">
+            <div className="absolute -bottom-6 -left-6 md:-bottom-12 md:-left-12 bg-purple-600 p-4 md:p-8 rounded-2xl md:rounded-[32px] animate-pulse duration-[3000ms]">
               <div className="flex items-center gap-3 md:gap-5">
                 <div className="w-10 h-10 md:w-14 md:h-14 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center text-white backdrop-blur-md">
                   <Zap size={20} className="md:size-8" />

@@ -8,7 +8,7 @@ const Footer = () => (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center shadow-xl shadow-purple-500/20">
+            <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center">
               <span className="text-white font-black text-2xl">E</span>
             </div>
             <span className="text-3xl font-black tracking-tighter">ELARA</span>
@@ -65,7 +65,7 @@ const Footer = () => (
               placeholder="seu@email.com" 
               className="w-full bg-zinc-100 dark:bg-white/5 border-2 border-zinc-200 dark:border-white/10 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all"
             />
-            <button className="absolute right-2 top-2 bottom-2 bg-purple-600 hover:bg-purple-700 text-white px-6 rounded-xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-purple-500/20">
+            <button className="absolute right-2 top-2 bottom-2 bg-purple-600 hover:bg-purple-700 text-white px-6 rounded-xl font-black text-sm transition-all active:scale-95">
               Assinar
             </button>
           </div>
