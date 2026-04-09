@@ -58,19 +58,12 @@ const InstallPrompt = ({ deferredPrompt, clearPrompt, forceShow, appLogo }: Inst
       </button>
       
       <div className="flex items-start gap-4 pr-6">
-        <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-black text-3xl overflow-hidden">
+        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-black text-3xl overflow-hidden">
           <img 
             src={appLogo || CLOUD_LOGO} 
             alt="Elara" 
-            className="w-full h-full object-cover" 
+            className="w-full h-full object-contain" 
             referrerPolicy="no-referrer" 
-            onError={(e) => { 
-              const target = e.currentTarget;
-              const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%239333ea'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='300' font-weight='bold' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'%3EE%3C/text%3E%3C/svg%3E";
-              if (target.src !== fallbackSvg) {
-                target.src = fallbackSvg;
-              }
-            }} 
           />
         </div>
         

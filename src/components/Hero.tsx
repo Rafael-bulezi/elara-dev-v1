@@ -23,10 +23,12 @@ const Hero = () => (
     <div className="container mx-auto px-4 relative z-10">
       <div className="flex flex-col lg:flex-row items-center gap-16 md:gap-24">
         <div className="flex-1 text-center lg:text-left space-y-8 md:space-y-12">
-          <div className="flex flex-col items-center lg:items-start gap-4 mb-6">
-            <p className="text-purple-600 dark:text-purple-300/80 text-sm italic font-medium animate-in fade-in duration-1000">
-              "{evangelisticVerses[0]}"
-            </p>
+          <div className="flex flex-col items-center lg:items-start gap-4 mb-8">
+            <div className="inline-block px-4 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50">
+              <p className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-zinc-700 dark:from-purple-300 dark:to-zinc-300 text-sm italic font-medium">
+                "{evangelisticVerses[0]}"
+              </p>
+            </div>
             <div className="inline-flex items-center gap-3 bg-white/50 dark:bg-white/5 backdrop-blur-xl border border-purple-500/20 dark:border-white/10 px-5 py-2.5 rounded-2xl text-purple-700 dark:text-purple-400 text-xs md:text-sm font-black uppercase tracking-[0.3em] animate-in fade-in slide-in-from-bottom-4 duration-700">
               <Zap size={16} className="animate-pulse" />
               Marketplace #1 de Angola

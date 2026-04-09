@@ -16,19 +16,12 @@ const MobileMenu = ({ isOpen, onClose, onNavigate, onInstallClick, appLogo }: Mo
     <div className={`fixed top-0 left-0 bottom-0 w-[280px] bg-white dark:bg-zinc-950 z-[70] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-black shrink-0 overflow-hidden">
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-white font-black shrink-0 overflow-hidden">
             <img 
               src={appLogo || CLOUD_LOGO} 
               alt="Elara" 
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-contain" 
               referrerPolicy="no-referrer"
-              onError={(e) => {
-                const target = e.currentTarget;
-                const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%239333ea'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='300' font-weight='bold' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'%3EE%3C/text%3E%3C/svg%3E";
-                if (target.src !== fallbackSvg) {
-                  target.src = fallbackSvg;
-                }
-              }} 
             />
           </div>
           <span className="font-black dark:text-white">ELARA</span>

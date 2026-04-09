@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { motion } from 'motion/react';
 import { UserProfile, Product, Chat, CartItem, BeforeInstallPromptEvent } from './types';
-import { initialProducts, categories } from './constants';
+import { categories } from './constants';
+import { CLOUD_LOGO } from './constants/logo';
 
 // Components
 import Header from './components/Header';
@@ -56,7 +57,7 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('home');
   
   // Data State
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -85,7 +86,7 @@ const App = () => {
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'info'} | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [forceShowInstall, setForceShowInstall] = useState(false);
-  const [appLogo, setAppLogo] = useState<string | null>(null);
+  const [appLogo, setAppLogo] = useState<string | null>(CLOUD_LOGO);
 
   useEffect(() => {
     const fetchAdminLogo = async () => {
@@ -96,11 +97,6 @@ const App = () => {
           .eq('email', '7dark7cloud7@gmail.com')
           .single();
         
-        if (error) {
-          console.error('Error fetching admin logo:', error);
-          return;
-        }
-
         if (data && data.avatar_url) {
           setAppLogo(data.avatar_url);
         }
@@ -224,7 +220,7 @@ const App = () => {
 
       if (error) {
         console.error('Error fetching products:', error);
-        setProducts(initialProducts);
+        setProducts([]);
       } else {
         if (data && data.length > 0) {
           setProducts(((data || []) as Record<string, unknown>[]).map((p) => ({
@@ -247,7 +243,7 @@ const App = () => {
             createdAt: new Date(p.created_at as string).getTime()
           } as Product)));
         } else {
-          setProducts(initialProducts);
+          setProducts([]);
         }
       }
     };

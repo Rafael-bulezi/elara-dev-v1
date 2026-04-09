@@ -56,19 +56,12 @@ const Header = ({
           onClick={() => window.location.href = '/'}
           className="flex items-center gap-3 group shrink-0"
         >
-          <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform bg-purple-600 text-white font-black text-2xl shrink-0">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform bg-white text-white font-black text-2xl shrink-0">
             <img 
               src={appLogo || CLOUD_LOGO} 
               alt="Elara" 
-              className="w-full h-full object-cover scale-125" 
+              className="w-full h-full object-contain" 
               referrerPolicy="no-referrer"
-              onError={(e) => {
-                const target = e.currentTarget;
-                const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%239333ea'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='300' font-weight='bold' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'%3EE%3C/text%3E%3C/svg%3E";
-                if (target.src !== fallbackSvg) {
-                  target.src = fallbackSvg;
-                }
-              }} 
             />
           </div>
           <span className="text-2xl md:text-3xl font-black tracking-tighter dark:text-white">Elara</span>
