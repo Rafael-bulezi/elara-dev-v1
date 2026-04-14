@@ -12,37 +12,39 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState<'buyer' | 'seller'>('buyer');
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
 
   if (!isOpen) return null;
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  const handlePhoneAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLogin && password !== confirmPassword) {
+    if (password !== confirmPassword) {
       alert("As senhas não coincidem.");
       return;
     }
     setLoading(true);
     try {
+      const dummyEmail = `${phone.replace(/\D/g, '')}@elara.ao`;
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: dummyEmail, password });
         if (error) throw error;
       } else {
         const { error } = await supabase.auth.signUp({ 
-          email, 
+          email: dummyEmail, 
           password,
           options: { 
             data: { 
               role,
-              full_name: fullName 
+              full_name: fullName,
+              phone: phone
             } 
           }
         });
         if (error) throw error;
-        alert('Conta criada! Verifique seu e-mail para confirmar.');
+        alert('Conta criada com sucesso!');
       }
       onClose();
     } catch (error) {
@@ -51,6 +53,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    const adminWhatsApp = "2449XXXXXXXXX"; // Replace with your actual number
+    const message = `Olá, esqueci minha senha da conta Elara. Meu número é ${phone}.`;
+    window.open(`https://wa.me/${adminWhatsApp}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleGoogleAuth = async () => {
@@ -133,7 +141,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             </div>
           )}
 
-          <form onSubmit={handleEmailAuth} className="space-y-4 mb-6">
+          <form onSubmit={handlePhoneAuth} className="space-y-4 mb-6">
             {!isLogin && (
               <input 
                 type="text" 
@@ -145,10 +153,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               />
             )}
             <input 
-              type="email" 
-              placeholder="E-mail" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="tel" 
+              placeholder="Número de Telefone" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
               required
             />
@@ -160,16 +168,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
               required
             />
-            {!isLogin && (
-              <input 
-                type="password" 
-                placeholder="Confirmar Senha" 
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
-                required
-              />
-            )}
+            <input 
+              type="password" 
+              placeholder="Confirmar Senha" 
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
+              required
+            />
             <button 
               type="submit"
               disabled={loading}
@@ -183,6 +189,17 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               ) : (isLogin ? 'Entrar' : 'Criar Conta')}
             </button>
           </form>
+
+          {isLogin && (
+            <div className="mt-4 text-center">
+              <button 
+                onClick={handleForgotPassword}
+                className="text-xs font-medium text-purple-600 hover:text-purple-800 transition-colors"
+              >
+                Esqueceu a senha? Contacte o Admin via WhatsApp
+              </button>
+            </div>
+          )}
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
