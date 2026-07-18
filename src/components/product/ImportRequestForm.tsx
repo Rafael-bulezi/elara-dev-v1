@@ -8,7 +8,7 @@ import { UserProfile } from '../../types';
 interface ImportRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: { name: string; description: string; budget: string; whatsapp: string }) => Promise<void>;
   userProfile?: UserProfile | null;
 }
 
@@ -43,9 +43,10 @@ const ImportRequestForm = ({ isOpen, onClose, onSubmit, userProfile }: ImportReq
 
       await onSubmit(formData); // This triggers the success toast in App.tsx
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Supabase Submission Error:", error);
-      alert(`Erro ao enviar pedido: ${error.message || 'Erro desconhecido'}\n\nDetalhes: ${JSON.stringify(error)}`);
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
+      alert(`Erro ao enviar pedido: ${message}\n\nDetalhes: ${JSON.stringify(error)}`);
     } finally {
       setLoading(false);
     }

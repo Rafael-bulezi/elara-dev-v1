@@ -3,7 +3,7 @@ import { supabase } from './lib/supabase';
 import { motion } from 'motion/react';
 import { viewVariants } from './utils/animations';
 import { UserProfile, Product, Chat, CartItem, BeforeInstallPromptEvent } from './types';
-import { categories } from './constants';
+import { categories, initialProducts } from './constants';
 import { CLOUD_LOGO } from './constants/logo';
 
 // Components
@@ -23,6 +23,8 @@ import InstallPrompt from './components/common/InstallPrompt';
 import DevTools from './components/common/DevTools';
 import ImportRequestForm from './components/product/ImportRequestForm';
 import ImportFeed from './components/product/ImportFeed';
+import ProductListingView from './views/ProductListingView';
+import { DiscoveryFilters } from './types/discovery';
 import { Globe } from 'lucide-react';
 
 // Views
@@ -64,9 +66,21 @@ const App = () => {
   // Data State
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'relevance' | 'price-asc' | 'price-desc' | 'promo'>('relevance');
+  const [discoveryFilters, setDiscoveryFilters] = useState<DiscoveryFilters>({
+    query: '',
+    category: null,
+    minPrice: null,
+    maxPrice: null,
+    condition: null,
+    verified: false,
+    localOnly: false,
+    importOnly: false,
+    sort: 'relevance'
+  });
+
+  const searchQuery = discoveryFilters.query;
+  const setSearchQuery = (q: string) => setDiscoveryFilters(prev => ({ ...prev, query: q }));
+  const setActiveCategory = (cat: string | null) => setDiscoveryFilters(prev => ({ ...prev, category: cat }));
   
   // Selection State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -97,7 +111,7 @@ const App = () => {
   useEffect(() => {
     const fetchAdminLogo = async () => {
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('avatar_url')
           .eq('email', '7dark7cloud7@gmail.com')
@@ -124,7 +138,7 @@ const App = () => {
     const isStandAlone = window.matchMedia('(display-mode: standalone)').matches || 
                          ('standalone' in window.navigator && !!window.navigator.standalone);
     
-    let timers: NodeJS.Timeout[] = [];
+    const timers: NodeJS.Timeout[] = [];
     if (!isStandAlone) {
       const shownCount = parseInt(localStorage.getItem('installPromptCount') || '0');
       
@@ -226,7 +240,8 @@ const App = () => {
 
       if (error) {
         console.error('Error fetching products:', error);
-        setProducts([]);
+        console.warn('Falling back to mock products');
+        setProducts(initialProducts);
       } else {
         if (data && data.length > 0) {
           setProducts(((data || []) as Record<string, unknown>[]).map((p) => ({
@@ -249,7 +264,7 @@ const App = () => {
             createdAt: new Date(p.created_at as string).getTime()
           } as Product)));
         } else {
-          setProducts([]);
+          setProducts(initialProducts);
         }
       }
     };
@@ -424,26 +439,6 @@ const App = () => {
     setCurrentView('chat');
   };
 
-  // Filtering
-  const filteredProducts = React.useMemo(() => {
-    return products.filter(p => {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = 
-        p.title.toLowerCase().includes(query) || 
-        (p.description && p.description.toLowerCase().includes(query)) ||
-        (p.category && p.category.toLowerCase().includes(query)) ||
-        (p.sellerName && p.sellerName.toLowerCase().includes(query));
-        
-      const matchesCategory = !activeCategory || p.category === activeCategory;
-      return matchesSearch && matchesCategory;
-    }).sort((a, b) => {
-      if (sortBy === 'price-asc') return a.price - b.price;
-      if (sortBy === 'price-desc') return b.price - a.price;
-      if (sortBy === 'promo') return (b.emPromocao ? 1 : 0) - (a.emPromocao ? 1 : 0);
-      return b.createdAt - a.createdAt;
-    });
-  }, [products, searchQuery, activeCategory, sortBy]);
-
   // Navigation
   const navigateTo = React.useCallback((view: typeof currentView) => {
     setCurrentView(view);
@@ -455,7 +450,7 @@ const App = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleImportSubmit = async (data: any) => {
+  const handleImportSubmit = async (data: { name: string; description: string; budget: string; whatsapp: string }) => {
     console.log("Import Request Submitted:", data);
     showNotification("Pedido de importação enviado com sucesso! Entraremos em contacto em breve.", "success");
     return Promise.resolve();
@@ -490,27 +485,39 @@ const App = () => {
             exit="exit"
           >
           {currentView === 'home' ? (
-            true || userProfile?.role === 'intermediary' ? (
+            userProfile?.role === 'intermediary' ? (
               <ImportFeed />
             ) : searchQuery.trim() !== '' ? (
-              <div className="container mx-auto px-4 py-8">
-                <h2 className="text-2xl font-bold dark:text-white mb-6">Resultados para "{searchQuery}"</h2>
-                {filteredProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {filteredProducts.map(p => (
-                      <ProductCard key={p.id} product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-zinc-500 dark:text-zinc-400">Nenhum produto encontrado para "{searchQuery}".</p>
-                  </div>
-                )}
-              </div>
+              <ProductListingView
+                products={products}
+                filters={discoveryFilters}
+                onChangeFilters={setDiscoveryFilters}
+                onBack={() => {
+                  setSearchQuery('');
+                  navigateTo('home');
+                }}
+                onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
+                onAddToCart={addToCart}
+              />
             ) : (
               <div className="space-y-8">
                 <Hero />
-                
+
+                {/* Category Pills */}
+                <section className="px-4">
+                  <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2">
+                    {categories.map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => { setActiveCategory(cat.name); setCurrentView('category'); }}
+                        className="shrink-0 px-5 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm font-black text-zinc-700 dark:text-zinc-300 hover:border-purple-500/50 hover:text-purple-600 dark:hover:text-purple-400 transition-all shadow-sm"
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
                 {/* Featured Products */}
                 <section className="px-4">
                   <h2 className="text-xl font-bold dark:text-white mb-4">Destaques</h2>
@@ -534,7 +541,7 @@ const App = () => {
                       <p className="text-purple-200 font-medium">
                         Peça uma importação personalizada diretamente da China, EUA ou Europa com as melhores taxas do mercado.
                       </p>
-                      <button 
+                      <button
                         onClick={() => setIsImportModalOpen(true)}
                         className="bg-white text-[#5A189A] px-6 py-3 rounded-2xl font-black text-sm hover:bg-zinc-100 active:scale-95 transition-all inline-flex items-center gap-2"
                       >
@@ -562,22 +569,17 @@ const App = () => {
               </div>
             )
           ) : currentView === 'category' ? (
-            <div className="container mx-auto px-4 py-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold dark:text-white">{activeCategory}</h2>
-                <select onChange={(e) => setSortBy(e.target.value as 'relevance' | 'price-asc' | 'price-desc' | 'promo')} className="bg-white dark:bg-zinc-800 border rounded-lg px-3 py-1 text-sm">
-                  <option value="relevance">Relevância</option>
-                  <option value="price-asc">Mais Baratos</option>
-                  <option value="price-desc">Mais Caros</option>
-                  <option value="promo">Promoções</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {filteredProducts.map(p => (
-                  <ProductCard key={p.id} product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
-                ))}
-              </div>
-            </div>
+            <ProductListingView
+              products={products}
+              filters={discoveryFilters}
+              onChangeFilters={setDiscoveryFilters}
+              onBack={() => {
+                setActiveCategory(null);
+                navigateTo('home');
+              }}
+              onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
+              onAddToCart={addToCart}
+            />
           ) : (
             null
           )}
@@ -712,11 +714,16 @@ const App = () => {
         onNavigate={navigateTo}
       />
 
-      <ProductDetailsModal 
+      <ProductDetailsModal
         isOpen={isProductDetailsOpen}
         onClose={() => setIsProductDetailsOpen(false)}
         product={selectedProduct}
         onAddToCart={addToCart}
+        onBuyNow={(p) => {
+          addToCart(p);
+          setIsProductDetailsOpen(false);
+          setIsCheckoutOpen(true);
+        }}
         onContactSeller={(id) => {
           setIsProductDetailsOpen(false);
           startChat(id);

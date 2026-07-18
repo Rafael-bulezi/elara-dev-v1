@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Globe, Clock, Package, MessageCircle, AlertCircle } from 'lucide-react';
+import { Globe, Clock, Package, MessageCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { motion } from 'motion/react';
 
@@ -11,8 +11,17 @@ const timeAgo = (dateStr: string) => {
   return `Publicado há ${Math.floor(diff / 1440)} dia(s)`;
 };
 
+interface ImportRequest {
+  id: string;
+  item_name: string;
+  description: string;
+  budget: string;
+  whatsapp: string;
+  created_at: string;
+}
+
 const ImportFeed = () => {
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<ImportRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +44,7 @@ const ImportFeed = () => {
     fetchRequests();
   }, []);
 
-  const handleInterested = (req: any) => {
+  const handleInterested = (req: ImportRequest) => {
     // Clean phone number: remove all non-numeric characters
     const cleanPhone = req.whatsapp.replace(/\D/g, '');
     const text = `Olá! Vi o seu pedido de *${req.item_name}* no Elara e gostaria de ajudar com a importação.`;
