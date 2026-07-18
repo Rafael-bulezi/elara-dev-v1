@@ -1,0 +1,219 @@
+**✅ Task Split for Elara E-commerce App**  
+**4 Agents | Highly Detailed Breakdown**
+
+Here’s a clean, professional, and parallelizable split into **4 specialized agents**. Each agent has a clear scope, deliverables, tech constraints, and collaboration rules.
+
+---
+
+### **Project Overview (for all agents)**
+
+**Project Name:** Elara  
+**Goal:** Build a modern, mobile-first e-commerce platform like Amazon, localized for Angola.  
+**Tech Stack (Mandatory for all agents):**
+- Next.js 15 (App Router) + TypeScript
+- Tailwind CSS + shadcn/ui
+- Supabase (Auth + Database + Storage)
+- Folder structure: `app/`, `components/`, `lib/`, `types/`, `hooks/`
+
+**Shared Rules (All Agents Must Follow):**
+- Use Portuguese as primary language in UI
+- All prices in **Kwanza (Kz)** format (e.g., `45.900 Kz`)
+- Mobile-first design
+- Use shadcn/ui components as much as possible
+- Create reusable components in `/components`
+- Define shared TypeScript types in `/types`
+- All agents must document their work clearly
+
+---
+
+### **Agent 1: Design System + Homepage + Core Layouts**
+
+**Role:** Build the visual foundation and the main entry point of the app.
+
+**Responsibilities:**
+- Create the full **Design System** (colors, typography, buttons, cards, badges, etc.)
+- Build the **Homepage** (hero, category pills, offers section, product cards)
+- Build the **global layout** (Top Navigation, Footer, Mobile Bottom Nav)
+- Create reusable **ProductCard** component (used everywhere)
+- Set up theme/colors (use Angola-inspired palette: deep navy + yellow/gold accents)
+
+**Key Deliverables:**
+1. `app/globals.css` + design tokens
+2. `components/ui/` — extended shadcn components if needed
+3. `components/ProductCard.tsx` (highly reusable)
+4. `app/page.tsx` (Homepage)
+5. `components/layout/Navbar.tsx` and `MobileBottomNav.tsx`
+6. Full documentation of the design system
+
+**Specific Screens/Components:**
+- Sticky Navbar (Logo "Elara", Search, Location, Account, Cart)
+- Hero banner with Luanda image + CTA
+- Horizontal category pills
+- "Ofertas do Dia" section (horizontal scroll on mobile)
+- Reusable Product Card with:
+  - Image
+  - Name
+  - Price in Kz
+  - Old price + discount
+  - Delivery badge ("Entrega em 2h em Luanda")
+  - Rating stars
+
+**Success Criteria:**
+- Homepage looks premium and loads fast
+- ProductCard is flexible enough to be used in grids and horizontal scrolls
+- Fully responsive (desktop + mobile)
+
+---
+
+### **Agent 2: Product Discovery (Categories, Filters, Search, PLP, PDP)**
+
+**Role:** Handle everything related to browsing and finding products.
+
+**Responsibilities:**
+- Build **Product Listing Page (PLP)** with left sidebar filters
+- Build **Product Detail Page (PDP)**
+- Implement **Search** functionality (basic + suggestions)
+- Create **Category pages**
+- Build advanced **Filters** (Price, Brand, Rating, Delivery speed, Seller type)
+
+**Key Deliverables:**
+1. `app/category/[slug]/page.tsx` (PLP)
+2. `app/product/[slug]/page.tsx` (PDP)
+3. `components/filters/` folder (SidebarFilters + MobileFiltersSheet)
+4. Search bar with suggestions component
+5. Filter components:
+   - Price range slider
+   - Brand checkboxes
+   - Rating filter
+   - Delivery options
+   - "Vendedores Angolanos Verificados" toggle
+
+**Specific Features:**
+- Left sidebar filters on desktop (becomes bottom sheet on mobile)
+- Sort options (Mais Relevantes, Menor Preço, etc.)
+- Breadcrumb navigation
+- Product grid (responsive)
+- On PDP: Multiple images, description, specs, "Adicionar ao carrinho", "Comprar agora", WhatsApp contact button
+
+**Success Criteria:**
+- Filters work smoothly
+- Mobile filter experience is excellent (bottom sheet)
+- PDP feels complete and trustworthy
+
+---
+
+### **Agent 3: Shopping Flow (Cart, Checkout, Orders, User Account)**
+
+**Role:** Handle the entire purchase journey after the user adds items to cart.
+
+**Responsibilities:**
+- Shopping Cart
+- Checkout flow
+- Order confirmation + Order history
+- User account pages
+
+**Key Deliverables:**
+1. `app/cart/page.tsx`
+2. `app/checkout/page.tsx`
+3. `app/account/orders/page.tsx`
+4. `app/account/profile/page.tsx`
+5. Mini cart (dropdown or sheet)
+6. Order success page
+
+**Specific Features to Build:**
+- **Cart:**
+  - List of items with quantity adjuster
+  - Price summary
+  - Delivery estimate
+  - "Finalizar Compra" button
+- **Checkout:**
+  - Delivery address form
+  - Delivery method selection (Entrega Rápida Luanda / Províncias / Recolha)
+  - Payment method selection:
+    - Multicaixa Express (QR simulation)
+    - Referência Multicaixa
+    - Pagamento na entrega (COD)
+  - Order summary
+- **Orders:** List of past orders with status
+
+**Success Criteria:**
+- Checkout flow is clear and not overwhelming
+- Payment selection screen feels realistic for Angola
+- Cart persists (use localStorage + Supabase sync later)
+
+---
+
+### **Agent 4: Backend, Data Layer, Auth & Angola Integration**
+
+**Role:** Build the foundation that makes everything work (data + logic).
+
+**Responsibilities:**
+- Supabase setup + schema design
+- Authentication
+- Product data seeding
+- API routes / Server actions
+- Payment simulation logic
+- Shared types and utilities
+
+**Key Deliverables:**
+1. Supabase database schema (tables: `products`, `categories`, `orders`, `order_items`, `users`, `reviews`)
+2. Seed data script (minimum 80–100 realistic products relevant to Angola)
+3. Authentication setup (email + Google)
+4. Server actions for:
+   - Add to cart
+   - Create order
+   - Get filtered products
+5. Payment simulation logic (especially Multicaixa flow)
+6. Shared TypeScript types in `/types`
+
+**Database Tables (Minimum):**
+- `products`
+- `categories`
+- `product_variants` (optional)
+- `orders`
+- `order_items`
+- `reviews`
+
+**Success Criteria:**
+- Clean database schema
+- Realistic seed data for Angola market
+- Auth works
+- Clear API contracts that other agents can use
+
+---
+
+### **Collaboration Rules Between Agents**
+
+| Agent | Depends On | Provides To |
+|-------|------------|-------------|
+| **Agent 1** | None | ProductCard, Navbar, Design System |
+| **Agent 2** | Agent 1 (ProductCard) | PLP, PDP, Filters |
+| **Agent 3** | Agent 1 + Agent 2 | Cart & Checkout use ProductCard + product data |
+| **Agent 4** | None | Types, Database schema, Auth, Seed data |
+
+**Communication Protocol:**
+- All agents must use the same **TypeScript types** from `/types`
+- Create a `SHARED.md` file in the root with:
+  - Component API contracts
+  - Data shapes
+  - Folder conventions
+- Use clear naming (e.g., `Product`, `CartItem`, `Order`)
+
+---
+
+### **Recommended Order of Work**
+
+1. **Agent 1** starts first (Design System + Homepage + ProductCard)
+2. **Agent 4** starts in parallel (Database schema + seed data + types)
+3. **Agent 2** starts after Agent 1 delivers ProductCard
+4. **Agent 3** starts after Agent 2 has basic product data
+
+---
+
+Would you like me to now create:
+
+**Option A:** A ready-to-copy prompt for each of the 4 agents (very detailed, ready to paste into other AI chats)
+
+**Option B:** A full project structure + initial setup commands + the detailed prompt for **Agent 1** first
+
+Just say which one you want (or both), and I’ll deliver it immediately.
