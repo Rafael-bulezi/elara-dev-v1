@@ -1,9 +1,16 @@
+import 'dotenv/config';
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY 
+  ? new Resend(process.env.RESEND_API_KEY) 
+  : null;
+
+if (!resend) {
+  console.warn("⚠️  RESEND_API_KEY is missing. Email notifications will be logged to the console instead of being sent.");
+}
 
 async function startServer() {
   const app = express();
@@ -16,7 +23,7 @@ async function startServer() {
     const { to, subject, data } = req.body;
     
     try {
-      if (process.env.RESEND_API_KEY) {
+      if (resend) {
         await resend.emails.send({
           from: 'onboarding@resend.dev', // Use your verified domain
           to: to,

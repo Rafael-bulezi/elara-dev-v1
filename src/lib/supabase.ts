@@ -39,3 +39,24 @@ export const getUser = async () => {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 };
+
+// Import Requests
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const createImportRequest = async (requestData: any) => {
+  if (!supabase) throw new Error("Supabase is not initialized");
+  
+  // Ensure we don't send empty strings if the DB expects NULL
+  const cleanData = { ...requestData };
+  if (!cleanData.buyer_id) delete cleanData.buyer_id;
+
+  const { data, error } = await supabase
+    .from('import_requests')
+    .insert([cleanData])
+    .select();
+  
+  if (error) {
+    console.error("Supabase Insert Error Detail:", error);
+    throw error;
+  }
+  return data;
+};

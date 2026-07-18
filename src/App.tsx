@@ -1,24 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { motion } from 'motion/react';
+import { viewVariants } from './utils/animations';
 import { UserProfile, Product, Chat, CartItem, BeforeInstallPromptEvent } from './types';
 import { categories } from './constants';
 import { CLOUD_LOGO } from './constants/logo';
 
 // Components
-import Header from './components/Header';
-import Hero from './components/Hero';
-import ProductCard from './components/ProductCard';
-import Footer from './components/Footer';
-import BottomNav from './components/BottomNav';
-import MobileMenu from './components/MobileMenu';
-import AuthModal from './components/AuthModal';
-import CartDrawer from './components/CartDrawer';
-import ProfileDrawer from './components/ProfileDrawer';
-import ProductDetailsModal from './components/ProductDetailsModal';
-import ProductFormModal from './components/ProductFormModal';
-import CheckoutModal from './components/CheckoutModal';
-import InstallPrompt from './components/InstallPrompt';
+import Header from './components/layout/Header';
+import Hero from './components/layout/Hero';
+import ProductCard from './components/product/ProductCard';
+import Footer from './components/layout/Footer';
+import BottomNav from './components/layout/BottomNav';
+import MobileMenu from './components/layout/MobileMenu';
+import AuthModal from './components/auth/AuthModal';
+import CartDrawer from './components/cart/CartDrawer';
+import ProfileDrawer from './components/auth/ProfileDrawer';
+import ProductDetailsModal from './components/product/ProductDetailsModal';
+import ProductFormModal from './components/product/ProductFormModal';
+import CheckoutModal from './components/cart/CheckoutModal';
+import InstallPrompt from './components/common/InstallPrompt';
+import DevTools from './components/common/DevTools';
+import ImportRequestForm from './components/product/ImportRequestForm';
+import ImportFeed from './components/product/ImportFeed';
+import { Globe } from 'lucide-react';
 
 // Views
 import OrdersView from './views/OrdersView';
@@ -34,7 +39,7 @@ import { CheckCircle, Bell } from 'lucide-react';
 
 import { initOneSignal } from './lib/notifications';
 
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 const App = () => {
   // Auth & Profile State
@@ -71,6 +76,7 @@ const App = () => {
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Theme Effect
   useEffect(() => {
@@ -449,6 +455,12 @@ const App = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const handleImportSubmit = async (data: any) => {
+    console.log("Import Request Submitted:", data);
+    showNotification("Pedido de importação enviado com sucesso! Entraremos em contacto em breve.", "success");
+    return Promise.resolve();
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors duration-500 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 font-sans selection:bg-purple-500/30 relative">
       <div className="relative z-10 flex flex-col min-h-screen">
@@ -464,6 +476,7 @@ const App = () => {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onSellProduct={() => userProfile ? setIsProductModalOpen(true) : setIsAuthModalOpen(true)}
+          onOpenImport={() => setIsImportModalOpen(true)}
           onNavigate={navigateTo}
           appLogo={appLogo}
         />
@@ -471,12 +484,15 @@ const App = () => {
         <main className="relative flex-1">
           <motion.div
             key={currentView}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            variants={viewVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
           >
           {currentView === 'home' ? (
-            searchQuery.trim() !== '' ? (
+            true || userProfile?.role === 'intermediary' ? (
+              <ImportFeed />
+            ) : searchQuery.trim() !== '' ? (
               <div className="container mx-auto px-4 py-8">
                 <h2 className="text-2xl font-bold dark:text-white mb-6">Resultados para "{searchQuery}"</h2>
                 {filteredProducts.length > 0 ? (
@@ -502,6 +518,29 @@ const App = () => {
                     {products.slice(0, 4).map(p => (
                       <ProductCard key={p.id} product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
                     ))}
+                  </div>
+                </section>
+
+                {/* Import CTA Section */}
+                <section className="px-4">
+                  <div className="bg-gradient-to-br from-[#5A189A] to-[#3c1066] p-8 rounded-[32px] overflow-hidden relative group shadow-xl shadow-purple-900/10">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+                      <Globe size={160} />
+                    </div>
+                    <div className="relative z-10 space-y-4 max-w-sm">
+                      <h3 className="text-2xl font-black text-white leading-tight">
+                        Não encontrou o que procura?
+                      </h3>
+                      <p className="text-purple-200 font-medium">
+                        Peça uma importação personalizada diretamente da China, EUA ou Europa com as melhores taxas do mercado.
+                      </p>
+                      <button 
+                        onClick={() => setIsImportModalOpen(true)}
+                        className="bg-white text-[#5A189A] px-6 py-3 rounded-2xl font-black text-sm hover:bg-zinc-100 active:scale-95 transition-all inline-flex items-center gap-2"
+                      >
+                        Peça uma Importação
+                      </button>
+                    </div>
                   </div>
                 </section>
 
@@ -644,6 +683,7 @@ const App = () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onNavigate={(view) => navigateTo(view as any)}
         onInstallClick={() => setForceShowInstall(true)}
+        onOpenImport={() => setIsImportModalOpen(true)}
         appLogo={appLogo}
       />
 
@@ -712,6 +752,13 @@ const App = () => {
         }}
       />
 
+      <ImportRequestForm
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSubmit={handleImportSubmit}
+        userProfile={userProfile}
+      />
+
       {notification && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] animate-in fade-in slide-in-from-top-4">
           <div className={`px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold text-sm ${
@@ -735,6 +782,8 @@ const App = () => {
         forceShow={forceShowInstall}
         appLogo={appLogo}
       />
+      
+      <DevTools setUserProfile={setUserProfile} />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Star, MapPin, Calendar, MessageCircle, ShoppingBag, ShieldCheck, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Product, UserProfile } from '../types';
-import ProductCard from '../components/ProductCard';
+import ProductCard from '../components/product/ProductCard';
 import { getAvatarUrl } from '../utils/avatar';
 
 interface SellerProfileViewProps {
