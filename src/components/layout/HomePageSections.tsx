@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Clock, Flame, Globe, TrendingUp, Percent } from 'lucide-react';
+import { ArrowRight, Clock, Flame, Globe, Percent } from 'lucide-react';
 import { Product } from '../../types';
 import ProductCard from '../product/ProductCard';
 
@@ -49,79 +49,86 @@ export const OfertasDoDia: React.FC<CommonProps> = ({
   );
 };
 
-/* ─── 2. FEATURE HERO (1 large + 4 small: 5-product asymmetric) ─── */
-export const FeatureHeroSection: React.FC<CommonProps & { category: string; onViewAll: () => void }> = ({
-  products, onAddToCart, onProductClick, wishlist, onToggleWishlist, category, onViewAll,
-}) => {
-  const cats = products.filter(p => p.category === category).slice(0, 5);
-  if (cats.length < 2) return null;
+/* ─── 2. CATEGORY SHOWCASE (Amazon-style 4-pod grid) ─── */
+const SHOWCASE_PODS = [
+  {
+    title: 'Smartphones & Tablets',
+    sub: 'Os mais vendidos',
+    cat: 'Smartphones',
+    link: 'Ver todos os Smartphones',
+  },
+  {
+    title: 'Eletrónicos & Tech',
+    sub: 'Tendências do momento',
+    cat: 'Eletrónicos',
+    link: 'Ver todos os Eletrónicos',
+  },
+  {
+    title: 'Moda & Estilo',
+    sub: 'Novidades da semana',
+    cat: 'Moda',
+    link: 'Ver toda a Moda',
+  },
+  {
+    title: 'Esportes & Fitness',
+    sub: 'Equipe-se para treinar',
+    cat: 'Esportes',
+    link: 'Ver todos os Esportes',
+  },
+];
 
-  const [hero, ...rest] = cats;
-  const discount = hero.originalPrice && hero.originalPrice > hero.price
-    ? Math.round(((hero.originalPrice - hero.price) / hero.originalPrice) * 100) : null;
+export const CategoryShowcaseSection: React.FC<CommonProps & { onSelectCategory: (name: string) => void }> = ({
+  products, onProductClick, onSelectCategory,
+}) => (
+  <section className="py-8 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-900">
+    <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {SHOWCASE_PODS.map((pod) => {
+          const items = products.filter(p => p.category === pod.cat).slice(0, 4);
+          return (
+            <div key={pod.cat} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-3">
+              {/* Pod header */}
+              <div>
+                <h3 className="text-sm font-black text-zinc-900 dark:text-white leading-tight">{pod.title}</h3>
+                <p className="text-[11px] text-zinc-500 mt-0.5">{pod.sub}</p>
+              </div>
 
-  return (
-    <section className="py-8 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={18} className="text-purple-600" />
-            <h2 className="text-lg font-black text-zinc-900 dark:text-white">{category}</h2>
-          </div>
-          <button onClick={onViewAll} className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1">
-            Ver mais <ArrowRight size={13} />
-          </button>
-        </div>
+              {/* 2×2 image grid */}
+              <div className="grid grid-cols-2 gap-2">
+                {(items.length >= 4 ? items : [...items, ...items, ...items, ...items]).slice(0, 4).map((p, i) => (
+                  <div
+                    key={`${p.id}-${i}`}
+                    onClick={() => onProductClick(p)}
+                    className="cursor-pointer group"
+                  >
+                    <div className="aspect-square rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-1">
+                      <img
+                        src={p.image}
+                        alt={p.title}
+                        className="w-full h-full object-cover group-hover:scale-[1.05] transition-transform duration-200"
+                      />
+                    </div>
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400 line-clamp-1 font-medium leading-tight">
+                      {p.title.split(' ').slice(0, 3).join(' ')}
+                    </p>
+                  </div>
+                ))}
+              </div>
 
-        {/* Desktop: 1 large left + 2×2 right | Mobile: horizontal scroll */}
-        <div className="hidden md:grid md:grid-cols-3 gap-4">
-          {/* Hero card */}
-          <div
-            onClick={() => onProductClick(hero)}
-            className="md:col-span-1 row-span-2 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden cursor-pointer hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex flex-col"
-          >
-            <div className="relative flex-1 min-h-48">
-              {discount && (
-                <span className="absolute top-3 left-3 z-10 bg-rose-500 text-white text-xs font-black px-2 py-1 rounded-lg">-{discount}%</span>
-              )}
-              <button onClick={(e) => { e.stopPropagation(); onToggleWishlist(hero); }}
-                className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center shadow ${wishlist.includes(hero.id) ? 'bg-rose-500 text-white' : 'bg-white/90 text-zinc-400 hover:text-rose-500'}`}>
-                <Flame size={14} fill={wishlist.includes(hero.id) ? 'currentColor' : 'none'} />
+              {/* Footer link */}
+              <button
+                onClick={() => onSelectCategory(pod.cat)}
+                className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 mt-auto pt-1 border-t border-zinc-100 dark:border-zinc-800"
+              >
+                {pod.link} <ArrowRight size={12} />
               </button>
-              <img src={hero.image} alt={hero.title} className="w-full h-56 object-cover" />
             </div>
-            <div className="p-4">
-              <p className="text-sm font-bold text-zinc-900 dark:text-white line-clamp-2 mb-2">{hero.title}</p>
-              <p className="text-xl font-black text-zinc-900 dark:text-white mb-3">{hero.price.toLocaleString('pt-AO')} Kz</p>
-              <button onClick={(e) => { e.stopPropagation(); onAddToCart(hero); }}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold py-2.5 rounded-xl transition-colors">
-                Adicionar ao Carrinho
-              </button>
-            </div>
-          </div>
-
-          {/* 4 small cards in 2×2 */}
-          <div className="col-span-2 grid grid-cols-2 gap-4">
-            {rest.slice(0, 4).map(p => (
-              <ProductCard key={p.id} product={p} onAddToCart={onAddToCart} onProductClick={onProductClick}
-                wishlisted={wishlist.includes(p.id)} onToggleWishlist={onToggleWishlist} />
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile: horizontal scroll */}
-        <div className="flex md:hidden gap-3 overflow-x-auto custom-scrollbar pb-2 -mx-4 px-4">
-          {cats.map(p => (
-            <div key={p.id} className="min-w-[155px] shrink-0">
-              <ProductCard product={p} onAddToCart={onAddToCart} onProductClick={onProductClick}
-                wishlisted={wishlist.includes(p.id)} onToggleWishlist={onToggleWishlist} />
-            </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
-    </section>
-  );
-};
+    </div>
+  </section>
+);
 
 /* ─── 3. STRIP ROW (1×5 horizontal, compact) ─── */
 export const StripSection: React.FC<CommonProps & { category: string; onViewAll: () => void }> = ({

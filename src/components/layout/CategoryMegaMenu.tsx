@@ -2,35 +2,18 @@ import React, { useState, useRef } from 'react';
 import { ArrowRight, Smartphone, Shirt, Cpu, Laptop, Home, Sparkles, Dumbbell } from 'lucide-react';
 import { Product } from '../../types';
 
+/* ─── Icon map ─── */
 const catIconMap: Record<string, React.ReactNode> = {
-  Smartphones: <Smartphone size={16} />,
-  Moda: <Shirt size={16} />,
+  Smartphones:   <Smartphone size={16} />,
+  Moda:          <Shirt size={16} />,
   'Eletrónicos': <Cpu size={16} />,
-  Computadores: <Laptop size={16} />,
-  Casa: <Home size={16} />,
-  Beleza: <Sparkles size={16} />,
-  Esportes: <Dumbbell size={16} />,
+  Computadores:  <Laptop size={16} />,
+  Casa:          <Home size={16} />,
+  Beleza:        <Sparkles size={16} />,
+  Esportes:      <Dumbbell size={16} />,
 };
 
-// Category-specific banner for the left panel
-const catBanners: Record<string, string> = {
-  Smartphones:    '/banner-tech.jpg',
-  Moda:           '/banner-beauty2.jpg',
-  'Eletrónicos':  '/banner-eletronicos.jpg',
-  Computadores:   '/banner-tech.jpg',
-  Casa:           '/banner-casa.jpg',
-  Beleza:         '/banner-beauty2.jpg',
-  Esportes:       '/banner-sports.jpg',
-};
-
-// Four featured banner tiles shown on the right of every dropdown
-const FEATURED_BANNERS = [
-  { img: '/banner-tech.jpg',       label: 'Eletrónicos & Tech',   tag: 'Tendência',     cat: 'Eletrónicos' },
-  { img: '/banner-sports.jpg',     label: 'Esportes & Fitness',   tag: 'Novo',          cat: 'Esportes' },
-  { img: '/banner-casa.jpg',       label: 'Casa & Cozinha',       tag: 'Em destaque',   cat: 'Casa' },
-  { img: '/banner-eletronicos.jpg',label: 'Arte & Criatividade',  tag: 'Importação',    cat: 'Eletrónicos' },
-];
-
+/* ─── Pill active color ─── */
 const catColors: Record<string, string> = {
   Smartphones:   'text-blue-600',
   Moda:          'text-pink-600',
@@ -39,6 +22,60 @@ const catColors: Record<string, string> = {
   Casa:          'text-amber-600',
   Beleza:        'text-rose-600',
   Esportes:      'text-emerald-600',
+};
+
+/* ─── Category banner images ─── */
+const catBanners: Record<string, string> = {
+  Smartphones:   '/banner-tech.jpg',
+  Moda:          '/banner-beauty2.jpg',
+  'Eletrónicos': '/banner-eletronicos.jpg',
+  Computadores:  '/banner-tech.jpg',
+  Casa:          '/banner-casa.jpg',
+  Beleza:        '/banner-beauty2.jpg',
+  Esportes:      '/banner-sports.jpg',
+};
+
+/* ─── Category taglines ─── */
+const catTaglines: Record<string, string> = {
+  Smartphones:   'Os melhores smartphones e acessórios premium.',
+  Moda:          'Tendências de moda para o dia a dia em Angola.',
+  'Eletrónicos': 'Tecnologia criativa e gadgets inovadores.',
+  Computadores:  'Laptops, desktops e periféricos para todos.',
+  Casa:          'Tudo para a sua cozinha e casa dos sonhos.',
+  Beleza:        'Cuidados de pele e beleza de marcas premium.',
+  Esportes:      'Equipe-se para o sucesso no seu treino.',
+};
+
+/* ─── Subcategories per category ─── */
+const catSubs: Record<string, { popular: string[]; more: string[] }> = {
+  Smartphones: {
+    popular: ['iPhone', 'Samsung Galaxy', 'Xiaomi', 'Tecno', 'Infinix', 'Huawei'],
+    more:    ['Capas & Proteção', 'Carregadores', 'Earbuds', 'Películas', 'Power Banks'],
+  },
+  Moda: {
+    popular: ['Roupas Masculinas', 'Roupas Femininas', 'Calçados', 'Bolsas', 'Acessórios', 'Joias'],
+    more:    ['Relógios', 'Óculos de sol', 'Cintos', 'Chapéus', 'Meias'],
+  },
+  'Eletrónicos': {
+    popular: ['TVs & Monitores', 'Tablets', 'Câmeras', 'Headphones', 'Smart Speakers', 'Drones'],
+    more:    ['GPS & Rastreadores', 'Projetores', 'Cabos & Adaptadores', 'Baterias', 'Microfones'],
+  },
+  Computadores: {
+    popular: ['Laptops', 'Desktops', 'Monitores', 'Teclados & Ratos', 'Impressoras', 'Roteadores'],
+    more:    ['Discos Rígidos', 'SSDs', 'Memória RAM', 'Placas Gráficas', 'Webcams'],
+  },
+  Casa: {
+    popular: ['Cozinha', 'Sala de estar', 'Quarto', 'Casa de Banho', 'Ferramentas', 'Jardim'],
+    more:    ['Decoração', 'Iluminação', 'Tapetes', 'Almofadas', 'Organização'],
+  },
+  Beleza: {
+    popular: ['Cuidado da Pele', 'Maquiagem', 'Cabelos', 'Perfumes', 'Corpo & Banho', 'Unhas'],
+    more:    ['Depilação', 'Máscaras Faciais', 'Protetor Solar', 'Sérum', 'Esfoliantes'],
+  },
+  Esportes: {
+    popular: ['Musculação', 'Corrida', 'Futebol', 'Basquete', 'Ciclismo', 'Yoga'],
+    more:    ['Natação', 'Boxe', 'Ténis', 'Camping', 'Artes Marciais'],
+  },
 };
 
 interface CategoryMegaMenuProps {
@@ -58,26 +95,30 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
   const [hovered, setHovered] = useState<string | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleEnter = (name: string) => {
+  const open = (name: string) => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setHovered(name);
   };
-
-  const handleLeave = () => {
-    hideTimer.current = setTimeout(() => setHovered(null), 150);
+  const close = () => {
+    hideTimer.current = setTimeout(() => setHovered(null), 160);
   };
+  const keepOpen = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+  };
+
+  const subs = hovered ? catSubs[hovered] : null;
 
   return (
     <div
       className="sticky top-[56px] md:top-[64px] z-40 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 shadow-sm"
-      onMouseLeave={handleLeave}
+      onMouseLeave={close}
     >
-      {/* Pill strip */}
+      {/* ── Pill strip ── */}
       <div className="max-w-[1400px] mx-auto px-3 md:px-6">
         <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar py-1.5">
           <button
             onClick={() => onNavigate('home')}
-            onMouseEnter={() => handleEnter('')}
+            onMouseEnter={() => open('')}
             className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-purple-600 text-white"
           >
             Início
@@ -85,7 +126,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
           {categories.map((cat) => (
             <button
               key={cat.id}
-              onMouseEnter={() => handleEnter(cat.name)}
+              onMouseEnter={() => open(cat.name)}
               onClick={() => { setHovered(null); onSelectCategory(cat.name); }}
               className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all whitespace-nowrap
                 ${hovered === cat.name
@@ -102,67 +143,85 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
         </div>
       </div>
 
-      {/* Mega-menu dropdown */}
-      {hovered && hovered !== '' && (
+      {/* ── eBay-style dropdown ── */}
+      {hovered && hovered !== '' && subs && (
         <div
           className="absolute left-0 right-0 top-full bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 shadow-2xl z-50"
-          onMouseEnter={() => { if (hideTimer.current) clearTimeout(hideTimer.current); }}
-          onMouseLeave={handleLeave}
+          onMouseEnter={keepOpen}
+          onMouseLeave={close}
         >
-          <div className="max-w-[1400px] mx-auto px-6 py-5 flex gap-5">
+          <div className="max-w-[1400px] mx-auto px-6 py-5 flex gap-6">
 
-            {/* Left: category-specific banner */}
-            <div
-              className="hidden md:flex shrink-0 w-56 flex-col gap-3 cursor-pointer group"
-              onClick={() => { setHovered(null); onSelectCategory(hovered); }}
-            >
-              <div className="relative rounded-2xl overflow-hidden h-48 shadow-md">
-                <img
-                  src={catBanners[hovered] || '/banner-hero-main.jpg'}
-                  alt={hovered}
-                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-white font-black text-sm leading-tight">{hovered}</p>
-                  <p className="text-white/70 text-[10px] mt-0.5">Ver todos os produtos</p>
-                </div>
+            {/* Left: subcategory text columns */}
+            <div className="flex gap-8 shrink-0">
+              {/* Most popular */}
+              <div className="min-w-[160px]">
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-3">
+                  Mais populares
+                </p>
+                <ul className="space-y-2">
+                  {subs.popular.map((sub) => (
+                    <li key={sub}>
+                      <button
+                        onClick={() => { setHovered(null); onSelectCategory(hovered); }}
+                        className="text-sm text-zinc-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium transition-colors text-left"
+                      >
+                        {sub}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <button
-                className="flex items-center gap-1.5 text-xs font-bold text-purple-600 hover:text-purple-700"
-              >
-                Ver tudo em {hovered} <ArrowRight size={12} />
-              </button>
+
+              {/* More categories */}
+              <div className="min-w-[160px]">
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-3">
+                  Mais categorias
+                </p>
+                <ul className="space-y-2">
+                  {subs.more.map((sub) => (
+                    <li key={sub}>
+                      <button
+                        onClick={() => { setHovered(null); onSelectCategory(hovered); }}
+                        className="text-sm text-zinc-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium transition-colors text-left"
+                      >
+                        {sub}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
-            {/* Right: 4 featured banner tiles */}
-            <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
-              {FEATURED_BANNERS.map((b, i) => (
-                <div
-                  key={i}
-                  onClick={() => { setHovered(null); onSelectCategory(b.cat); }}
-                  className="relative rounded-xl overflow-hidden cursor-pointer group aspect-[4/3]"
-                >
-                  <img
-                    src={b.img}
-                    alt={b.label}
-                    className="w-full h-full object-cover group-hover:scale-[1.05] transition-transform duration-300"
-                  />
-                  {/* Dark overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-                  {/* Tag pill */}
-                  <span className="absolute top-2 left-2 bg-purple-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                    {b.tag}
-                  </span>
-                  {/* Label */}
-                  <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                    <p className="text-white font-bold text-xs leading-tight">{b.label}</p>
-                    <p className="text-white/60 text-[9px] mt-0.5 flex items-center gap-0.5">
-                      Explorar <ArrowRight size={8} />
-                    </p>
-                  </div>
+            {/* Divider */}
+            <div className="hidden md:block w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" />
+
+            {/* Right: large category banner card */}
+            <div
+              className="flex-1 relative rounded-2xl overflow-hidden cursor-pointer group min-h-[220px]"
+              onClick={() => { setHovered(null); onSelectCategory(hovered); }}
+            >
+              {/* Background image */}
+              <img
+                src={catBanners[hovered] || '/banner-hero-main.jpg'}
+                alt={hovered}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-400"
+              />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/10" />
+
+              {/* Text content */}
+              <div className="relative z-10 p-7 flex flex-col justify-between h-full">
+                <div className="space-y-2 max-w-xs">
+                  <h3 className="text-2xl font-black text-white leading-tight">{hovered}</h3>
+                  <p className="text-white/75 text-sm leading-relaxed">
+                    {catTaglines[hovered] || 'Explore os melhores produtos desta categoria.'}
+                  </p>
                 </div>
-              ))}
+                <button className="mt-6 self-start flex items-center gap-2 bg-white text-zinc-900 text-xs font-black px-5 py-2.5 rounded-full hover:bg-purple-50 transition-colors shadow-md">
+                  Explorar agora <ArrowRight size={13} />
+                </button>
+              </div>
             </div>
           </div>
         </div>

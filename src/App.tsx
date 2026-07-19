@@ -26,7 +26,7 @@ import ProductListingView from './views/ProductListingView';
 import { DiscoveryFilters } from './types/discovery';
 import CategoryMegaMenu from './components/layout/CategoryMegaMenu';
 import {
-  OfertasDoDia, FeatureHeroSection, StripSection,
+  OfertasDoDia, CategoryShowcaseSection, StripSection,
   ImportCTA, DuoGrid, StatsBanner,
 } from './components/layout/HomePageSections';
 import ProductDetailPage from './views/ProductDetailPage';
@@ -566,15 +566,14 @@ const App = () => {
                   />
                 </div>
 
-                {/* 3. Smartphones — 1 large + 2×2 */}
-                <FeatureHeroSection
-                  category="Smartphones"
+                {/* 3. Category showcase — Amazon-style 4-pod grid */}
+                <CategoryShowcaseSection
                   products={products}
                   onAddToCart={addToCart}
                   onProductClick={handleProductClick}
                   wishlist={wishlistIds}
                   onToggleWishlist={toggleWishlist}
-                  onViewAll={() => handleSelectCategory('Smartphones')}
+                  onSelectCategory={handleSelectCategory}
                 />
 
                 {/* 4. Moda — 1×5 strip */}
