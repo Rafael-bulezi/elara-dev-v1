@@ -20,6 +20,7 @@ import ProductFormModal from './components/product/ProductFormModal';
 import CheckoutModal from './components/cart/CheckoutModal';
 import InstallPrompt from './components/common/InstallPrompt';
 import DevTools from './components/common/DevTools';
+import OnboardingFlow from './components/common/OnboardingFlow';
 import ImportRequestForm from './components/product/ImportRequestForm';
 import ImportFeed from './components/product/ImportFeed';
 import ProductListingView from './views/ProductListingView';
@@ -58,6 +59,9 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 const App = () => {
   // Auth & Profile State
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    try { return !localStorage.getItem('elara_onboarded'); } catch { return false; }
+  });
 
   // Initialize OneSignal when userProfile is available
   useEffect(() => {
@@ -481,6 +485,14 @@ const App = () => {
     return Promise.resolve();
   };
 
+  const handleOnboardingComplete = (city?: string) => {
+    try {
+      localStorage.setItem('elara_onboarded', '1');
+      if (city) localStorage.setItem('elara_city', city);
+    } catch {}
+    setShowOnboarding(false);
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50 transition-colors duration-500 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 font-sans selection:bg-purple-500/30 relative">
       <div className="relative z-10 flex flex-col min-h-screen">
@@ -816,6 +828,14 @@ const App = () => {
       />
       
       <DevTools setUserProfile={setUserProfile} />
+
+      {/* Onboarding — shown only on first visit */}
+      {showOnboarding && (
+        <OnboardingFlow
+          onComplete={handleOnboardingComplete}
+          onOpenAuth={() => { handleOnboardingComplete(); setIsAuthModalOpen(true); }}
+        />
+      )}
       </div>
     </div>
   );

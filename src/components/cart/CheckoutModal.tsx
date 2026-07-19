@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, CheckCircle, CreditCard, ArrowLeft, Smartphone, Truck, ShieldCheck, MessageCircle, Globe, AlertCircle, Loader2, Copy, Upload, Check } from 'lucide-react';
-import { motion } from 'motion/react';
-import imageCompression from 'browser-image-compression';
+import {
+  X, CheckCircle, ArrowLeft, ArrowRight, ShieldCheck, Truck,
+  MapPin, Smartphone, Banknote, Copy, Check, Loader2, Package,
+  MessageCircle, QrCode,
+} from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Product, UserProfile } from '../../types';
 
@@ -13,530 +15,363 @@ interface CheckoutModalProps {
   userProfile: UserProfile | null;
 }
 
-const CheckoutModal = ({ 
-  isOpen, 
-  onClose, 
-  onOrderComplete, 
-  cart, 
-  userProfile
-}: CheckoutModalProps) => {
+type PayMethod = 'multicaixa_express' | 'referencia' | 'cod';
+type DeliveryOption = 'luanda_fast' | 'provinces' | 'pickup';
+
+const DELIVERY_OPTS = [
+  { id: 'luanda_fast' as DeliveryOption, label: 'Rápida em Luanda', detail: 'Entrega em 24–48h', price: 1500 },
+  { id: 'provinces' as DeliveryOption, label: 'Províncias', detail: '2–5 dias úteis', price: 2500 },
+  { id: 'pickup' as DeliveryOption, label: 'Recolha na Loja', detail: 'Disponível em Luanda', price: 0 },
+];
+
+const ORDER_ID = () => `#ELR-${Date.now().toString(36).toUpperCase().slice(-8)}`;
+
+const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: CheckoutModalProps) => {
   const [step, setStep] = useState(1);
-  const [checkoutType, setCheckoutType] = useState<'whatsapp' | 'app' | null>(null);
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(false);
+  const [orderId] = useState(ORDER_ID);
+  const [copied, setCopied] = useState('');
+  const [error, setError] = useState('');
+
+  const [form, setForm] = useState({
     name: userProfile?.name || '',
-    email: userProfile?.email || '',
     phone: userProfile?.phone || '',
+    city: 'Luanda',
+    neighborhood: '',
     address: '',
-    paymentMethod: 'multicaixa'
+    delivery: 'luanda_fast' as DeliveryOption,
+    payment: 'multicaixa_express' as PayMethod,
   });
 
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<boolean>(false);
-  const [copied, setCopied] = useState<string | null>(null);
-
-  const IBAN = "0055 0000 33548942101 98";
-  const EXPRESS = "921044212";
-
-  const total = cart.reduce((sum, item) => sum + (item.price * (item.cartQuantity || 1)), 0);
-  // const hasImportProducts = cart.some(item => item.isImport);
-
   useEffect(() => {
-    if (isOpen) {
-      setStep(1);
-      setSuccess(false);
-    }
+    if (isOpen) { setStep(1); setError(''); }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const subtotal = cart.reduce((s, i) => s + i.price * (i.cartQuantity || 1), 0);
+  const deliveryCost = DELIVERY_OPTS.find(d => d.id === form.delivery)?.price ?? 1500;
+  const total = subtotal + deliveryCost;
 
-  const handlePaymentChange = (method: string) => {
-    setFormData(prev => ({ ...prev, paymentMethod: method }));
-  };
-
-  const copyToClipboard = (text: string, type: string) => {
+  const copy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
-    setCopied(type);
-    setTimeout(() => setCopied(null), 2000);
+    setCopied(key);
+    setTimeout(() => setCopied(''), 2000);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setReceiptFile(e.target.files[0]);
-    }
-  };
-
-  const generateWhatsAppLink = () => {
-    const message = `Olá! Gostaria de fazer um pedido na ELARA:\n\n` +
-      cart.map(item => `- ${item.title} (${item.cartQuantity || 1}x) - Kz ${item.price.toLocaleString('pt-AO')} ${item.isImport ? '(Importação)' : ''}`).join('\n') +
-      `\n\nTotal: Kz ${total.toLocaleString('pt-AO')}\n\n` +
-      `Cliente: ${formData.name}\n` +
-      `Endereço: ${formData.address}\n` +
-      `Pagamento: ${formData.paymentMethod}`;
-    
-    // Extract phone number from text (Angola format)
-    const extractPhone = (text: string) => {
-      if (!text) return null;
-      // Look for 9 digits starting with 9, or with 244 prefix
-      const match = text.match(/(?:244)?\s?9\d{8}/g);
-      if (match) {
-        // Return the first one found, cleaned
-        return match[0].replace(/\s/g, '');
-      }
-      return null;
-    };
-
-    // 1. Check product property
-    // 2. Check product description
-    // 3. Check seller name (sometimes people put it there)
-    // 4. Default
-    const sellerPhone = cart[0]?.sellerPhone || 
-                       extractPhone(cart[0]?.description || '') || 
-                       extractPhone(cart[0]?.sellerName || '') ||
-                       "244900000000"; 
-
-    const encodedMessage = encodeURIComponent(message);
-    const cleanPhone = sellerPhone.replace(/\D/g, '');
-    // Ensure 244 prefix if not present
-    const finalPhone = cleanPhone.startsWith('244') ? cleanPhone : `244${cleanPhone}`;
-    return `https://wa.me/${finalPhone}?text=${encodedMessage}`;
-  };
-
-  const handleConfirmOrder = async () => {
+  const handleOrder = async () => {
+    setLoading(true); setError('');
     try {
-      if (!userProfile && checkoutType === 'app') {
-        setError("Por favor, faça login para finalizar a compra pelo App.");
-        return;
+      const orderData = {
+        buyer_id: userProfile?.uid || null,
+        buyer_name: form.name,
+        buyer_phone: form.phone,
+        shipping_address: `${form.address}, ${form.neighborhood}, ${form.city}`,
+        payment_method: form.payment,
+        delivery_option: form.delivery,
+        total,
+        status: 'pending',
+        payment_status: form.payment === 'cod' ? 'pending' : 'verifying',
+      };
+      if (supabase) {
+        await supabase.from('orders').insert([orderData]);
       }
-
-      if (checkoutType === 'whatsapp') {
-        window.open(generateWhatsAppLink(), '_blank');
-        onOrderComplete();
-        return;
-      }
-
-      if (step === 2 && checkoutType === 'app') {
-        setStep(3);
-        return;
-      }
-
-      if (step === 3 && checkoutType === 'app') {
-        if (!receiptFile && formData.paymentMethod !== 'entrega') {
-          setError("Por favor, envie o comprovativo do pagamento.");
-          return;
-        }
-
-        setIsUploading(true);
-        let receiptUrl = '';
-
-        if (receiptFile) {
-          let fileToUpload: File | Blob = receiptFile;
-          
-          // Compress receipt image only if it's an image
-          if (receiptFile.type.startsWith('image/')) {
-            const options = {
-              maxSizeMB: 0.5, // Max 500KB
-              maxWidthOrHeight: 800,
-              useWebWorker: true,
-            };
-            fileToUpload = await imageCompression(receiptFile, options);
-          }
-
-          const fileExt = receiptFile.name.split('.').pop();
-          const fileName = `${userProfile?.uid}/${Date.now()}.${fileExt}`;
-          const filePath = `receipts/${fileName}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from('images')
-            .upload(filePath, fileToUpload);
-
-          if (uploadError) throw uploadError;
-
-          const { data: { publicUrl } } = supabase.storage
-            .from('images')
-            .getPublicUrl(filePath);
-          
-          receiptUrl = publicUrl;
-        }
-
-        // Create order in Supabase
-        const { data: order, error: orderError } = await supabase
-          .from('orders')
-          .insert({
-            buyer_id: userProfile?.uid,
-            buyer_name: formData.name,
-            buyer_email: formData.email,
-            buyer_phone: formData.phone,
-            shipping_address: formData.address,
-            payment_method: formData.paymentMethod,
-            seller_id: cart[0]?.sellerId || '',
-            total: total,
-            status: 'pending',
-            payment_status: formData.paymentMethod === 'entrega' ? 'pending' : 'verifying',
-            payment_receipt: receiptUrl
-          })
-          .select()
-          .single();
-
-        if (orderError) throw orderError;
-
-        // Create order items
-        const orderItems = cart.map(item => ({
-          order_id: order.id,
-          product_id: item.id,
-          quantity: item.cartQuantity || 1,
-          price: item.price
-        }));
-
-        const { error: itemsError } = await supabase
-          .from('order_items')
-          .insert(orderItems);
-
-        if (itemsError) throw itemsError;
-        
-        setIsUploading(false);
-        setStep(4);
-        return;
-      }
-    } catch (error) {
-      console.error('Order error:', error);
-      setIsUploading(false);
-      setError(error instanceof Error ? error.message : "Erro ao processar pedido. Tente novamente.");
+      setStep(4);
+    } catch {
+      setError('Erro ao processar pedido. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center gap-0 mb-6">
+      {['Endereço', 'Revisão', 'Pagamento', 'Confirmação'].map((label, i) => {
+        const n = i + 1;
+        const done = step > n;
+        const active = step === n;
+        return (
+          <React.Fragment key={n}>
+            <div className="flex flex-col items-center">
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${done ? 'bg-emerald-500 text-white' : active ? 'bg-purple-600 text-white' : 'bg-zinc-100 text-zinc-400'}`}>
+                {done ? <Check size={12} /> : n}
+              </div>
+              <span className={`text-[9px] mt-1 font-bold ${active ? 'text-purple-600' : done ? 'text-emerald-500' : 'text-zinc-400'}`}>{label}</span>
+            </div>
+            {i < 3 && <div className={`h-0.5 w-10 mx-1 mb-4 rounded-full transition-colors ${step > n ? 'bg-emerald-400' : 'bg-zinc-200'}`} />}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-start justify-center p-0 md:p-4 overflow-y-auto">
-      <div className="bg-white w-full max-w-2xl h-full md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl relative animate-in fade-in zoom-in-95 duration-300 flex flex-col overflow-hidden my-auto border border-zinc-200">
-        <div className="p-6 md:p-8 border-b border-zinc-200 flex items-center justify-between flex-shrink-0 bg-white/80 backdrop-blur-xl sticky top-0 z-10">
-          <div className="flex items-center gap-4">
-            {step > 1 && !success && (
-              <button onClick={() => setStep(step - 1)} className="p-2 hover:bg-zinc-100 rounded-xl transition-colors">
-                <ArrowLeft size={20} className="text-zinc-600" />
+    <div className="fixed inset-0 bg-black/50 z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
+      <div className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 shrink-0">
+          <div className="flex items-center gap-3">
+            {step > 1 && step < 4 && (
+              <button onClick={() => setStep(s => s - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-zinc-100 rounded-lg transition-colors">
+                <ArrowLeft size={16} className="text-zinc-500" />
               </button>
             )}
-            <h2 className="text-2xl font-black tracking-tight">Finalizar Compra</h2>
+            <h2 className="font-black text-base text-zinc-900">
+              {step === 4 ? '🎉 Pedido confirmado!' : 'Finalizar compra'}
+            </h2>
           </div>
-          <button onClick={onClose} className="p-2 text-zinc-500 hover:bg-zinc-100 rounded-full">
-            <X size={24} />
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center hover:bg-zinc-100 rounded-lg transition-colors">
+            <X size={16} className="text-zinc-500" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
-          <div className="p-6 md:p-10 flex-1">
-          {error && (
-            <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl font-bold text-sm flex items-center gap-2">
-              <AlertCircle size={18} />
-              {error}
-            </div>
-          )}
-          
-          {success ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center animate-in fade-in zoom-in duration-500">
-              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-8 relative">
-                <CheckCircle size={48} className="text-emerald-500" />
-                <motion.div 
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1.5, opacity: 0 }}
-                  transition={{ repeat: Infinity, duration: 2 }}
-                  className="absolute inset-0 bg-emerald-500 rounded-full"
-                />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-3xl font-black tracking-tight">Pagamento Confirmado!</h3>
-                <p className="text-zinc-500 font-medium max-w-xs mx-auto">
-                  O seu pedido foi processado com sucesso e o pagamento foi identificado pelo sistema.
-                </p>
-                <div className="flex items-center justify-center gap-2 pt-4">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                  <div className="w-12 h-1 bg-emerald-500 rounded-full" />
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                  <div className="w-12 h-1 bg-emerald-500 rounded-full" />
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar">
+          {step < 4 && <StepIndicator />}
+
+          {error && <div className="mb-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs px-3 py-2.5 rounded-xl font-medium">{error}</div>}
+
+          {/* ── Step 1: Address ── */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-zinc-700 mb-3">Endereço de entrega</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-bold text-zinc-500 block mb-1">Nome completo</label>
+                  <input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-purple-400 transition-colors"
+                    placeholder="Seu nome completo" required />
                 </div>
-                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em]">Processo Concluído</p>
-              </div>
-            </div>
-          ) : step === 1 ? (
-            <div className="space-y-8">
-              <div className="text-center space-y-2">
-                <h3 className="text-xl font-black">Como você prefere finalizar?</h3>
-                <p className="text-zinc-500">Escolha o método de fechamento do seu pedido</p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button 
-                  onClick={() => { setCheckoutType('whatsapp'); setStep(2); }}
-                  className="group p-8 rounded-[32px] border-2 border-emerald-500/20 hover:border-emerald-500 bg-emerald-50/50 transition-all text-center space-y-4"
-                >
-                  <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center text-white mx-auto shadow-xl shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-                    <MessageCircle size={32} />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-black text-emerald-700">Via WhatsApp</h4>
-                    <p className="text-sm text-emerald-600/70 font-bold">Fale direto com o vendedor</p>
-                  </div>
-                </button>
-
-                <button 
-                  onClick={() => { setCheckoutType('app'); setStep(2); }}
-                  className="group p-8 rounded-[32px] border-2 border-purple-500/20 hover:border-purple-500 bg-purple-50/50 transition-all text-center space-y-4"
-                >
-                  <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center text-white mx-auto shadow-xl shadow-purple-500/20 group-hover:scale-110 transition-transform">
-                    <Smartphone size={32} />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-black text-purple-700">Pelo App</h4>
-                    <p className="text-sm text-purple-600/70 font-bold">Pagamento seguro via ELARA</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-          ) : step === 2 ? (
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <h4 className="text-lg font-black flex items-center gap-3">
-                    <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white text-sm">1</div>
-                    Dados de Entrega
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">Nome Completo</label>
-                      <input 
-                        type="text" 
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 p-4 rounded-2xl outline-none transition-all font-bold"
-                        placeholder="Seu nome"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">Telefone</label>
-                      <input 
-                        type="tel" 
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 p-4 rounded-2xl outline-none transition-all font-bold"
-                        placeholder="Seu WhatsApp"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">Endereço de Entrega</label>
-                      <input 
-                        type="text" 
-                        name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 p-4 rounded-2xl outline-none transition-all font-bold"
-                        placeholder="Rua, Bairro, Cidade"
-                      />
-                    </div>
-                  </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-bold text-zinc-500 block mb-1">Número de telefone</label>
+                  <input value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))}
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-purple-400 transition-colors"
+                    placeholder="9XX XXX XXX" required />
                 </div>
+                <div>
+                  <label className="text-xs font-bold text-zinc-500 block mb-1">Cidade</label>
+                  <select value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))}
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-purple-400 transition-colors">
+                    {['Luanda','Benguela','Huíla','Huambo','Cabinda','Malanje'].map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-zinc-500 block mb-1">Bairro</label>
+                  <input value={form.neighborhood} onChange={e => setForm(f => ({...f, neighborhood: e.target.value}))}
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-purple-400 transition-colors"
+                    placeholder="Bairro / Zona" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-bold text-zinc-500 block mb-1">Morada completa</label>
+                  <input value={form.address} onChange={e => setForm(f => ({...f, address: e.target.value}))}
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-purple-400 transition-colors"
+                    placeholder="Rua, número, referência" />
+                </div>
+              </div>
 
-                <div className="space-y-6">
-                  <h4 className="text-lg font-black flex items-center gap-3">
-                    <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white text-sm">2</div>
-                    Pagamento
-                  </h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      ...(checkoutType === 'whatsapp' ? [{ id: 'whatsapp', name: 'WhatsApp (Acordar com Vendedor)', icon: MessageCircle }] : []),
-                      { id: 'multicaixa', name: 'Multicaixa Express', icon: CreditCard },
-                      { id: 'transferencia', name: 'Transferência Bancária', icon: Globe },
-                      { id: 'entrega', name: 'Pagamento na Entrega', icon: Truck }
-                    ].map(method => (
-                      <button 
-                        key={method.id}
-                        onClick={() => handlePaymentChange(method.id)}
-                        className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${formData.paymentMethod === method.id ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-zinc-100 text-zinc-600 hover:border-zinc-200'}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <method.icon size={20} />
-                          <span className="font-bold">{method.name}</span>
+              <div className="mt-1">
+                <p className="text-xs font-black text-zinc-700 mb-2">Método de entrega</p>
+                <div className="space-y-2">
+                  {DELIVERY_OPTS.map(opt => (
+                    <label key={opt.id} className={`flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all ${form.delivery === opt.id ? 'border-purple-600 bg-purple-50' : 'border-zinc-200 hover:border-zinc-300'}`}>
+                      <div className="flex items-center gap-3">
+                        <input type="radio" name="delivery" checked={form.delivery === opt.id} onChange={() => setForm(f => ({...f, delivery: opt.id}))} className="accent-purple-600" />
+                        <div>
+                          <p className="text-sm font-bold text-zinc-900">{opt.label}</p>
+                          <p className="text-xs text-zinc-500">{opt.detail}</p>
                         </div>
-                        {formData.paymentMethod === method.id && <CheckCircle size={20} />}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="bg-zinc-50 p-6 rounded-3xl border border-zinc-100 space-y-4">
-                    <div className="flex justify-between text-sm font-bold">
-                      <span className="text-zinc-500">Subtotal</span>
-                      <span className="dark:text-white">Kz {total.toLocaleString('pt-AO')}</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-bold">
-                      <span className="text-zinc-500">Entrega</span>
-                      <span className="text-emerald-500">Grátis</span>
-                    </div>
-                    <div className="h-px bg-zinc-200"></div>
-                    <div className="flex justify-between items-end">
-                      <span className="font-black">Total</span>
-                      <span className="text-2xl font-black text-purple-600">Kz {total.toLocaleString('pt-AO')}</span>
-                    </div>
-                  </div>
+                      </div>
+                      <span className="text-sm font-black text-zinc-900">{opt.price === 0 ? 'Grátis' : `Kz ${opt.price.toLocaleString('pt-AO')}`}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>
-          ) : step === 3 ? (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black tracking-tight">Pagamento</h3>
-                <p className="text-zinc-500 font-medium">Siga as instruções abaixo para concluir seu pedido</p>
+          )}
+
+          {/* ── Step 2: Review ── */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <div className="bg-zinc-50 rounded-2xl divide-y divide-zinc-200 overflow-hidden">
+                {cart.map(item => (
+                  <div key={item.id} className="flex items-center gap-3 p-3.5">
+                    <div className="w-14 h-14 bg-white rounded-xl overflow-hidden border border-zinc-200 shrink-0">
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-zinc-900 line-clamp-1">{item.title}</p>
+                      <p className="text-xs text-zinc-500">Qtd: {item.cartQuantity || 1}</p>
+                    </div>
+                    <span className="text-sm font-black text-zinc-900 shrink-0">Kz {(item.price * (item.cartQuantity || 1)).toLocaleString('pt-AO')}</span>
+                  </div>
+                ))}
               </div>
 
-              <div className="space-y-6">
-                <div className="bg-zinc-50 p-6 rounded-[32px] border-2 border-zinc-100 space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">IBAN para Transferência</span>
-                      {copied === 'iban' && <span className="text-[10px] font-bold text-emerald-500 animate-bounce">Copiado!</span>}
-                    </div>
-                    <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-zinc-200 group">
-                      <code className="flex-1 font-mono font-bold text-sm md:text-base">{IBAN}</code>
-                      <button 
-                        onClick={() => copyToClipboard(IBAN, 'iban')}
-                        className="p-2 hover:bg-zinc-100 rounded-xl text-zinc-400 hover:text-purple-600 transition-colors"
-                      >
-                        {copied === 'iban' ? <Check size={20} /> : <Copy size={20} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">Número Multicaixa Express</span>
-                      {copied === 'express' && <span className="text-[10px] font-bold text-emerald-500 animate-bounce">Copiado!</span>}
-                    </div>
-                    <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-zinc-200">
-                      <code className="flex-1 font-mono font-bold text-lg">{EXPRESS}</code>
-                      <button 
-                        onClick={() => copyToClipboard(EXPRESS, 'express')}
-                        className="p-2 hover:bg-zinc-100 rounded-xl text-zinc-400 hover:text-purple-600 transition-colors"
-                      >
-                        {copied === 'express' ? <Check size={20} /> : <Copy size={20} />}
-                      </button>
-                    </div>
+              <div className="bg-zinc-50 rounded-2xl p-4 space-y-2">
+                <div className="flex items-start gap-2 text-sm">
+                  <MapPin size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-bold text-zinc-900">{form.name}</p>
+                    <p className="text-zinc-500 text-xs">{form.address}, {form.neighborhood}, {form.city}</p>
+                    <p className="text-zinc-500 text-xs">{form.phone}</p>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-4">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest block">Enviar Comprovativo</label>
-                  <div className="relative group">
-                    <input 
-                      type="file" 
-                      accept="image/*,application/pdf"
-                      onChange={handleFileChange}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    />
-                    <div className={`p-8 rounded-[32px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 ${receiptFile ? 'border-emerald-500 bg-emerald-50/50' : 'border-zinc-200 hover:border-purple-500/50 bg-zinc-50'}`}>
-                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${receiptFile ? 'bg-emerald-500 text-white' : 'bg-zinc-200 text-zinc-400'}`}>
-                        {receiptFile ? <Check size={32} /> : <Upload size={32} />}
-                      </div>
-                      <div className="text-center">
-                        <p className="font-black">
-                          {receiptFile ? receiptFile.name : 'Clique ou arraste a foto ou PDF do depósito'}
-                        </p>
-                        <p className="text-sm text-zinc-500 font-medium">
-                          Formatos aceitos: JPG, PNG, PDF (Máx 5MB)
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+              <div className="bg-zinc-50 rounded-2xl p-4 space-y-2 text-sm">
+                <div className="flex justify-between text-zinc-600"><span>Subtotal</span><span className="font-bold">Kz {subtotal.toLocaleString('pt-AO')}</span></div>
+                <div className="flex justify-between text-zinc-600"><span>Entrega</span><span className="font-bold">{deliveryCost === 0 ? 'Grátis' : `Kz ${deliveryCost.toLocaleString('pt-AO')}`}</span></div>
+                <div className="flex justify-between text-zinc-900 font-black text-base border-t border-zinc-200 pt-2 mt-2">
+                  <span>Total</span><span>Kz {total.toLocaleString('pt-AO')}</span>
                 </div>
               </div>
             </div>
-          ) : step === 4 ? (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-purple-50 p-12 rounded-[40px] border-2 border-purple-500/20 text-center space-y-8">
-                <div className="relative mx-auto w-24 h-24">
-                  <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                    className="absolute inset-0 border-4 border-purple-200 border-t-purple-600 rounded-full"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center text-purple-600">
-                    <Smartphone size={32} />
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-3xl font-black tracking-tight">Estamos checando...</h3>
-                  <p className="text-zinc-500 font-medium max-w-xs mx-auto">
-                    Recebemos o seu comprovativo. Nossa equipe está verificando o pagamento agora mesmo.
-                  </p>
-                </div>
+          )}
 
-                <div className="flex items-center gap-4 p-6 bg-emerald-500/10 rounded-3xl border border-emerald-500/20">
-                  <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white flex-shrink-0">
-                    <Loader2 size={28} className="animate-spin" />
+          {/* ── Step 3: Payment ── */}
+          {step === 3 && (
+            <div className="space-y-4">
+              <p className="text-xs font-black text-zinc-700 mb-3">Escolha o método de pagamento</p>
+
+              {/* Payment method buttons */}
+              <div className="space-y-2">
+                {([
+                  { id: 'multicaixa_express' as PayMethod, icon: <QrCode size={18} className="text-purple-600" />, label: 'Multicaixa Express (QR)', sub: 'Abra a app e escaneie o QR', badge: 'Recomendado' },
+                  { id: 'referencia' as PayMethod, icon: <Smartphone size={18} className="text-blue-600" />, label: 'Referência Multicaixa', sub: 'Gera uma referência para pagar' },
+                  { id: 'cod' as PayMethod, icon: <Banknote size={18} className="text-emerald-600" />, label: 'Pagamento na Entrega (COD)', sub: 'Pague quando receber o pedido' },
+                ] as const).map(opt => (
+                  <label key={opt.id} className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${form.payment === opt.id ? 'border-purple-600 bg-purple-50' : 'border-zinc-200 hover:border-zinc-300'}`}>
+                    <input type="radio" name="payment" checked={form.payment === opt.id} onChange={() => setForm(f => ({...f, payment: opt.id}))} className="accent-purple-600" />
+                    <div className="w-9 h-9 bg-zinc-100 rounded-lg flex items-center justify-center shrink-0">{opt.icon}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-zinc-900">{opt.label}</p>
+                        {'badge' in opt && opt.badge && <span className="bg-purple-100 text-purple-700 text-[9px] font-black px-1.5 py-0.5 rounded-full">{opt.badge}</span>}
+                      </div>
+                      <p className="text-xs text-zinc-500">{opt.sub}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {/* Payment details */}
+              {form.payment === 'multicaixa_express' && (
+                <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 text-center">
+                  <div className="w-28 h-28 bg-white rounded-xl mx-auto mb-3 flex items-center justify-center border border-purple-200">
+                    <QrCode size={64} className="text-purple-600" />
                   </div>
-                  <div className="text-left">
-                    <p className="text-sm font-black text-emerald-600 uppercase tracking-widest leading-tight">
-                      Verificação em curso
-                    </p>
-                    <p className="text-xs text-emerald-600/60 font-bold">
-                      Você será notificado assim que o pagamento for comprovado.
-                    </p>
+                  <p className="text-sm font-bold text-zinc-900 mb-1">Kz {total.toLocaleString('pt-AO')}</p>
+                  <p className="text-xs text-zinc-500">Abra o Multicaixa Express e escaneie o código</p>
+                  <p className="text-xs text-amber-600 font-bold mt-2">⏱ Expira em 30:00</p>
+                </div>
+              )}
+
+              {form.payment === 'referencia' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-3">
+                  <p className="text-sm font-bold text-zinc-900">Como pagar com Referência:</p>
+                  <ol className="text-xs text-zinc-600 space-y-1.5 list-decimal list-inside">
+                    <li>Vá ao Multicaixa ou banca online</li>
+                    <li>Seleccione Referências &amp; Pagamentos</li>
+                    <li>Insira a referência abaixo</li>
+                  </ol>
+                  <div className="bg-white rounded-xl border border-blue-200 p-3">
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase">Referência</p>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xl font-black text-zinc-900 tracking-widest">1 2 3 4 5 6 7 8</span>
+                      <button onClick={() => copy('12345678', 'ref')} className="flex items-center gap-1 text-xs text-blue-600 font-bold">
+                        {copied === 'ref' ? <Check size={12} /> : <Copy size={12} />} Copiar
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold text-zinc-900">
+                    <span>Total a pagar:</span>
+                    <span>Kz {total.toLocaleString('pt-AO')}</span>
                   </div>
                 </div>
+              )}
 
-                <button 
-                  onClick={onOrderComplete}
-                  className="px-8 py-4 bg-white border-2 border-zinc-200 rounded-2xl font-black text-sm hover:bg-zinc-50 transition-all active:scale-95"
-                >
-                  Voltar para a Loja
+              {form.payment === 'cod' && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
+                  <Truck size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-zinc-900">Pague na entrega</p>
+                    <p className="text-xs text-zinc-500 mt-1">O estafeta receberá o pagamento de <span className="font-black text-zinc-900">Kz {total.toLocaleString('pt-AO')}</span> à entrega. Tenha o valor exacto disponível.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Step 4: Confirmation ── */}
+          {step === 4 && (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle size={32} className="text-emerald-500" />
+              </div>
+              <h3 className="text-xl font-black text-zinc-900 mb-2">Pedido confirmado!</h3>
+              <p className="text-sm text-zinc-500 mb-1">Obrigado pela sua compra na Elara.</p>
+              <div className="bg-zinc-50 rounded-2xl p-4 my-5 text-left space-y-2.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-500">Nº do pedido</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-black text-zinc-900 font-mono">{orderId}</span>
+                    <button onClick={() => copy(orderId, 'order')} className="text-purple-600">
+                      {copied === 'order' ? <Check size={13} /> : <Copy size={13} />}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-500">Total</span>
+                  <span className="font-black text-zinc-900">Kz {total.toLocaleString('pt-AO')}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-500">Entrega</span>
+                  <span className="font-bold text-zinc-900">{DELIVERY_OPTS.find(d => d.id === form.delivery)?.label}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-500">Pagamento</span>
+                  <span className="font-bold text-zinc-900">
+                    {form.payment === 'multicaixa_express' ? 'Multicaixa Express' : form.payment === 'referencia' ? 'Referência' : 'Na entrega'}
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-zinc-400 mb-5">Receberá uma notificação via SMS/WhatsApp com os detalhes. Acompanhe o seu pedido em "Os meus pedidos".</p>
+              <div className="flex gap-3">
+                <button onClick={onOrderComplete}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-black py-3.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                  <Package size={16} /> Acompanhar pedido
+                </button>
+                <button onClick={onClose}
+                  className="flex-1 border-2 border-zinc-200 hover:border-zinc-300 text-zinc-700 font-black py-3.5 rounded-xl text-sm transition-colors">
+                  Continuar
                 </button>
               </div>
             </div>
-          ) : null}
-        </div>
-
-          {(step === 2 || step === 3) && !success && (
-            <div className="sticky bottom-0 p-6 md:p-8 bg-zinc-50/90 backdrop-blur-xl border-t border-zinc-200 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-8 z-10">
-              <button 
-                onClick={handleConfirmOrder}
-                disabled={isUploading}
-                className={`w-full py-5 rounded-2xl font-black text-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 ${checkoutType === 'whatsapp' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20' : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20'} ${isUploading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 size={24} className="animate-spin" />
-                    Enviando...
-                  </>
-                ) : checkoutType === 'whatsapp' ? (
-                  <>
-                    <MessageCircle size={24} />
-                    Enviar Pedido via WhatsApp
-                  </>
-                ) : step === 2 ? (
-                  <>
-                    <ArrowLeft size={24} className="rotate-180" />
-                    Próximo Passo
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck size={24} />
-                    Enviar Comprovativo
-                  </>
-                )}
-              </button>
-            </div>
           )}
         </div>
+
+        {/* Footer CTA */}
+        {step < 4 && (
+          <div className="px-5 py-4 border-t border-zinc-100 bg-white shrink-0">
+            {step < 3 && (
+              <div className="flex justify-between text-sm mb-3 text-zinc-500">
+                <span>Total ({cart.length} item{cart.length !== 1 ? 's' : ''})</span>
+                <span className="font-black text-zinc-900">Kz {total.toLocaleString('pt-AO')}</span>
+              </div>
+            )}
+            <button
+              onClick={step < 3 ? () => setStep(s => s + 1) : handleOrder}
+              disabled={loading || (step === 1 && (!form.name || !form.phone))}
+              className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-4 rounded-2xl text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-purple-200">
+              {loading ? <Loader2 size={16} className="animate-spin" /> : step === 3 ? <ShieldCheck size={16} /> : <ArrowRight size={16} />}
+              {loading ? 'A processar...' : step === 3 ? 'Confirmar pedido' : 'Continuar'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default CheckoutModal;
-

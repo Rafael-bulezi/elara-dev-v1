@@ -1,2 +1,4 @@
 - [Elara routing pattern](elara-routing.md) — state-based routing in App.tsx, no router library; 'product' view added for dedicated product page
 - [Elara homepage structure](elara-homepage.md) — max 7 sections, CategoryMegaMenu strip above hero, no pills below hero; section layouts vary (1+4, 1×5, 2×2, stats)
+- [Elara checkout & payment](elara-checkout.md) — 4-step checkout modal; Angola payment methods: Multicaixa Express QR, Referência, COD
+- [Elara onboarding](elara-onboarding.md) — 3-step flow (welcome→city→account), localStorage key 'elara_onboarded'; shown once, skippable at every step
