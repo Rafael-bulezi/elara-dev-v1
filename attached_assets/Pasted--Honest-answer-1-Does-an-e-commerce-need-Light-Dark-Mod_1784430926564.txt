@@ -1,0 +1,89 @@
+**Honest answer:**
+
+### 1. Does an e-commerce need Light + Dark Mode?
+
+**No — not at this stage.**
+
+For Elara, adding dark mode right now is a **bad idea**. Here’s why:
+
+| Aspect | Reality |
+|------|--------|
+| **Complexity** | High. You need to design and test every component, badge, button, product card, filter, and checkout step in two themes. |
+| **Product images** | Often look worse or inconsistent in dark mode. |
+| **Trust signals** | Discount badges, “Vendedor Verificado”, Multicaixa icons, delivery labels — all need careful dual treatment. |
+| **Development time** | Significantly increases (design system, QA, edge cases). |
+| **Real benefit** | Very small for e-commerce. Most people shop with brightness up. |
+| **Big players** | Amazon, eBay, Jumia, and most marketplaces either don’t have it or added it very late (and often only in the app). |
+
+**Recommendation for Elara:**
+- Stick to **one strong light theme** for now.
+- Make it clean, modern, and high-contrast.
+- Only consider dark mode much later (after you have real users, solid conversion, and extra capacity).
+
+Dark mode is a “nice to have”, not a “need to have”.
+
+---
+
+### 2. Things an E-commerce Should **Not** Add (Especially Early)
+
+Here is a clear list of features that commonly waste time and add complexity without helping sales in the beginning:
+
+#### High Priority to Avoid Early
+
+| Feature | Why you should avoid it now | When (if ever) to consider |
+|-------|-----------------------------|---------------------------|
+| **Dark Mode** | High complexity, low return | Much later |
+| **Complex Loyalty / Points system** | Distracts from core buying experience | After you have repeat customers |
+| **Forced Account Creation** | Kills conversion | Never force it early |
+| **Too many payment methods** | Adds technical and support complexity | Start with Multicaixa + Referência + COD |
+| **Advanced AI Recommendations** | Hard to get right, needs data | After you have real user behavior |
+| **Wishlist with social features** | Nice but not essential | After core flow is excellent |
+| **Live Chat widget** | Better to use WhatsApp in Angola | Prefer WhatsApp button |
+| **Multi-currency** | Unnecessary friction | Stick to Kz only |
+| **Heavy animations & micro-interactions** | Hurts performance | Keep very subtle or none |
+| **Blog / Content section** | Dilutes focus | Only if you have content strategy later |
+| **AR Try-on / 3D viewers** | Expensive and complex | Almost never needed early |
+| **Complex Seller Dashboard** | Only needed if you're a true multi-vendor marketplace | Start simpler if possible |
+| **Multiple languages** | Start with excellent Portuguese only | Add English later if needed |
+
+#### Medium Priority (Be Careful)
+
+- Overly complex filters (keep them powerful but clean)
+- Too many product badges
+- Subscription / recurring orders
+- Gift cards / vouchers (can wait)
+- Detailed size guides / comparison tables (only if the category needs it)
+
+---
+
+### What You *Should* Focus On Instead
+
+Protect your time and complexity budget for things that actually move the needle:
+
+1. **Fast and clear Product Listing + Filters** (eBay-style)
+2. **Excellent Product Detail Page** (trust + clear info)
+3. **Simple and trustworthy Checkout** (especially Multicaixa)
+4. **Strong delivery transparency** (Luanda vs Provinces)
+5. **Mobile performance**
+6. **Trust signals** (Verified sellers, reviews, secure payment)
+7. **Good search**
+
+---
+
+### Simple Rule for Elara
+
+Before adding any new feature, ask:
+
+> “Does this help the user find a product faster, trust us more, or complete the purchase more easily?”
+
+If the answer is not a clear **yes**, don’t add it yet.
+
+---
+
+**Bottom line:**
+
+- Skip dark mode for now.
+- Aggressively cut features that add complexity without improving the core buying experience.
+- A fast, clean, trustworthy store that works extremely well in Portuguese + Multicaixa will beat a feature-rich but slower and more complicated one.
+
+Would you like me to create a short **“Feature Priority List”** for Elara (Must Have / Should Have / Avoid for now)? This can help you and your agents stay focused.

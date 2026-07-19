@@ -1,0 +1,114 @@
+**Yes**, eBay has one of the best filter systems for marketplaces. Here’s a clear breakdown of how it works and exactly how we should adapt it for **Elara**.
+
+### What Makes eBay’s Filter System Strong
+
+| Feature | Why it works | Should Elara copy it? |
+|------|--------------|-----------------------|
+| Left sidebar (desktop) | Users can filter while still seeing products | Yes |
+| Collapsible sections | Keeps the sidebar clean | Yes |
+| Result counts next to options | Users know how many products they’ll get | Yes (very important) |
+| Applied filters as chips | Easy to see and remove individual filters | Yes |
+| Search inside long lists (especially brands) | Critical when there are many brands | Yes |
+| Sticky “Show results” on mobile | Clear action after filtering | Yes |
+| Multi-select checkboxes | Flexible | Yes |
+| “Clear all” option | Essential | Yes |
+
+---
+
+### Recommended Filter System for Elara
+
+#### 1. Desktop Version (eBay-style)
+
+**Layout:**
+- Fixed left sidebar (around 260–280px wide)
+- Main product grid on the right
+- Applied filters appear as **removable chips** above the product grid
+
+**Filter Order (most important first for Angola):**
+
+1. **Entrega** (highest priority)
+   - Rápida em Luanda (hoje/amanhã)
+   - Províncias (1–5 dias)
+   - Recolha na loja
+
+2. **Preço (Kz)**
+   - Min / Max inputs
+   - Optional quick ranges (Até 50.000, 50.000–150.000, etc.)
+
+3. **Marca**
+   - Search box inside the filter (“Pesquisar marca”)
+   - Checkboxes + counts (Samsung (128), Apple (92)...)
+   - “Ver mais” if the list is long
+
+4. **Avaliação do cliente**
+   - 4★ & up, 3★ & up, etc. (with counts)
+
+5. **Vendedor**
+   - Vendedores Angolanos Verificados
+   - (Later: Top Rated, etc.)
+
+6. Other filters (Categoria, etc.) lower down
+
+**Key Behaviors:**
+- Most important filters (Entrega + Preço + Marca) should be **open by default**
+- When a filter is selected → results update (or show a clear “Aplicar” if you prefer)
+- Show number of results next to each option
+- “Limpar tudo” at the top of the sidebar
+
+---
+
+#### 2. Mobile Version (Best Practice)
+
+- Floating or top **“Filtros”** button (with a badge showing how many filters are active)
+- Opens a **bottom sheet** (or full-screen panel)
+- Sticky button at the bottom: **“Ver resultados (842)”**
+- Applied filters shown as chips at the top of the sheet
+- Same filter order as desktop
+- Easy “Limpar tudo”
+
+This is the modern standard and works better than trying to force a sidebar on mobile.
+
+---
+
+### Extra Details That Make It Feel Like eBay
+
+- When the user selects filters, show the active ones as **chips** above the products:
+  ```
+  [Rápida em Luanda ×]  [Samsung ×]  [4★ & up ×]   Limpar tudo
+  ```
+- Clicking the × removes only that filter
+- Brand list should be searchable
+- Keep the design clean — don’t overcrowd the sidebar
+
+---
+
+### Suggested Component Structure (for your agents)
+
+```
+components/filters/
+├── FilterSidebar.tsx          → Desktop version
+├── FilterBottomSheet.tsx      → Mobile version
+├── FilterSection.tsx          → Collapsible section
+├── PriceFilter.tsx
+├── BrandFilter.tsx            → With search input
+├── DeliveryFilter.tsx
+├── RatingFilter.tsx
+├── AppliedFilters.tsx         → The chips bar
+└── FilterChip.tsx
+```
+
+---
+
+### Final Recommendation
+
+Your previous mockups are already quite good. To make them feel more like eBay, focus on these upgrades:
+
+1. Add **result counts** next to every option
+2. Make **Entrega** the first and most prominent filter
+3. Add a **search box inside the Brand filter**
+4. Improve the **applied filters chips** bar (very important)
+5. Make sure mobile uses a proper bottom sheet with sticky “Ver resultados”
+
+---
+
+Would you like me to write a **detailed prompt** you can give directly to your design/frontend agent to implement this exact eBay-style filter system for Elara? I can make it very specific (including layout, behavior, and component requirements).

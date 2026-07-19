@@ -9,10 +9,9 @@ import { CLOUD_LOGO } from './constants/logo';
 // Components
 import Header from './components/layout/Header';
 import Hero from './components/layout/Hero';
-import CategoryGrid from './components/layout/CategoryGrid';
-import ProductCard from './components/product/ProductCard';
 import Footer from './components/layout/Footer';
 import BottomNav from './components/layout/BottomNav';
+import WishlistDrawer from './components/layout/WishlistDrawer';
 import MobileMenu from './components/layout/MobileMenu';
 import AuthModal from './components/auth/AuthModal';
 import CartDrawer from './components/cart/CartDrawer';
@@ -26,7 +25,7 @@ import ImportRequestForm from './components/product/ImportRequestForm';
 import ImportFeed from './components/product/ImportFeed';
 import ProductListingView from './views/ProductListingView';
 import { DiscoveryFilters } from './types/discovery';
-import { Globe } from 'lucide-react';
+import { CategoryPills, OfertasDoDia, FeaturedSection } from './components/layout/HomePageSections';
 
 // Views
 import OrdersView from './views/OrdersView';
@@ -39,6 +38,14 @@ import ChatRoomView from './views/ChatRoomView';
 import ImportQuoteView from './views/ImportQuoteView';
 
 import { CheckCircle, Bell } from 'lucide-react';
+
+interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+}
 
 import { initOneSignal } from './lib/notifications';
 
@@ -92,6 +99,21 @@ const App = () => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [wishlist, setWishlist] = useState<Product[]>([]);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [appNotifications, setAppNotifications] = useState<AppNotification[]>([
+    { id: '1', title: 'Bem-vindo à Elara!', message: 'Explore milhares de produtos locais e importados.', time: 'Agora', read: false },
+  ]);
+
+  const toggleWishlist = React.useCallback((product: Product) => {
+    setWishlist(prev => {
+      const exists = prev.find(p => p.id === product.id);
+      if (exists) return prev.filter(p => p.id !== product.id);
+      return [...prev, product];
+    });
+  }, []);
+
+  const wishlistIds = React.useMemo(() => wishlist.map(p => p.id), [wishlist]);
 
   // Theme Effect
   useEffect(() => {
@@ -470,7 +492,11 @@ const App = () => {
           toggleTheme={() => setIsDark(!isDark)}
           toggleMobileMenu={() => setIsMobileMenuOpen(true)}
           cartCount={cart.reduce((acc, item) => acc + (item.cartQuantity || 1), 0)}
+          wishlistCount={wishlist.length}
+          notifications={appNotifications}
+          onMarkNotificationsRead={() => setAppNotifications(prev => prev.map(n => ({ ...n, read: true })))}
           onOpenCart={() => setIsCartOpen(true)}
+          onOpenWishlist={() => setIsWishlistOpen(true)}
           onOpenProfile={() => setIsProfileOpen(true)}
           userProfile={userProfile}
           onOpenAuth={() => setIsAuthModalOpen(true)}
@@ -491,7 +517,7 @@ const App = () => {
             animate="visible"
             exit="exit"
           >
-          {currentView === 'home' ? (
+          {currentView === 'home' && (
             userProfile?.role === 'intermediary' ? (
               <ImportFeed />
             ) : searchQuery.trim() !== '' ? (
@@ -499,92 +525,49 @@ const App = () => {
                 products={products}
                 filters={discoveryFilters}
                 onChangeFilters={setDiscoveryFilters}
-                onBack={() => {
-                  setSearchQuery('');
-                  navigateTo('home');
-                }}
+                onBack={() => { setSearchQuery(''); navigateTo('home'); }}
                 onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
                 onAddToCart={addToCart}
+                wishlist={wishlistIds}
+                onToggleWishlist={toggleWishlist}
               />
             ) : (
-              <div className="space-y-8 md:space-y-12">
-                <Hero onCtaClick={() => document.getElementById('destaques')?.scrollIntoView({ behavior: 'smooth' })} />
-
-                <CategoryGrid onCategoryClick={(name) => handleSelectCategory(name)} />
-
-                {/* Featured Products */}
-                <section id="destaques" className="px-4">
-                  <div className="container mx-auto">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white">Destaques</h2>
-                      <button className="text-sm font-semibold text-purple-600 hover:text-purple-700">Ver todos</button>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {products.slice(0, 8).map(p => (
-                        <ProductCard key={p.id} product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
-                      ))}
-                    </div>
-                  </div>
-                </section>
-
-                {/* Import CTA Section */}
-                <section className="px-4">
-                  <div className="container mx-auto">
-                    <div className="bg-[#5A189A] p-6 md:p-8 rounded-2xl overflow-hidden relative">
-                      <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                        <div className="space-y-2 max-w-md">
-                          <h3 className="text-xl md:text-2xl font-black text-white leading-tight">
-                            Não encontrou o que procura?
-                          </h3>
-                          <p className="text-purple-100 text-sm font-medium">
-                            Peça uma importação personalizada da China, EUA ou Europa com as melhores taxas do mercado.
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setIsImportModalOpen(true)}
-                          className="shrink-0 bg-white text-[#5A189A] px-6 py-3 rounded-xl font-bold text-sm hover:bg-zinc-100 transition-colors inline-flex items-center justify-center gap-2"
-                        >
-                          <Globe size={18} />
-                          Peça uma Importação
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                {categories.map(cat => (
-                  <section key={cat.id} className="space-y-4">
-                    <div className="container mx-auto px-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white">{cat.name}</h2>
-                        <button onClick={() => handleSelectCategory(cat.name)} className="text-sm font-semibold text-purple-600 hover:text-purple-700">Ver Mais</button>
-                      </div>
-                    </div>
-                    <div className="flex gap-4 overflow-x-auto px-4 scroll-snap-x custom-scrollbar">
-                      {products.filter(p => p.category === cat.name).slice(0, 10).map(p => (
-                        <div key={p.id} className="min-w-[160px] scroll-snap-item">
-                          <ProductCard product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                ))}
+              <div>
+                <Hero onCtaClick={() => document.getElementById('ofertas')?.scrollIntoView({ behavior: 'smooth' })} />
+                <CategoryPills categories={categories} onSelect={handleSelectCategory} />
+                <div id="ofertas">
+                  <OfertasDoDia
+                    products={products}
+                    onAddToCart={addToCart}
+                    onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
+                    wishlist={wishlistIds}
+                    onToggleWishlist={toggleWishlist}
+                  />
+                </div>
+                <FeaturedSection
+                  products={products}
+                  onAddToCart={addToCart}
+                  onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
+                  wishlist={wishlistIds}
+                  onToggleWishlist={toggleWishlist}
+                  onSelectCategory={handleSelectCategory}
+                  onOpenImport={() => setIsImportModalOpen(true)}
+                />
               </div>
             )
-          ) : currentView === 'category' ? (
+          )}
+
+          {currentView === 'category' && (
             <ProductListingView
               products={products}
               filters={discoveryFilters}
               onChangeFilters={setDiscoveryFilters}
-              onBack={() => {
-                setActiveCategory(null);
-                navigateTo('home');
-              }}
+              onBack={() => { setActiveCategory(null); navigateTo('home'); }}
               onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
               onAddToCart={addToCart}
+              wishlist={wishlistIds}
+              onToggleWishlist={toggleWishlist}
             />
-          ) : (
-            null
           )}
 
           {currentView === 'orders' && (
@@ -666,6 +649,14 @@ const App = () => {
       </main>
 
       <Footer />
+
+      <WishlistDrawer
+        isOpen={isWishlistOpen}
+        onClose={() => setIsWishlistOpen(false)}
+        items={wishlist}
+        onAddToCart={(p) => { addToCart(p); setIsWishlistOpen(false); }}
+        onRemove={(id) => setWishlist(prev => prev.filter(p => p.id !== id))}
+      />
 
       <BottomNav 
         activeTab={activeTab}
