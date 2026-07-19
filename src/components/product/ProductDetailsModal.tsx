@@ -37,17 +37,17 @@ const ProductDetailsModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-start justify-center p-0 md:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-950 w-full max-w-6xl h-full md:h-auto md:max-h-[92vh] md:rounded-[40px] shadow-2xl relative animate-in fade-in zoom-in-95 duration-300 flex flex-col overflow-hidden my-auto border border-zinc-200 dark:border-zinc-800">
+      <div className="bg-white w-full max-w-6xl h-full md:h-auto md:max-h-[92vh] md:rounded-[40px] shadow-2xl relative animate-in fade-in zoom-in-95 duration-300 flex flex-col overflow-hidden my-auto border border-zinc-200">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-3 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md rounded-full text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all shadow-xl active:scale-90"
+          className="absolute top-4 right-4 z-10 p-3 bg-white/90 backdrop-blur-md rounded-full text-zinc-500 hover:text-zinc-900 transition-all shadow-xl active:scale-90"
         >
           <X size={24} />
         </button>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="flex flex-col lg:flex-row">
-            <div className="w-full lg:w-[45%] p-4 md:p-6 bg-zinc-50 dark:bg-zinc-900/50">
+            <div className="w-full lg:w-[45%] p-4 md:p-6 bg-zinc-50">
               <div className="lg:sticky lg:top-6">
                 <ProductGallery images={images} title={product.title} />
               </div>
@@ -55,28 +55,28 @@ const ProductDetailsModal = ({
 
             <div className="flex-1 p-5 md:p-8 lg:p-10">
               <div className="flex flex-wrap items-center gap-3 mb-4">
-                <span className="text-[10px] md:text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-900/20 px-3 py-1 rounded-lg">
+                <span className="text-[10px] md:text-xs font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-lg">
                   {product.category}
                 </span>
                 {product.verified && (
-                  <span className="text-[10px] md:text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-lg flex items-center gap-1">
+                  <span className="text-[10px] md:text-xs font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-lg flex items-center gap-1">
                     <ShieldCheck size={12} />
                     Verificado
                   </span>
                 )}
                 <div className="flex items-center gap-1 text-amber-400">
                   <Star size={14} className="fill-current" />
-                  <span className="text-xs md:text-sm font-black text-zinc-900 dark:text-white">{product.productRating || 4.5}</span>
+                  <span className="text-xs md:text-sm font-black text-zinc-900">{product.productRating || 4.5}</span>
                   <span className="text-[10px] md:text-sm font-bold text-zinc-400">({product.productReviews || 0} avaliações)</span>
                 </div>
               </div>
 
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-zinc-900 dark:text-white mb-4 md:mb-6 leading-tight tracking-tight">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-zinc-900 mb-4 md:mb-6 leading-tight tracking-tight">
                 {product.title}
               </h2>
 
               <div className="flex items-baseline gap-3 md:gap-4 mb-6 md:mb-8 flex-wrap">
-                <span className="text-3xl md:text-4xl font-black text-purple-600 dark:text-purple-400">
+                <span className="text-3xl md:text-4xl font-black text-purple-600">
                   Kz {product.price.toLocaleString('pt-AO')}
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
@@ -92,51 +92,51 @@ const ProductDetailsModal = ({
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
-                <div className="bg-zinc-50 dark:bg-zinc-900 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-zinc-100 dark:border-zinc-800">
-                  <div className="flex items-center gap-2 md:gap-3 text-zinc-500 dark:text-zinc-400 mb-1">
+                <div className="bg-zinc-50 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-zinc-100">
+                  <div className="flex items-center gap-2 md:gap-3 text-zinc-500 mb-1">
                     <Package size={16} className="md:w-[18px] md:h-[18px]" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Condição</span>
                   </div>
-                  <p className="text-xs md:text-base font-black dark:text-white">{product.condition || 'Novo'}</p>
+                  <p className="text-xs md:text-base font-black">{product.condition || 'Novo'}</p>
                 </div>
-                <div className="bg-zinc-50 dark:bg-zinc-900 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-zinc-100 dark:border-zinc-800">
-                  <div className="flex items-center gap-2 md:gap-3 text-zinc-500 dark:text-zinc-400 mb-1">
+                <div className="bg-zinc-50 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-zinc-100">
+                  <div className="flex items-center gap-2 md:gap-3 text-zinc-500 mb-1">
                     <Truck size={16} className="md:w-[18px] md:h-[18px]" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Entrega</span>
                   </div>
-                  <p className="text-xs md:text-base font-black dark:text-white">{product.deliveryStatus || '24-48h'}</p>
+                  <p className="text-xs md:text-base font-black">{product.deliveryStatus || '24-48h'}</p>
                 </div>
-                <div className="bg-zinc-50 dark:bg-zinc-900 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-zinc-100 dark:border-zinc-800">
-                  <div className="flex items-center gap-2 md:gap-3 text-zinc-500 dark:text-zinc-400 mb-1">
+                <div className="bg-zinc-50 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-zinc-100">
+                  <div className="flex items-center gap-2 md:gap-3 text-zinc-500 mb-1">
                     <Zap size={16} className="md:w-[18px] md:h-[18px]" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Stock</span>
                   </div>
-                  <p className="text-xs md:text-base font-black dark:text-white">{product.stock ?? 1} unidade{product.stock !== 1 ? 's' : ''}</p>
+                  <p className="text-xs md:text-base font-black">{product.stock ?? 1} unidade{product.stock !== 1 ? 's' : ''}</p>
                 </div>
               </div>
 
-              <div className="bg-zinc-50 dark:bg-zinc-900 rounded-2xl md:rounded-3xl border border-zinc-100 dark:border-zinc-800 p-4 md:p-6 mb-6 md:mb-8">
+              <div className="bg-zinc-50 rounded-2xl md:rounded-3xl border border-zinc-100 p-4 md:p-6 mb-6 md:mb-8">
                 <h3 className="text-sm font-black uppercase tracking-widest text-zinc-500 mb-3">Descrição</h3>
-                <p className="text-sm md:text-base text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                <p className="text-sm md:text-base text-zinc-700 leading-relaxed">
                   {product.description || 'Produto disponível na Elara. Entre em contacto com o vendedor para mais detalhes.'}
                 </p>
               </div>
 
               <div
                 onClick={() => onViewSeller?.(product.sellerId)}
-                className="group bg-zinc-50 dark:bg-zinc-900 p-4 md:p-6 rounded-2xl md:rounded-[32px] border border-zinc-100 dark:border-zinc-800 mb-6 md:mb-8 flex items-center justify-between cursor-pointer hover:border-purple-500/50 transition-all"
+                className="group bg-zinc-50 p-4 md:p-6 rounded-2xl md:rounded-[32px] border border-zinc-100 mb-6 md:mb-8 flex items-center justify-between cursor-pointer hover:border-purple-500/50 transition-all"
               >
                 <div className="flex items-center gap-3 md:gap-4">
                   <div className="relative">
                     <img
                       src={getAvatarUrl(product.sellerAvatar, product.sellerName)}
                       alt={product.sellerName}
-                      className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl object-cover border-2 border-white dark:border-zinc-800 shadow-lg"
+                      className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl object-cover border-2 border-white shadow-lg"
                     />
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 md:w-5 md:h-5 bg-emerald-500 border-2 border-white dark:border-zinc-800 rounded-full" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 md:w-5 md:h-5 bg-emerald-500 border-2 border-white rounded-full" />
                   </div>
                   <div>
-                    <h4 className="text-sm md:text-base font-black dark:text-white group-hover:text-purple-600 transition-colors">
+                    <h4 className="text-sm md:text-base font-black group-hover:text-purple-600 transition-colors">
                       {product.sellerName}
                     </h4>
                     <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-sm text-zinc-500">
@@ -147,7 +147,7 @@ const ProductDetailsModal = ({
                     </div>
                   </div>
                 </div>
-                <button className="p-2 md:p-3 bg-white dark:bg-zinc-800 rounded-xl md:rounded-2xl text-zinc-400 group-hover:text-purple-600 group-hover:bg-purple-50 dark:group-hover:bg-purple-900/20 transition-all">
+                <button className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl text-zinc-400 group-hover:text-purple-600 group-hover:bg-purple-50 transition-all">
                   <User size={18} className="md:w-5 md:h-5" />
                 </button>
               </div>
@@ -155,7 +155,7 @@ const ProductDetailsModal = ({
               <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                 <button
                   onClick={() => onContactSeller?.(product.sellerId, product.sellerName, product.sellerAvatar)}
-                  className="flex-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-black transition-all active:scale-95 flex items-center justify-center gap-2 md:gap-3"
+                  className="flex-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 py-3 md:py-4 rounded-xl md:rounded-2xl font-black transition-all active:scale-95 flex items-center justify-center gap-2 md:gap-3"
                 >
                   <MessageCircle size={20} className="md:w-[22px] md:h-[22px]" />
                   <span className="text-sm md:text-base">Chat</span>
@@ -183,7 +183,7 @@ const ProductDetailsModal = ({
               {onBuyNow && (
                 <button
                   onClick={() => onBuyNow(product)}
-                  className="w-full mt-3 md:mt-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-base md:text-lg active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3"
+                  className="w-full mt-3 md:mt-4 bg-zinc-900 text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-base md:text-lg active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3"
                 >
                   <CheckCircle2 size={20} className="md:w-[22px] md:h-[22px]" />
                   <span className="text-sm md:text-base">Comprar Agora</span>

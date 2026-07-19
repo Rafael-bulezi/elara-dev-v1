@@ -27,18 +27,18 @@ class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
-          <div className="max-w-md w-full bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 text-center border border-zinc-200 dark:border-zinc-800">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle className="text-red-600 dark:text-red-400" size={32} />
+        <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-4">
+          <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-zinc-200">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle className="text-red-600" size={32} />
             </div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Ops! Algo correu mal</h1>
-            <p className="text-zinc-600 dark:text-zinc-400 mb-8">
+            <h1 className="text-2xl font-bold text-zinc-900 mb-2">Ops! Algo correu mal</h1>
+            <p className="text-zinc-600 mb-8">
               Ocorreu um erro inesperado. Por favor, tente recarregar a página ou contacte o suporte se o problema persistir.
             </p>
             
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="mb-8 p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-left overflow-auto max-h-40">
+              <div className="mb-8 p-4 bg-zinc-100 rounded-lg text-left overflow-auto max-h-40">
                 <code className="text-xs text-red-500 font-mono">
                   {this.state.error.toString()}
                 </code>

@@ -68,7 +68,6 @@ const App = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   
   // UI State
-  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') !== 'light');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -118,16 +117,6 @@ const App = () => {
 
   const wishlistIds = React.useMemo(() => wishlist.map(p => p.id), [wishlist]);
 
-  // Theme Effect
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDark]);
 
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'info'} | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -493,11 +482,9 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors duration-500 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 font-sans selection:bg-purple-500/30 relative">
+    <div className="min-h-screen bg-zinc-50 transition-colors duration-500 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 font-sans selection:bg-purple-500/30 relative">
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header 
-          isDark={isDark}
-          toggleTheme={() => setIsDark(!isDark)}
           toggleMobileMenu={() => setIsMobileMenuOpen(true)}
           cartCount={cart.reduce((acc, item) => acc + (item.cartQuantity || 1), 0)}
           wishlistCount={wishlist.length}
@@ -610,6 +597,7 @@ const App = () => {
           {currentView === 'product' && selectedProduct && (
             <ProductDetailPage
               product={selectedProduct}
+              products={products}
               onBack={() => navigateTo('home')}
               onAddToCart={addToCart}
               onBuyNow={(p) => { addToCart(p); setIsCheckoutOpen(true); }}
@@ -617,6 +605,8 @@ const App = () => {
               onViewSeller={(id) => { setSelectedSellerId(id); navigateTo('seller'); }}
               wishlisted={wishlistIds.includes(selectedProduct.id)}
               onToggleWishlist={toggleWishlist}
+              onProductClick={handleProductClick}
+              wishlist={wishlistIds}
             />
           )}
 

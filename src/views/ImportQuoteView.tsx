@@ -54,11 +54,11 @@ const ImportQuoteView = ({ userProfile, onBack }: ImportQuoteViewProps) => {
   if (success) {
     return (
       <div className="container mx-auto px-4 py-20 max-w-2xl text-center">
-        <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/20 text-emerald-500 rounded-[32px] flex items-center justify-center mx-auto mb-8 animate-bounce">
+        <div className="w-24 h-24 bg-emerald-100 text-emerald-500 rounded-[32px] flex items-center justify-center mx-auto mb-8 animate-bounce">
           <ShieldCheck size={48} />
         </div>
-        <h2 className="text-4xl font-black dark:text-white tracking-tight mb-4">Solicitação Enviada!</h2>
-        <p className="text-xl text-zinc-500 dark:text-zinc-400 font-medium mb-10 leading-relaxed">
+        <h2 className="text-4xl font-black tracking-tight mb-4">Solicitação Enviada!</h2>
+        <p className="text-xl text-zinc-500 font-medium mb-10 leading-relaxed">
           Recebemos sua solicitação de cotação. Nossa equipe de importação analisará os detalhes e entrará em contato em até 24 horas úteis.
         </p>
         <button 
@@ -74,18 +74,18 @@ const ImportQuoteView = ({ userProfile, onBack }: ImportQuoteViewProps) => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex items-center gap-4 mb-10">
-        <button onClick={onBack} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
-          <ArrowLeft size={24} className="text-zinc-700 dark:text-zinc-300" />
+        <button onClick={onBack} className="p-2 bg-zinc-100 rounded-full hover:bg-zinc-200 transition-colors">
+          <ArrowLeft size={24} className="text-zinc-700" />
         </button>
         <div>
-          <h2 className="text-2xl md:text-4xl font-black text-zinc-900 dark:text-white tracking-tight">Solicitar Importação</h2>
-          <p className="text-zinc-500 dark:text-zinc-400 font-medium">Traga qualquer produto da China ou Europa</p>
+          <h2 className="text-2xl md:text-4xl font-black text-zinc-900 tracking-tight">Solicitar Importação</h2>
+          <p className="text-zinc-500 font-medium">Traga qualquer produto da China ou Europa</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <form onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 p-8 md:p-12 rounded-[40px] border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-500/5 space-y-8">
+          <form onSubmit={handleSubmit} className="bg-white p-8 md:p-12 rounded-[40px] border border-zinc-200 shadow-xl shadow-zinc-500/5 space-y-8">
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-black text-zinc-500 uppercase tracking-widest mb-3 px-1">Nome do Produto</label>
@@ -95,7 +95,7 @@ const ImportQuoteView = ({ userProfile, onBack }: ImportQuoteViewProps) => {
                   placeholder="Ex: iPhone 15 Pro Max 256GB"
                   value={formData.productName}
                   onChange={(e) => setFormData({...formData, productName: e.target.value})}
-                  className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all"
+                  className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
                 />
               </div>
 
@@ -108,7 +108,7 @@ const ImportQuoteView = ({ userProfile, onBack }: ImportQuoteViewProps) => {
                     placeholder="https://alibaba.com/product/..."
                     value={formData.productLink}
                     onChange={(e) => setFormData({...formData, productLink: e.target.value})}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 focus:border-purple-500/50 py-4 pl-14 pr-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all"
+                    className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 pl-14 pr-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
                   />
                 </div>
               </div>
@@ -122,7 +122,7 @@ const ImportQuoteView = ({ userProfile, onBack }: ImportQuoteViewProps) => {
                     min="1"
                     value={formData.quantity}
                     onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all"
+                    className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -132,7 +132,7 @@ const ImportQuoteView = ({ userProfile, onBack }: ImportQuoteViewProps) => {
                     placeholder="Ex: 500.000"
                     value={formData.budget}
                     onChange={(e) => setFormData({...formData, budget: e.target.value})}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all"
+                    className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
                   />
                 </div>
               </div>
@@ -145,19 +145,19 @@ const ImportQuoteView = ({ userProfile, onBack }: ImportQuoteViewProps) => {
                   placeholder="Descreva cor, modelo, especificações técnicas ou qualquer detalhe importante..."
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all resize-none"
+                  className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all resize-none"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-black text-zinc-500 uppercase tracking-widest mb-3 px-1">Urgência</label>
-                <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+                <div className="flex bg-zinc-100 p-1.5 rounded-2xl border border-zinc-200">
                   {(['low', 'normal', 'high'] as const).map((u) => (
                     <button 
                       key={u}
                       type="button"
                       onClick={() => setFormData({...formData, urgency: u})}
-                      className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${formData.urgency === u ? 'bg-white dark:bg-zinc-700 text-purple-600 dark:text-purple-400 shadow-lg' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+                      className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${formData.urgency === u ? 'bg-white text-purple-600 shadow-lg' : 'text-zinc-500 hover:text-zinc-700'}`}
                     >
                       {u === 'low' ? 'Baixa' : u === 'normal' ? 'Normal' : 'Alta'}
                     </button>
@@ -206,12 +206,12 @@ const ImportQuoteView = ({ userProfile, onBack }: ImportQuoteViewProps) => {
             </div>
           </div>
 
-          <div className="bg-zinc-100 dark:bg-zinc-900 p-8 rounded-[40px] border border-zinc-200 dark:border-zinc-800">
+          <div className="bg-zinc-100 p-8 rounded-[40px] border border-zinc-200">
             <div className="flex items-center gap-3 mb-4 text-amber-500">
               <AlertCircle size={24} />
               <h4 className="font-black uppercase tracking-widest text-sm">Aviso Importante</h4>
             </div>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed">
+            <p className="text-sm text-zinc-500 font-medium leading-relaxed">
               O tempo médio de entrega para importações é de 15 a 25 dias úteis após a confirmação do pagamento. Todas as taxas alfandegárias já estão inclusas em nossas cotações finais.
             </p>
           </div>

@@ -110,7 +110,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
 
   return (
     <div
-      className="sticky top-[56px] md:top-[64px] z-40 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 shadow-sm"
+      className="sticky top-[56px] md:top-[64px] z-40 bg-white border-b border-zinc-200 shadow-sm"
       onMouseLeave={close}
     >
       {/* ── Pill strip ── */}
@@ -130,8 +130,8 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
               onClick={() => { setHovered(null); onSelectCategory(cat.name); }}
               className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all whitespace-nowrap
                 ${hovered === cat.name
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
-                  : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-purple-400 hover:text-purple-600'
+                  ? 'border-purple-500 bg-purple-50 text-purple-700'
+                  : 'border-zinc-200 bg-white text-zinc-700 hover:border-purple-400 hover:text-purple-600'
                 }`}
             >
               <span className={catColors[cat.name] || 'text-zinc-500'}>
@@ -146,7 +146,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
       {/* ── eBay-style dropdown ── */}
       {hovered && hovered !== '' && subs && (
         <div
-          className="absolute left-0 right-0 top-full bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 shadow-2xl z-50"
+          className="absolute left-0 right-0 top-full bg-white border-b border-zinc-200 shadow-2xl z-50"
           onMouseEnter={keepOpen}
           onMouseLeave={close}
         >
@@ -156,7 +156,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
             <div className="flex gap-8 shrink-0">
               {/* Most popular */}
               <div className="min-w-[160px]">
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">
                   Mais populares
                 </p>
                 <ul className="space-y-2">
@@ -164,7 +164,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
                     <li key={sub}>
                       <button
                         onClick={() => { setHovered(null); onSelectCategory(hovered); }}
-                        className="text-sm text-zinc-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium transition-colors text-left"
+                        className="text-sm text-zinc-700 hover:text-purple-600 font-medium transition-colors text-left"
                       >
                         {sub}
                       </button>
@@ -175,7 +175,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
 
               {/* More categories */}
               <div className="min-w-[160px]">
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">
                   Mais categorias
                 </p>
                 <ul className="space-y-2">
@@ -183,7 +183,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
                     <li key={sub}>
                       <button
                         onClick={() => { setHovered(null); onSelectCategory(hovered); }}
-                        className="text-sm text-zinc-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium transition-colors text-left"
+                        className="text-sm text-zinc-700 hover:text-purple-600 font-medium transition-colors text-left"
                       >
                         {sub}
                       </button>
@@ -194,7 +194,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
             </div>
 
             {/* Divider */}
-            <div className="hidden md:block w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" />
+            <div className="hidden md:block w-px bg-zinc-200 shrink-0" />
 
             {/* Right: large category banner card */}
             <div

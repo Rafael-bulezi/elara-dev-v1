@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft, ShoppingCart, Zap, MessageCircle, Heart, Star,
-  ShieldCheck, Truck, Package, ChevronRight, Share2, RotateCcw, ChevronLeft
+  ShieldCheck, Truck, Package, ChevronRight, Share2, RotateCcw, ChevronLeft,
 } from 'lucide-react';
 import { Product } from '../types';
 import { getAvatarUrl } from '../utils/avatar';
 
 interface ProductDetailPageProps {
   product: Product;
+  products?: Product[];
   onBack: () => void;
   onAddToCart: (p: Product) => void;
   onBuyNow: (p: Product) => void;
@@ -15,11 +16,13 @@ interface ProductDetailPageProps {
   onViewSeller: (sellerId: string) => void;
   wishlisted: boolean;
   onToggleWishlist: (p: Product) => void;
+  onProductClick?: (p: Product) => void;
+  wishlist?: string[];
 }
 
 const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
-  product, onBack, onAddToCart, onBuyNow, onContactSeller, onViewSeller,
-  wishlisted, onToggleWishlist,
+  product, products = [], onBack, onAddToCart, onBuyNow, onContactSeller, onViewSeller,
+  wishlisted, onToggleWishlist, onProductClick, wishlist = [],
 }) => {
   const [mainImg, setMainImg] = useState(0);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
@@ -39,9 +42,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const breadcrumbs = ['Início', product.category, product.title];
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-50">
       {/* Breadcrumb */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="bg-white border-b border-zinc-200">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-2.5 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
           <button onClick={onBack} className="flex items-center gap-1 text-zinc-500 hover:text-purple-600 text-xs font-medium shrink-0">
             <ArrowLeft size={14} />
@@ -49,8 +52,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </button>
           {breadcrumbs.map((crumb, i) => (
             <React.Fragment key={i}>
-              <ChevronRight size={12} className="text-zinc-300 dark:text-zinc-700 shrink-0" />
-              <span className={`text-xs shrink-0 ${i === breadcrumbs.length - 1 ? 'text-zinc-900 dark:text-white font-semibold truncate max-w-[200px]' : 'text-zinc-500 hover:text-purple-600 cursor-pointer font-medium'}`}>
+              <ChevronRight size={12} className="text-zinc-300 shrink-0" />
+              <span className={`text-xs shrink-0 ${i === breadcrumbs.length - 1 ? 'text-zinc-900 font-semibold truncate max-w-[200px]' : 'text-zinc-500 hover:text-purple-600 cursor-pointer font-medium'}`}>
                 {crumb}
               </span>
             </React.Fragment>
@@ -64,7 +67,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           {/* ── LEFT: Gallery ── */}
           <div className="lg:w-[44%] lg:sticky lg:top-24 lg:self-start">
             {/* Main image */}
-            <div className="relative aspect-square bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden mb-3 border border-zinc-200 dark:border-zinc-800">
+            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden mb-3 border border-zinc-200">
               {discount && (
                 <span className="absolute top-3 left-3 z-10 bg-rose-500 text-white text-xs font-black px-2 py-1 rounded-lg">
                   -{discount}%
@@ -73,12 +76,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               <button
                 onClick={() => onToggleWishlist(product)}
                 className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-colors ${
-                  wishlisted ? 'bg-rose-500 text-white' : 'bg-white dark:bg-zinc-800 text-zinc-400 hover:text-rose-500'
+                  wishlisted ? 'bg-rose-500 text-white' : 'bg-white text-zinc-400 hover:text-rose-500'
                 }`}
               >
                 <Heart size={18} fill={wishlisted ? 'currentColor' : 'none'} />
               </button>
-              <button className="absolute top-3 right-14 z-10 w-9 h-9 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center shadow-lg text-zinc-500 hover:text-zinc-800">
+              <button className="absolute top-3 right-14 z-10 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-lg text-zinc-500 hover:text-zinc-800">
                 <Share2 size={16} />
               </button>
               <img
@@ -90,11 +93,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               {images.length > 1 && (
                 <>
                   <button onClick={() => setMainImg(i => (i - 1 + images.length) % images.length)}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 dark:bg-zinc-800/90 rounded-full shadow flex items-center justify-center text-zinc-600 hover:bg-white">
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow flex items-center justify-center text-zinc-600 hover:bg-white">
                     <ChevronLeft size={16} />
                   </button>
                   <button onClick={() => setMainImg(i => (i + 1) % images.length)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 dark:bg-zinc-800/90 rounded-full shadow flex items-center justify-center text-zinc-600 hover:bg-white">
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow flex items-center justify-center text-zinc-600 hover:bg-white">
                     <ChevronRight size={16} />
                   </button>
                 </>
@@ -108,7 +111,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   key={i}
                   onClick={() => setMainImg(i)}
                   className={`shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-colors ${
-                    mainImg === i ? 'border-purple-500' : 'border-zinc-200 dark:border-zinc-800 hover:border-purple-300'
+                    mainImg === i ? 'border-purple-500' : 'border-zinc-200 hover:border-purple-300'
                   }`}
                 >
                   <img src={img} alt={`${product.title} ${i + 1}`} className="w-full h-full object-contain p-1" />
@@ -121,23 +124,23 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           <div className="flex-1 min-w-0">
             {/* Brand / badges */}
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="text-xs font-black text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-3 py-1 rounded-lg uppercase tracking-wide">
+              <span className="text-xs font-black text-purple-600 bg-purple-50 px-3 py-1 rounded-lg uppercase tracking-wide">
                 {product.category}
               </span>
               {product.condition && (
-                <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg">
+                <span className="text-xs font-bold text-zinc-600 bg-zinc-100 px-2 py-1 rounded-lg">
                   {product.condition}
                 </span>
               )}
               {product.isImport && (
-                <span className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
                   Importado
                 </span>
               )}
             </div>
 
             {/* Title */}
-            <h1 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white leading-tight mb-3">
+            <h1 className="text-xl md:text-2xl font-black text-zinc-900 leading-tight mb-3">
               {product.title}
             </h1>
 
@@ -147,16 +150,16 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 {[1,2,3,4,5].map(s => (
                   <Star key={s} size={14} className={s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-zinc-300 fill-zinc-300'} />
                 ))}
-                <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300 ml-1">{Number(rating).toFixed(1)}</span>
+                <span className="text-sm font-bold text-zinc-700 ml-1">{Number(rating).toFixed(1)}</span>
               </div>
               <span className="text-sm text-zinc-500">({reviewCount} avaliações)</span>
               <span className="text-sm font-semibold text-emerald-600">• Em stock</span>
             </div>
 
             {/* Price */}
-            <div className="bg-zinc-50 dark:bg-zinc-900 rounded-2xl p-4 mb-5">
+            <div className="bg-zinc-50 rounded-2xl p-4 mb-5">
               <div className="flex items-baseline gap-3 flex-wrap mb-1">
-                <span className="text-3xl md:text-4xl font-black text-zinc-900 dark:text-white">
+                <span className="text-3xl md:text-4xl font-black text-zinc-900">
                   {product.price.toLocaleString('pt-AO')} Kz
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
@@ -177,13 +180,13 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             <div className="space-y-2 mb-5">
               <div className="flex items-center gap-2 text-sm">
                 <Truck size={16} className="text-emerald-600 shrink-0" />
-                <span className="font-semibold text-zinc-900 dark:text-white">Entrega rápida em Luanda (24-48h)</span>
+                <span className="font-semibold text-zinc-900">Entrega rápida em Luanda (24-48h)</span>
                 <span className="text-emerald-600 font-bold ml-auto">Kz 1.500</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Package size={16} className="text-blue-500 shrink-0" />
                 <span className="text-zinc-500">Províncias (1-5 dias úteis)</span>
-                <span className="text-zinc-700 dark:text-zinc-300 font-semibold ml-auto">Kz 2.500</span>
+                <span className="text-zinc-700 font-semibold ml-auto">Kz 2.500</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <RotateCcw size={16} className="text-zinc-400 shrink-0" />
@@ -202,7 +205,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </button>
               <button
                 onClick={() => onBuyNow(product)}
-                className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold py-3.5 rounded-xl text-sm transition-colors hover:bg-zinc-800 dark:hover:bg-zinc-100"
+                className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 text-white font-bold py-3.5 rounded-xl text-sm transition-colors hover:bg-zinc-800"
               >
                 <Zap size={18} />
                 Comprar Agora
@@ -214,7 +217,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold py-3 rounded-xl text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors mb-5"
+                className="w-full flex items-center justify-center gap-2 border-2 border-emerald-500 text-emerald-600 font-bold py-3 rounded-xl text-sm hover:bg-emerald-50 transition-colors mb-5"
               >
                 <MessageCircle size={18} />
                 Falar no WhatsApp
@@ -224,23 +227,23 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {/* Seller card */}
             <div
               onClick={() => onViewSeller(product.sellerId)}
-              className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 cursor-pointer hover:border-purple-300 transition-colors mb-4"
+              className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-zinc-200 cursor-pointer hover:border-purple-300 transition-colors mb-4"
             >
               <img
                 src={getAvatarUrl(product.sellerAvatar, product.sellerName)}
                 alt={product.sellerName}
-                className="w-11 h-11 rounded-full object-cover border border-zinc-200 dark:border-zinc-700 shrink-0"
+                className="w-11 h-11 rounded-full object-cover border border-zinc-200 shrink-0"
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">{product.sellerName}</p>
+                  <p className="text-sm font-bold text-zinc-900 truncate">{product.sellerName}</p>
                   <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
                 </div>
                 <p className="text-xs text-zinc-500">Vendedor verificado · Ver loja</p>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); onContactSeller(product.sellerId); }}
-                className="shrink-0 flex items-center gap-1 text-xs font-bold text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-3 py-2 rounded-lg hover:bg-purple-100 transition-colors"
+                className="shrink-0 flex items-center gap-1 text-xs font-bold text-purple-600 bg-purple-50 px-3 py-2 rounded-lg hover:bg-purple-100 transition-colors"
               >
                 <MessageCircle size={13} />
                 Chat
@@ -253,10 +256,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 { icon: ShieldCheck, label: 'Pagamento seguro', sub: '100% protegido' },
                 { icon: Package, label: 'Suporte dedicado', sub: 'Estamos aqui para ajudar' },
               ].map(({ icon: Icon, label, sub }) => (
-                <div key={label} className="flex items-center gap-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                <div key={label} className="flex items-center gap-2 p-3 bg-zinc-50 rounded-xl border border-zinc-200">
                   <Icon size={18} className="text-purple-500 shrink-0" />
                   <div>
-                    <p className="text-xs font-bold text-zinc-900 dark:text-white">{label}</p>
+                    <p className="text-xs font-bold text-zinc-900">{label}</p>
                     <p className="text-[10px] text-zinc-500">{sub}</p>
                   </div>
                 </div>
@@ -266,8 +269,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         </div>
 
         {/* ── Tabs ── */}
-        <div className="mt-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-          <div className="flex border-b border-zinc-200 dark:border-zinc-800">
+        <div className="mt-8 bg-white rounded-2xl border border-zinc-200 overflow-hidden">
+          <div className="flex border-b border-zinc-200">
             {[
               { key: 'desc', label: 'Descrição' },
               { key: 'specs', label: 'Especificações' },
@@ -279,7 +282,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 className={`flex-1 py-3.5 text-sm font-bold transition-colors ${
                   activeTab === tab.key
                     ? 'text-purple-600 border-b-2 border-purple-600'
-                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                    : 'text-zinc-500 hover:text-zinc-800'
                 }`}
               >
                 {tab.label}
@@ -288,7 +291,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
           <div className="p-5 md:p-8">
             {activeTab === 'desc' && (
-              <div className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed space-y-3">
+              <div className="text-sm text-zinc-600 leading-relaxed space-y-3">
                 <p>{product.description || `${product.title} — disponível na Elara com entrega rápida para toda Angola.`}</p>
                 <p>Produto original com garantia de qualidade. Compre com confiança na maior marketplace angolana.</p>
               </div>
@@ -302,9 +305,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   ['Disponibilidade', 'Em stock'],
                   ['Importado', product.isImport ? 'Sim' : 'Não'],
                 ].map(([label, value]) => (
-                  <div key={label} className="flex items-center gap-4 py-2 border-b border-zinc-100 dark:border-zinc-800">
+                  <div key={label} className="flex items-center gap-4 py-2 border-b border-zinc-100">
                     <span className="text-xs font-bold text-zinc-500 w-32 shrink-0">{label}</span>
-                    <span className="text-xs text-zinc-900 dark:text-white font-semibold">{value}</span>
+                    <span className="text-xs text-zinc-900 font-semibold">{value}</span>
                   </div>
                 ))}
               </div>
@@ -312,7 +315,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {activeTab === 'reviews' && (
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="text-5xl font-black text-zinc-900 dark:text-white">{Number(rating).toFixed(1)}</div>
+                  <div className="text-5xl font-black text-zinc-900">{Number(rating).toFixed(1)}</div>
                   <div>
                     <div className="flex gap-0.5 mb-1">
                       {[1,2,3,4,5].map(s => (
@@ -328,6 +331,71 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
         </div>
       </div>
+
+      {/* ── Recommendations ── */}
+      {(() => {
+        const related = products
+          .filter(p => p.id !== product.id && p.category === product.category)
+          .slice(0, 6);
+        const fallback = products.filter(p => p.id !== product.id).slice(0, 6);
+        const recs = related.length >= 3 ? related : fallback;
+        if (recs.length === 0) return null;
+        return (
+          <div className="bg-white border-t border-zinc-100 mt-4">
+            <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8">
+              <h2 className="text-base font-black text-zinc-900 mb-5">Produtos semelhantes</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {recs.map(p => {
+                  const disc = p.originalPrice && p.originalPrice > p.price
+                    ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : null;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => onProductClick?.(p)}
+                      className="text-left group bg-white rounded-xl border border-zinc-200 overflow-hidden hover:shadow-md hover:border-purple-200 transition-all duration-200"
+                    >
+                      <div className="aspect-square bg-zinc-50 overflow-hidden relative">
+                        <img
+                          src={p.image}
+                          alt={p.title}
+                          className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-300"
+                        />
+                        {disc && (
+                          <span className="absolute top-1.5 left-1.5 bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
+                            -{disc}%
+                          </span>
+                        )}
+                        {wishlist.includes(p.id) && (
+                          <span className="absolute top-1.5 right-1.5 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow">
+                            <Heart size={11} className="text-rose-500 fill-rose-500" />
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-2.5">
+                        <p className="text-[11px] text-zinc-700 font-semibold line-clamp-2 leading-tight mb-1.5">{p.title}</p>
+                        <p className="text-sm font-black text-zinc-900">
+                          {p.price.toLocaleString('pt-AO')} Kz
+                        </p>
+                        {p.originalPrice && p.originalPrice > p.price && (
+                          <p className="text-[10px] text-zinc-400 line-through">
+                            {p.originalPrice.toLocaleString('pt-AO')} Kz
+                          </p>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onAddToCart(p); }}
+                          className="mt-2 w-full bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold py-1.5 rounded-lg transition-colors"
+                        >
+                          Adicionar
+                        </button>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

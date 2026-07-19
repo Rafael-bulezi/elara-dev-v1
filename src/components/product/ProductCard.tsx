@@ -24,10 +24,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       onClick={() => onProductClick(product)}
-      className="group bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer flex flex-col h-full transition-shadow"
+      className="group bg-white rounded-xl border border-zinc-200 overflow-hidden hover:shadow-md hover:border-zinc-300 cursor-pointer flex flex-col h-full transition-shadow"
     >
       {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-zinc-50 dark:bg-zinc-800">
+      <div className="relative aspect-square overflow-hidden bg-zinc-50">
         <ImageWithFallback
           src={product.image}
           alt={product.title}
@@ -51,7 +51,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition-colors ${
             wishlisted
               ? 'bg-rose-500 text-white'
-              : 'bg-white/90 dark:bg-zinc-800/90 text-zinc-500 hover:text-rose-500'
+              : 'bg-white/90 text-zinc-500 hover:text-rose-500'
           }`}
         >
           <Heart size={14} fill={wishlisted ? 'currentColor' : 'none'} />
@@ -67,7 +67,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Info */}
       <div className="p-2.5 flex flex-col flex-1">
-        <h3 className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 line-clamp-2 mb-1.5 leading-tight">
+        <h3 className="text-xs font-semibold text-zinc-800 line-clamp-2 mb-1.5 leading-tight">
           {product.title}
         </h3>
 
@@ -84,7 +84,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {/* Price */}
         <div className="mb-1.5">
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-base font-black text-zinc-900 dark:text-white">
+            <span className="text-base font-black text-zinc-900">
               {product.price.toLocaleString('pt-AO')} Kz
             </span>
             {product.originalPrice && product.originalPrice > product.price && (
@@ -96,7 +96,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Delivery */}
-        <div className="flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold mb-2">
+        <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-semibold mb-2">
           <Truck size={10} />
           {product.deliveryStatus || 'Rápida em Luanda (24-48h)'}
         </div>

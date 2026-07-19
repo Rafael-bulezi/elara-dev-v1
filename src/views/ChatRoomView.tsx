@@ -112,14 +112,14 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-zinc-950 z-[80] flex flex-col">
-      <div className="p-4 md:p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl sticky top-0 z-10">
+    <div className="fixed inset-0 bg-white z-[80] flex flex-col">
+      <div className="p-4 md:p-6 border-b border-zinc-200 flex items-center justify-between bg-white/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+          <button onClick={onBack} className="p-2 text-zinc-500 hover:bg-zinc-100 rounded-full transition-colors">
             <ArrowLeft size={24} />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-zinc-100 dark:bg-zinc-800 rounded-2xl overflow-hidden border-2 border-white dark:border-zinc-900 shadow-sm">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-zinc-100 rounded-2xl overflow-hidden border-2 border-white shadow-sm">
               {otherParticipantAvatar ? (
                 <img src={otherParticipantAvatar} alt={otherParticipantName} className="w-full h-full object-cover" />
               ) : (
@@ -129,7 +129,7 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
               )}
             </div>
             <div>
-              <h3 className="font-black text-zinc-900 dark:text-white leading-tight">{otherParticipantName}</h3>
+              <h3 className="font-black text-zinc-900 leading-tight">{otherParticipantName}</h3>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                 <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Online</span>
@@ -139,21 +139,21 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
         </div>
         
         <div className="flex items-center gap-2">
-          <button className="p-3 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-2xl transition-colors hidden sm:flex">
+          <button className="p-3 text-zinc-500 hover:bg-zinc-100 rounded-2xl transition-colors hidden sm:flex">
             <Phone size={20} />
           </button>
-          <button className="p-3 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-2xl transition-colors hidden sm:flex">
+          <button className="p-3 text-zinc-500 hover:bg-zinc-100 rounded-2xl transition-colors hidden sm:flex">
             <Video size={20} />
           </button>
-          <button className="p-3 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-2xl transition-colors">
+          <button className="p-3 text-zinc-500 hover:bg-zinc-100 rounded-2xl transition-colors">
             <MoreVertical size={20} />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-zinc-50 dark:bg-zinc-900/30">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-zinc-50">
         <div className="flex justify-center">
-          <div className="bg-white/50 dark:bg-zinc-800/50 backdrop-blur-md border border-zinc-200 dark:border-zinc-700 px-4 py-2 rounded-2xl flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-black uppercase tracking-widest shadow-sm">
+          <div className="bg-white/50 backdrop-blur-md border border-zinc-200 px-4 py-2 rounded-2xl flex items-center gap-2 text-zinc-500 text-xs font-black uppercase tracking-widest shadow-sm">
             <ShieldCheck size={14} className="text-emerald-500" />
             Conversa Protegida por Escrow
           </div>
@@ -170,7 +170,7 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
           return (
             <div key={msg.id} className={`flex items-end gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
               {!isMe && showAvatar && (
-                <div className="w-8 h-8 bg-zinc-100 dark:bg-zinc-800 rounded-xl overflow-hidden flex-shrink-0 border border-white dark:border-zinc-900 shadow-sm">
+                <div className="w-8 h-8 bg-zinc-100 rounded-xl overflow-hidden flex-shrink-0 border border-white shadow-sm">
                   {otherParticipantAvatar ? (
                     <img src={otherParticipantAvatar} alt={otherParticipantName} className="w-full h-full object-cover" />
                   ) : (
@@ -183,7 +183,7 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
               {!isMe && !showAvatar && <div className="w-8" />}
               
               <div className={`max-w-[80%] md:max-w-[70%] space-y-1 ${isMe ? 'items-end' : 'items-start'}`}>
-                <div className={`p-4 md:p-5 rounded-3xl shadow-sm relative group ${isMe ? 'bg-purple-600 text-white rounded-br-lg' : 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-bl-lg border border-zinc-100 dark:border-zinc-700'}`}>
+                <div className={`p-4 md:p-5 rounded-3xl shadow-sm relative group ${isMe ? 'bg-purple-600 text-white rounded-br-lg' : 'bg-white text-zinc-900 rounded-bl-lg border border-zinc-100'}`}>
                   <p className="text-sm md:text-base font-medium leading-relaxed">{msg.text}</p>
                   <div className={`flex items-center gap-2 mt-2 ${isMe ? 'justify-end text-white/60' : 'justify-start text-zinc-400'}`}>
                     <span className="text-[10px] font-black uppercase tracking-widest">
@@ -199,9 +199,9 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 md:p-6 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-6">
+      <div className="p-4 md:p-6 border-t border-zinc-200 bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-6">
         <form onSubmit={handleSendMessage} className="flex items-center gap-3 md:gap-4 max-w-5xl mx-auto">
-          <button type="button" className="p-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-2xl transition-all active:scale-95">
+          <button type="button" className="p-4 bg-zinc-100 text-zinc-500 hover:bg-zinc-200 rounded-2xl transition-all active:scale-95">
             <ImageIcon size={22} />
           </button>
           <div className="flex-1 relative group">
@@ -210,7 +210,7 @@ const ChatRoomView = ({ chat, userProfile, onBack }: ChatRoomViewProps) => {
               placeholder="Digite sua mensagem..." 
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              className="w-full bg-zinc-100 dark:bg-zinc-800 border-2 border-transparent focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all"
+              className="w-full bg-zinc-100 border-2 border-transparent focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
             />
           </div>
           <button 

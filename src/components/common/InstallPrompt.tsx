@@ -49,10 +49,10 @@ const InstallPrompt = ({ deferredPrompt, clearPrompt, forceShow, appLogo }: Inst
   };
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-[9999] bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-2xl animate-in slide-in-from-bottom-10">
+    <div className="fixed bottom-20 left-4 right-4 z-[9999] bg-white p-6 rounded-3xl border border-zinc-200 shadow-2xl animate-in slide-in-from-bottom-10">
       <button 
         onClick={() => setShowPrompt(false)}
-        className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white"
+        className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600"
       >
         <X size={20} />
       </button>
@@ -68,12 +68,12 @@ const InstallPrompt = ({ deferredPrompt, clearPrompt, forceShow, appLogo }: Inst
         </div>
         
         <div className="flex-1">
-          <h4 className="font-black text-lg dark:text-white leading-tight mb-1">
+          <h4 className="font-black text-lg leading-tight mb-1">
             Instalar o App Elara <span className="text-purple-600 text-sm">Beta</span>
           </h4>
           
           {isIOS ? (
-            <div className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2 mt-2">
+            <div className="text-sm text-zinc-600 space-y-2 mt-2">
               <p>Para instalar no seu iPhone/iPad:</p>
               <ol className="list-decimal list-inside space-y-1 font-medium">
                 <li className="flex items-center gap-2">Toque em <Share size={16} className="inline text-blue-500" /> Compartilhar</li>
@@ -82,13 +82,13 @@ const InstallPrompt = ({ deferredPrompt, clearPrompt, forceShow, appLogo }: Inst
             </div>
           ) : (
             <>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+              <p className="text-sm text-zinc-500 mb-4">
                 Tenha uma experiência mais rápida, segura e sem gastar dados do navegador.
               </p>
               
               {!deferredPrompt && (
-                <div className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2 mb-4 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="font-bold text-zinc-900 dark:text-white">Como instalar:</p>
+                <div className="text-sm text-zinc-600 space-y-2 mb-4 bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+                  <p className="font-bold text-zinc-900">Como instalar:</p>
                   <ol className="list-decimal list-inside space-y-1 font-medium">
                     <li>Toque nos <strong>3 pontinhos</strong> no menu do navegador</li>
                     <li>Selecione <strong>Adicionar à tela inicial</strong> ou <strong>Instalar aplicativo</strong></li>

@@ -47,16 +47,16 @@ const SearchSuggestions = ({
               setIsOpen(false);
             }
           }}
-          className="w-full bg-zinc-100 dark:bg-zinc-900 border-2 border-transparent focus:border-purple-500/50 focus:bg-white dark:focus:bg-zinc-950 rounded-2xl py-2.5 pl-12 pr-4 text-sm font-medium transition-all outline-none dark:text-white placeholder:text-zinc-400"
+          className="w-full bg-zinc-100 border-2 border-transparent focus:border-purple-500/50 focus:bg-white rounded-2xl py-2.5 pl-12 pr-4 text-sm font-medium transition-all outline-none placeholder:text-zinc-400"
         />
       </div>
 
       {showSuggestions && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl z-50 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-zinc-200 shadow-xl z-50 overflow-hidden">
           {query.trim().length > 0 && (
             <button
               onClick={() => { onSelect(query); setIsOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-purple-600 hover:bg-purple-50 transition-colors"
             >
               <Search size={16} />
               Ver resultados para "{query}"
@@ -64,12 +64,12 @@ const SearchSuggestions = ({
           )}
 
           {suggestions.length > 0 && (
-            <div className="border-t border-zinc-100 dark:border-zinc-800">
+            <div className="border-t border-zinc-100">
               {suggestions.map((s, i) => (
                 <button
                   key={i}
                   onClick={() => { onSelect(s); setIsOpen(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
                 >
                   <Search size={14} className="text-zinc-400" />
                   {s}
@@ -79,7 +79,7 @@ const SearchSuggestions = ({
           )}
 
           {recentSearches.length > 0 && (
-            <div className="border-t border-zinc-100 dark:border-zinc-800">
+            <div className="border-t border-zinc-100">
               <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400">
                 Pesquisas Recentes
               </div>
@@ -87,7 +87,7 @@ const SearchSuggestions = ({
                 <button
                   key={i}
                   onClick={() => { onSelect(s); setIsOpen(false); }}
-                  className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
                 >
                   <span className="flex items-center gap-3">
                     <Clock size={14} className="text-zinc-400" />

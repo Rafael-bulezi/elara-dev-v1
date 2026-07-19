@@ -16,7 +16,7 @@ const ProductGallery = ({ images, title }: ProductGalleryProps) => {
 
   return (
     <div className="flex flex-col gap-3 h-full">
-      <div className="relative flex-1 min-h-[300px] bg-zinc-100 dark:bg-zinc-900 rounded-2xl overflow-hidden group">
+      <div className="relative flex-1 min-h-[300px] bg-zinc-100 rounded-2xl overflow-hidden group">
         <ImageWithFallback
           src={safeImages[activeIndex]}
           alt={title}
@@ -26,15 +26,15 @@ const ProductGallery = ({ images, title }: ProductGalleryProps) => {
           <>
             <button
               onClick={prev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 dark:bg-zinc-900/90 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <ChevronLeft size={20} className="text-zinc-700 dark:text-zinc-300" />
+              <ChevronLeft size={20} className="text-zinc-700" />
             </button>
             <button
               onClick={next}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 dark:bg-zinc-900/90 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <ChevronRight size={20} className="text-zinc-700 dark:text-zinc-300" />
+              <ChevronRight size={20} className="text-zinc-700" />
             </button>
           </>
         )}

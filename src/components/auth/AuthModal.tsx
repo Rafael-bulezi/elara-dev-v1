@@ -96,28 +96,28 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="bg-white dark:bg-zinc-900 rounded-[40px] w-full max-w-md overflow-hidden border border-zinc-200 dark:border-zinc-800 my-auto max-h-[90vh] flex flex-col"
+        className="bg-white rounded-[40px] w-full max-w-md overflow-hidden border border-zinc-200 my-auto max-h-[90vh] flex flex-col"
       >
         <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-4xl font-black dark:text-white tracking-tighter mb-2">
+              <h2 className="text-4xl font-black tracking-tighter mb-2">
                 {isLogin ? 'Bem-vindo' : 'Criar Conta'}
               </h2>
-              <p className="text-zinc-500 dark:text-zinc-400 font-medium">
+              <p className="text-zinc-500 font-medium">
                 {isLogin ? 'Entre na sua conta ELARA' : 'Junte-se à nossa comunidade'}
               </p>
             </div>
             <button 
               onClick={onClose} 
-              className="p-3 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-2xl transition-all"
+              className="p-3 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-2xl transition-all"
             >
               <X size={24} />
             </button>
           </div>
 
-          <div className="mb-8 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/30 rounded-2xl">
-            <p className="text-sm text-purple-800 dark:text-purple-300 font-medium">
+          <div className="mb-8 p-4 bg-purple-50 border border-purple-200 rounded-2xl">
+            <p className="text-sm text-purple-800 font-medium">
               <strong className="font-black uppercase tracking-wider">Fase de Testes:</strong> Você não precisa confirmar seu e-mail ou número agora. Basta inserir seus dados e acessar!
             </p>
           </div>
@@ -130,13 +130,13 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               <div className="grid grid-cols-2 gap-4">
                 <button 
                   onClick={() => setRole('buyer')}
-                  className={`py-4 rounded-2xl border-2 font-black uppercase tracking-wider text-xs transition-all ${role === 'buyer' ? 'border-zinc-900 dark:border-white bg-zinc-900 dark:bg-white text-white dark:text-zinc-900' : 'border-zinc-100 dark:border-zinc-800 text-zinc-400'}`}
+                  className={`py-4 rounded-2xl border-2 font-black uppercase tracking-wider text-xs transition-all ${role === 'buyer' ? 'border-zinc-900 bg-zinc-900 text-white' : 'border-zinc-100 text-zinc-400'}`}
                 >
                   Comprar
                 </button>
                 <button 
                   onClick={() => setRole('seller')}
-                  className={`py-4 rounded-2xl border-2 font-black uppercase tracking-wider text-xs transition-all ${role === 'seller' ? 'border-zinc-900 dark:border-white bg-zinc-900 dark:bg-white text-white dark:text-zinc-900' : 'border-zinc-100 dark:border-zinc-800 text-zinc-400'}`}
+                  className={`py-4 rounded-2xl border-2 font-black uppercase tracking-wider text-xs transition-all ${role === 'seller' ? 'border-zinc-900 bg-zinc-900 text-white' : 'border-zinc-100 text-zinc-400'}`}
                 >
                   Vender
                 </button>
@@ -151,7 +151,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 placeholder="Nome Completo" 
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
+                className="w-full p-4 rounded-2xl border border-zinc-200 bg-zinc-50"
                 required
               />
             )}
@@ -160,7 +160,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               placeholder="Número de Telefone" 
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
+              className="w-full p-4 rounded-2xl border border-zinc-200 bg-zinc-50"
               required
             />
             <input 
@@ -168,7 +168,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               placeholder="Senha" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
+              className="w-full p-4 rounded-2xl border border-zinc-200 bg-zinc-50"
               required
             />
             <input 
@@ -176,13 +176,13 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               placeholder="Confirmar Senha" 
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800"
+              className="w-full p-4 rounded-2xl border border-zinc-200 bg-zinc-50"
               required
             />
             <button 
               type="submit"
               disabled={loading}
-              className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-zinc-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -206,17 +206,17 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
+              <div className="w-full border-t border-zinc-200"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-zinc-900 px-2 text-zinc-400">Ou</span>
+              <span className="bg-white px-2 text-zinc-400">Ou</span>
             </div>
           </div>
 
           <button 
             onClick={handleGoogleAuth}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-4 bg-white dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-800 hover:border-zinc-900 dark:hover:border-white text-zinc-900 dark:text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 disabled:opacity-50 group"
+            className="w-full flex items-center justify-center gap-4 bg-white border-2 border-zinc-100 hover:border-zinc-900 text-zinc-900 py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 disabled:opacity-50 group"
           >
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -230,7 +230,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           <div className="mt-10 text-center">
             <button 
               onClick={() => setIsLogin(!isLogin)}
-              className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+              className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400 hover:text-zinc-900 transition-colors"
             >
               {isLogin ? 'Não tem conta? Criar agora' : 'Já tem conta? Entrar'}
             </button>

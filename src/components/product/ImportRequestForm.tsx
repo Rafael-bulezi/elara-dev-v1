@@ -67,21 +67,21 @@ const ImportRequestForm = ({ isOpen, onClose, onSubmit, userProfile }: ImportReq
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="bg-white dark:bg-zinc-900 rounded-[32px] w-full max-w-lg overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-2xl relative"
+            className="bg-white rounded-[32px] w-full max-w-lg overflow-hidden border border-zinc-200 shadow-2xl relative"
           >
             <div className="p-8 md:p-10">
               <div className="flex justify-between items-start mb-8">
                 <div>
-                  <h2 className="text-3xl font-black dark:text-white tracking-tight mb-2">
+                  <h2 className="text-3xl font-black tracking-tight mb-2">
                     Pedir Importação
                   </h2>
-                  <p className="text-zinc-500 dark:text-zinc-400 font-medium">
+                  <p className="text-zinc-500 font-medium">
                     Descreva o item que você deseja trazer para Angola.
                   </p>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-all"
+                  className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-full transition-all"
                 >
                   <X size={24} />
                 </button>
@@ -89,7 +89,7 @@ const ImportRequestForm = ({ isOpen, onClose, onSubmit, userProfile }: ImportReq
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-2 ml-1">
+                  <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 mb-2 ml-1">
                     Nome do Item
                   </label>
                   <input
@@ -98,12 +98,12 @@ const ImportRequestForm = ({ isOpen, onClose, onSubmit, userProfile }: ImportReq
                     placeholder="Ex: MacBook Pro M2, Tênis Nike Jordan..."
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#5A189A]/50 transition-all"
+                    className="w-full p-4 rounded-2xl border border-zinc-200 bg-zinc-50 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#5A189A]/50 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-2 ml-1">
+                  <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 mb-2 ml-1">
                     Descrição Detalhada
                   </label>
                   <textarea
@@ -112,13 +112,13 @@ const ImportRequestForm = ({ isOpen, onClose, onSubmit, userProfile }: ImportReq
                     placeholder="Especifique cor, tamanho, modelo exato, link de referência se houver..."
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#5A189A]/50 transition-all resize-none custom-scrollbar"
+                    className="w-full p-4 rounded-2xl border border-zinc-200 bg-zinc-50 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#5A189A]/50 transition-all resize-none custom-scrollbar"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-2 ml-1">
+                    <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 mb-2 ml-1">
                       Orçamento (Kz/USD)
                     </label>
                     <input
@@ -127,11 +127,11 @@ const ImportRequestForm = ({ isOpen, onClose, onSubmit, userProfile }: ImportReq
                       placeholder="Ex: 50.000 Kz"
                       value={formData.budget}
                       onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                      className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#5A189A]/50 transition-all"
+                      className="w-full p-4 rounded-2xl border border-zinc-200 bg-zinc-50 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#5A189A]/50 transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-2 ml-1">
+                    <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 mb-2 ml-1">
                       WhatsApp de Contacto
                     </label>
                     <input
@@ -140,16 +140,16 @@ const ImportRequestForm = ({ isOpen, onClose, onSubmit, userProfile }: ImportReq
                       placeholder="+244..."
                       value={formData.whatsapp}
                       onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                      className="w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#5A189A]/50 transition-all"
+                      className="w-full p-4 rounded-2xl border border-zinc-200 bg-zinc-50 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#5A189A]/50 transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-2 ml-1">
+                  <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 mb-2 ml-1">
                     Imagem de Referência (Opcional)
                   </label>
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-zinc-200 dark:border-zinc-800 border-dashed rounded-2xl cursor-pointer bg-zinc-50 dark:bg-zinc-950/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group overflow-hidden relative">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-zinc-200 border-dashed rounded-2xl cursor-pointer bg-zinc-50 hover:bg-zinc-100 transition-colors group overflow-hidden relative">
                     {formData.image ? (
                       <div className="absolute inset-0 w-full h-full">
                         <img 
@@ -164,7 +164,7 @@ const ImportRequestForm = ({ isOpen, onClose, onSubmit, userProfile }: ImportReq
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Upload className="w-8 h-8 text-zinc-400 group-hover:text-[#5A189A] transition-colors mb-2" />
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
+                        <p className="text-sm text-zinc-500 font-medium">
                           Adicionar foto do produto
                         </p>
                       </div>

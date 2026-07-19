@@ -213,17 +213,17 @@ const CheckoutModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-start justify-center p-0 md:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-950 w-full max-w-2xl h-full md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl relative animate-in fade-in zoom-in-95 duration-300 flex flex-col overflow-hidden my-auto border border-zinc-200 dark:border-zinc-800">
-        <div className="p-6 md:p-8 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between flex-shrink-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl sticky top-0 z-10">
+      <div className="bg-white w-full max-w-2xl h-full md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl relative animate-in fade-in zoom-in-95 duration-300 flex flex-col overflow-hidden my-auto border border-zinc-200">
+        <div className="p-6 md:p-8 border-b border-zinc-200 flex items-center justify-between flex-shrink-0 bg-white/80 backdrop-blur-xl sticky top-0 z-10">
           <div className="flex items-center gap-4">
             {step > 1 && !success && (
-              <button onClick={() => setStep(step - 1)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl transition-colors">
-                <ArrowLeft size={20} className="text-zinc-600 dark:text-zinc-400" />
+              <button onClick={() => setStep(step - 1)} className="p-2 hover:bg-zinc-100 rounded-xl transition-colors">
+                <ArrowLeft size={20} className="text-zinc-600" />
               </button>
             )}
-            <h2 className="text-2xl font-black dark:text-white tracking-tight">Finalizar Compra</h2>
+            <h2 className="text-2xl font-black tracking-tight">Finalizar Compra</h2>
           </div>
-          <button onClick={onClose} className="p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full">
+          <button onClick={onClose} className="p-2 text-zinc-500 hover:bg-zinc-100 rounded-full">
             <X size={24} />
           </button>
         </div>
@@ -231,7 +231,7 @@ const CheckoutModal = ({
         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
           <div className="p-6 md:p-10 flex-1">
           {error && (
-            <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl font-bold text-sm flex items-center gap-2">
+            <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl font-bold text-sm flex items-center gap-2">
               <AlertCircle size={18} />
               {error}
             </div>
@@ -239,7 +239,7 @@ const CheckoutModal = ({
           
           {success ? (
             <div className="flex flex-col items-center justify-center py-12 text-center animate-in fade-in zoom-in duration-500">
-              <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-8 relative">
+              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-8 relative">
                 <CheckCircle size={48} className="text-emerald-500" />
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -249,8 +249,8 @@ const CheckoutModal = ({
                 />
               </div>
               <div className="space-y-4">
-                <h3 className="text-3xl font-black dark:text-white tracking-tight">Pagamento Confirmado!</h3>
-                <p className="text-zinc-500 dark:text-zinc-400 font-medium max-w-xs mx-auto">
+                <h3 className="text-3xl font-black tracking-tight">Pagamento Confirmado!</h3>
+                <p className="text-zinc-500 font-medium max-w-xs mx-auto">
                   O seu pedido foi processado com sucesso e o pagamento foi identificado pelo sistema.
                 </p>
                 <div className="flex items-center justify-center gap-2 pt-4">
@@ -260,40 +260,40 @@ const CheckoutModal = ({
                   <div className="w-12 h-1 bg-emerald-500 rounded-full" />
                   <div className="w-2 h-2 bg-emerald-500 rounded-full" />
                 </div>
-                <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.3em]">Processo Concluído</p>
+                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em]">Processo Concluído</p>
               </div>
             </div>
           ) : step === 1 ? (
             <div className="space-y-8">
               <div className="text-center space-y-2">
-                <h3 className="text-xl font-black dark:text-white">Como você prefere finalizar?</h3>
-                <p className="text-zinc-500 dark:text-zinc-400">Escolha o método de fechamento do seu pedido</p>
+                <h3 className="text-xl font-black">Como você prefere finalizar?</h3>
+                <p className="text-zinc-500">Escolha o método de fechamento do seu pedido</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button 
                   onClick={() => { setCheckoutType('whatsapp'); setStep(2); }}
-                  className="group p-8 rounded-[32px] border-2 border-emerald-500/20 hover:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10 transition-all text-center space-y-4"
+                  className="group p-8 rounded-[32px] border-2 border-emerald-500/20 hover:border-emerald-500 bg-emerald-50/50 transition-all text-center space-y-4"
                 >
                   <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center text-white mx-auto shadow-xl shadow-emerald-500/20 group-hover:scale-110 transition-transform">
                     <MessageCircle size={32} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-black text-emerald-700 dark:text-emerald-400">Via WhatsApp</h4>
-                    <p className="text-sm text-emerald-600/70 dark:text-emerald-400/50 font-bold">Fale direto com o vendedor</p>
+                    <h4 className="text-lg font-black text-emerald-700">Via WhatsApp</h4>
+                    <p className="text-sm text-emerald-600/70 font-bold">Fale direto com o vendedor</p>
                   </div>
                 </button>
 
                 <button 
                   onClick={() => { setCheckoutType('app'); setStep(2); }}
-                  className="group p-8 rounded-[32px] border-2 border-purple-500/20 hover:border-purple-500 bg-purple-50/50 dark:bg-purple-900/10 transition-all text-center space-y-4"
+                  className="group p-8 rounded-[32px] border-2 border-purple-500/20 hover:border-purple-500 bg-purple-50/50 transition-all text-center space-y-4"
                 >
                   <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center text-white mx-auto shadow-xl shadow-purple-500/20 group-hover:scale-110 transition-transform">
                     <Smartphone size={32} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-black text-purple-700 dark:text-purple-400">Pelo App</h4>
-                    <p className="text-sm text-purple-600/70 dark:text-purple-400/50 font-bold">Pagamento seguro via ELARA</p>
+                    <h4 className="text-lg font-black text-purple-700">Pelo App</h4>
+                    <p className="text-sm text-purple-600/70 font-bold">Pagamento seguro via ELARA</p>
                   </div>
                 </button>
               </div>
@@ -302,41 +302,41 @@ const CheckoutModal = ({
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h4 className="text-lg font-black dark:text-white flex items-center gap-3">
+                  <h4 className="text-lg font-black flex items-center gap-3">
                     <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white text-sm">1</div>
                     Dados de Entrega
                   </h4>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Nome Completo</label>
+                      <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">Nome Completo</label>
                       <input 
                         type="text" 
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 focus:border-purple-500/50 p-4 rounded-2xl outline-none transition-all dark:text-white font-bold"
+                        className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 p-4 rounded-2xl outline-none transition-all font-bold"
                         placeholder="Seu nome"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Telefone</label>
+                      <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">Telefone</label>
                       <input 
                         type="tel" 
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 focus:border-purple-500/50 p-4 rounded-2xl outline-none transition-all dark:text-white font-bold"
+                        className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 p-4 rounded-2xl outline-none transition-all font-bold"
                         placeholder="Seu WhatsApp"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Endereço de Entrega</label>
+                      <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">Endereço de Entrega</label>
                       <input 
                         type="text" 
                         name="address"
                         value={formData.address}
                         onChange={handleInputChange}
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 focus:border-purple-500/50 p-4 rounded-2xl outline-none transition-all dark:text-white font-bold"
+                        className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 p-4 rounded-2xl outline-none transition-all font-bold"
                         placeholder="Rua, Bairro, Cidade"
                       />
                     </div>
@@ -344,7 +344,7 @@ const CheckoutModal = ({
                 </div>
 
                 <div className="space-y-6">
-                  <h4 className="text-lg font-black dark:text-white flex items-center gap-3">
+                  <h4 className="text-lg font-black flex items-center gap-3">
                     <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white text-sm">2</div>
                     Pagamento
                   </h4>
@@ -358,7 +358,7 @@ const CheckoutModal = ({
                       <button 
                         key={method.id}
                         onClick={() => handlePaymentChange(method.id)}
-                        className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${formData.paymentMethod === method.id ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400' : 'border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-200 dark:hover:border-zinc-700'}`}
+                        className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${formData.paymentMethod === method.id ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-zinc-100 text-zinc-600 hover:border-zinc-200'}`}
                       >
                         <div className="flex items-center gap-3">
                           <method.icon size={20} />
@@ -369,7 +369,7 @@ const CheckoutModal = ({
                     ))}
                   </div>
 
-                  <div className="bg-zinc-50 dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800 space-y-4">
+                  <div className="bg-zinc-50 p-6 rounded-3xl border border-zinc-100 space-y-4">
                     <div className="flex justify-between text-sm font-bold">
                       <span className="text-zinc-500">Subtotal</span>
                       <span className="dark:text-white">Kz {total.toLocaleString('pt-AO')}</span>
@@ -378,10 +378,10 @@ const CheckoutModal = ({
                       <span className="text-zinc-500">Entrega</span>
                       <span className="text-emerald-500">Grátis</span>
                     </div>
-                    <div className="h-px bg-zinc-200 dark:bg-zinc-800"></div>
+                    <div className="h-px bg-zinc-200"></div>
                     <div className="flex justify-between items-end">
-                      <span className="font-black dark:text-white">Total</span>
-                      <span className="text-2xl font-black text-purple-600 dark:text-purple-400">Kz {total.toLocaleString('pt-AO')}</span>
+                      <span className="font-black">Total</span>
+                      <span className="text-2xl font-black text-purple-600">Kz {total.toLocaleString('pt-AO')}</span>
                     </div>
                   </div>
                 </div>
@@ -390,22 +390,22 @@ const CheckoutModal = ({
           ) : step === 3 ? (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black dark:text-white tracking-tight">Pagamento</h3>
-                <p className="text-zinc-500 dark:text-zinc-400 font-medium">Siga as instruções abaixo para concluir seu pedido</p>
+                <h3 className="text-2xl font-black tracking-tight">Pagamento</h3>
+                <p className="text-zinc-500 font-medium">Siga as instruções abaixo para concluir seu pedido</p>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-zinc-50 dark:bg-zinc-900 p-6 rounded-[32px] border-2 border-zinc-100 dark:border-zinc-800 space-y-6">
+                <div className="bg-zinc-50 p-6 rounded-[32px] border-2 border-zinc-100 space-y-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">IBAN para Transferência</span>
                       {copied === 'iban' && <span className="text-[10px] font-bold text-emerald-500 animate-bounce">Copiado!</span>}
                     </div>
-                    <div className="flex items-center gap-3 bg-white dark:bg-zinc-950 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 group">
-                      <code className="flex-1 font-mono font-bold text-sm md:text-base dark:text-white">{IBAN}</code>
+                    <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-zinc-200 group">
+                      <code className="flex-1 font-mono font-bold text-sm md:text-base">{IBAN}</code>
                       <button 
                         onClick={() => copyToClipboard(IBAN, 'iban')}
-                        className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl text-zinc-400 hover:text-purple-600 transition-colors"
+                        className="p-2 hover:bg-zinc-100 rounded-xl text-zinc-400 hover:text-purple-600 transition-colors"
                       >
                         {copied === 'iban' ? <Check size={20} /> : <Copy size={20} />}
                       </button>
@@ -417,11 +417,11 @@ const CheckoutModal = ({
                       <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">Número Multicaixa Express</span>
                       {copied === 'express' && <span className="text-[10px] font-bold text-emerald-500 animate-bounce">Copiado!</span>}
                     </div>
-                    <div className="flex items-center gap-3 bg-white dark:bg-zinc-950 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
-                      <code className="flex-1 font-mono font-bold text-lg dark:text-white">{EXPRESS}</code>
+                    <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-zinc-200">
+                      <code className="flex-1 font-mono font-bold text-lg">{EXPRESS}</code>
                       <button 
                         onClick={() => copyToClipboard(EXPRESS, 'express')}
-                        className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl text-zinc-400 hover:text-purple-600 transition-colors"
+                        className="p-2 hover:bg-zinc-100 rounded-xl text-zinc-400 hover:text-purple-600 transition-colors"
                       >
                         {copied === 'express' ? <Check size={20} /> : <Copy size={20} />}
                       </button>
@@ -430,7 +430,7 @@ const CheckoutModal = ({
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-xs font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest block">Enviar Comprovativo</label>
+                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest block">Enviar Comprovativo</label>
                   <div className="relative group">
                     <input 
                       type="file" 
@@ -438,15 +438,15 @@ const CheckoutModal = ({
                       onChange={handleFileChange}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     />
-                    <div className={`p-8 rounded-[32px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 ${receiptFile ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10' : 'border-zinc-200 dark:border-zinc-800 hover:border-purple-500/50 bg-zinc-50 dark:bg-zinc-900'}`}>
-                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${receiptFile ? 'bg-emerald-500 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'}`}>
+                    <div className={`p-8 rounded-[32px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 ${receiptFile ? 'border-emerald-500 bg-emerald-50/50' : 'border-zinc-200 hover:border-purple-500/50 bg-zinc-50'}`}>
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${receiptFile ? 'bg-emerald-500 text-white' : 'bg-zinc-200 text-zinc-400'}`}>
                         {receiptFile ? <Check size={32} /> : <Upload size={32} />}
                       </div>
                       <div className="text-center">
-                        <p className="font-black dark:text-white">
+                        <p className="font-black">
                           {receiptFile ? receiptFile.name : 'Clique ou arraste a foto ou PDF do depósito'}
                         </p>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
+                        <p className="text-sm text-zinc-500 font-medium">
                           Formatos aceitos: JPG, PNG, PDF (Máx 5MB)
                         </p>
                       </div>
@@ -457,12 +457,12 @@ const CheckoutModal = ({
             </div>
           ) : step === 4 ? (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-purple-50 dark:bg-purple-900/10 p-12 rounded-[40px] border-2 border-purple-500/20 text-center space-y-8">
+              <div className="bg-purple-50 p-12 rounded-[40px] border-2 border-purple-500/20 text-center space-y-8">
                 <div className="relative mx-auto w-24 h-24">
                   <motion.div 
                     animate={{ rotate: 360 }}
                     transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                    className="absolute inset-0 border-4 border-purple-200 dark:border-purple-900 border-t-purple-600 rounded-full"
+                    className="absolute inset-0 border-4 border-purple-200 border-t-purple-600 rounded-full"
                   />
                   <div className="absolute inset-0 flex items-center justify-center text-purple-600">
                     <Smartphone size={32} />
@@ -470,8 +470,8 @@ const CheckoutModal = ({
                 </div>
                 
                 <div className="space-y-4">
-                  <h3 className="text-3xl font-black dark:text-white tracking-tight">Estamos checando...</h3>
-                  <p className="text-zinc-500 dark:text-zinc-400 font-medium max-w-xs mx-auto">
+                  <h3 className="text-3xl font-black tracking-tight">Estamos checando...</h3>
+                  <p className="text-zinc-500 font-medium max-w-xs mx-auto">
                     Recebemos o seu comprovativo. Nossa equipe está verificando o pagamento agora mesmo.
                   </p>
                 </div>
@@ -481,10 +481,10 @@ const CheckoutModal = ({
                     <Loader2 size={28} className="animate-spin" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest leading-tight">
+                    <p className="text-sm font-black text-emerald-600 uppercase tracking-widest leading-tight">
                       Verificação em curso
                     </p>
-                    <p className="text-xs text-emerald-600/60 dark:text-emerald-400/40 font-bold">
+                    <p className="text-xs text-emerald-600/60 font-bold">
                       Você será notificado assim que o pagamento for comprovado.
                     </p>
                   </div>
@@ -492,7 +492,7 @@ const CheckoutModal = ({
 
                 <button 
                   onClick={onOrderComplete}
-                  className="px-8 py-4 bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-2xl font-black text-sm hover:bg-zinc-50 transition-all active:scale-95"
+                  className="px-8 py-4 bg-white border-2 border-zinc-200 rounded-2xl font-black text-sm hover:bg-zinc-50 transition-all active:scale-95"
                 >
                   Voltar para a Loja
                 </button>
@@ -502,7 +502,7 @@ const CheckoutModal = ({
         </div>
 
           {(step === 2 || step === 3) && !success && (
-            <div className="sticky bottom-0 p-6 md:p-8 bg-zinc-50/90 dark:bg-zinc-900/90 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-8 z-10">
+            <div className="sticky bottom-0 p-6 md:p-8 bg-zinc-50/90 backdrop-blur-xl border-t border-zinc-200 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-8 z-10">
               <button 
                 onClick={handleConfirmOrder}
                 disabled={isUploading}

@@ -211,35 +211,35 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
-            <ArrowLeft size={24} className="text-zinc-700 dark:text-zinc-300" />
+          <button onClick={onBack} className="p-2 bg-zinc-100 rounded-full hover:bg-zinc-200 transition-colors">
+            <ArrowLeft size={24} className="text-zinc-700" />
           </button>
           <div>
-            <h2 className="text-2xl md:text-4xl font-black text-zinc-900 dark:text-white tracking-tight">Painel Administrativo</h2>
-            <p className="text-zinc-500 dark:text-zinc-400 font-medium">Gestão de produtos e pagamentos</p>
+            <h2 className="text-2xl md:text-4xl font-black text-zinc-900 tracking-tight">Painel Administrativo</h2>
+            <p className="text-zinc-500 font-medium">Gestão de produtos e pagamentos</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-4 bg-emerald-50 dark:bg-emerald-900/20 px-6 py-3 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+        <div className="flex items-center gap-4 bg-emerald-50 px-6 py-3 rounded-2xl border border-emerald-100">
           <ShieldCheck size={24} className="text-emerald-500" />
           <div className="text-left">
-            <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Sessão Segura</p>
-            <p className="text-sm font-black dark:text-white">Admin: {userProfile?.name || userProfile?.email}</p>
+            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Sessão Segura</p>
+            <p className="text-sm font-black">Admin: {userProfile?.name || userProfile?.email}</p>
           </div>
         </div>
       </div>
 
-      <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 mb-8 w-fit">
+      <div className="flex bg-zinc-100 p-1.5 rounded-2xl border border-zinc-200 mb-8 w-fit">
         <button 
           onClick={() => setActiveTab('products')}
-          className={`px-8 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'products' ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-lg' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+          className={`px-8 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'products' ? 'bg-white text-purple-600 shadow-lg' : 'text-zinc-500 hover:text-zinc-700'}`}
         >
           <Package size={18} />
           Produtos ({allProducts.length})
         </button>
         <button 
           onClick={() => setActiveTab('payments')}
-          className={`px-8 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'payments' ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-lg' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+          className={`px-8 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'payments' ? 'bg-white text-purple-600 shadow-lg' : 'text-zinc-500 hover:text-zinc-700'}`}
         >
           <CreditCard size={18} />
           Pagamentos ({pendingPayments.length})
@@ -247,12 +247,12 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
       </div>
 
       {activeTab === 'products' && (
-        <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 mb-8 w-full md:w-fit overflow-x-auto">
+        <div className="flex bg-zinc-100 p-1.5 rounded-2xl border border-zinc-200 mb-8 w-full md:w-fit overflow-x-auto">
           {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
             <button 
               key={status}
               onClick={() => setProductFilter(status)}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${productFilter === status ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-lg' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${productFilter === status ? 'bg-white text-purple-600 shadow-lg' : 'text-zinc-500 hover:text-zinc-700'}`}
             >
               {status === 'all' ? 'Todos' : status === 'pending' ? 'Pendentes' : status === 'approved' ? 'Aprovados' : 'Rejeitados'}
             </button>
@@ -267,7 +267,7 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
           placeholder={activeTab === 'products' ? "Buscar por produto ou vendedor..." : "Buscar por comprador ou ID do pedido..."}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 focus:border-purple-500/50 py-4 pl-14 pr-6 rounded-2xl text-zinc-900 dark:text-white font-bold outline-none transition-all"
+          className="w-full bg-white border-2 border-zinc-100 focus:border-purple-500/50 py-4 pl-14 pr-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
         />
       </div>
 
@@ -277,22 +277,22 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
         </div>
       ) : activeTab === 'products' ? (
         filteredProducts.length === 0 ? (
-          <div className="text-center py-20 bg-zinc-50 dark:bg-zinc-900/50 rounded-[40px] border border-zinc-200 dark:border-zinc-800">
-            <div className="w-24 h-24 bg-zinc-100 dark:bg-zinc-800 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-300 dark:text-zinc-700">
+          <div className="text-center py-20 bg-zinc-50 rounded-[40px] border border-zinc-200">
+            <div className="w-24 h-24 bg-zinc-100 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-300">
               <Clock size={48} />
             </div>
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Nenhum produto encontrado</h3>
-            <p className="text-zinc-500 dark:text-zinc-400 max-w-md mx-auto font-medium">Não há produtos que correspondam aos filtros selecionados.</p>
+            <h3 className="text-2xl font-black text-zinc-900 mb-2">Nenhum produto encontrado</h3>
+            <p className="text-zinc-500 max-w-md mx-auto font-medium">Não há produtos que correspondam aos filtros selecionados.</p>
           </div>
         ) : (
           <div className="grid gap-6">
             {filteredProducts.map((product) => (
               <div 
                 key={product.id}
-                className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-[40px] border border-zinc-200 dark:border-zinc-800 hover:border-purple-500/50 transition-all group shadow-xl shadow-zinc-500/5"
+                className="bg-white p-6 md:p-8 rounded-[40px] border border-zinc-200 hover:border-purple-500/50 transition-all group shadow-xl shadow-zinc-500/5"
               >
                 <div className="flex flex-col lg:flex-row gap-8">
-                  <div className="w-full lg:w-48 h-48 bg-zinc-100 dark:bg-zinc-800 rounded-[32px] overflow-hidden flex-shrink-0 relative group-hover:scale-105 transition-transform">
+                  <div className="w-full lg:w-48 h-48 bg-zinc-100 rounded-[32px] overflow-hidden flex-shrink-0 relative group-hover:scale-105 transition-transform">
                     <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
                     <div className="absolute top-3 left-3">
                       <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 text-white rounded-xl shadow-lg ${product.status === 'approved' ? 'bg-emerald-500' : product.status === 'rejected' ? 'bg-rose-500' : 'bg-amber-500'}`}>
@@ -304,43 +304,43 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                   <div className="flex-1 space-y-6">
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-900/20 px-3 py-1 rounded-lg border border-purple-100 dark:border-purple-800">{product.category}</span>
+                        <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-lg border border-purple-100">{product.category}</span>
                         <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">ID: {product.id}</span>
                       </div>
-                      <h3 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white leading-tight">{product.title}</h3>
-                      <p className="text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed line-clamp-2">{product.description}</p>
+                      <h3 className="text-2xl md:text-3xl font-black text-zinc-900 leading-tight">{product.title}</h3>
+                      <p className="text-zinc-500 font-medium leading-relaxed line-clamp-2">{product.description}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-6 pt-4 border-t border-zinc-100">
                       <div>
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Preço</p>
-                        <p className="text-xl font-black text-purple-600 dark:text-purple-400">Kz {product.price.toLocaleString('pt-AO')}</p>
+                        <p className="text-xl font-black text-purple-600">Kz {product.price.toLocaleString('pt-AO')}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Estoque</p>
-                        <p className="text-xl font-black dark:text-white">{product.stock || 0}</p>
+                        <p className="text-xl font-black">{product.stock || 0}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Detalhes</p>
-                        <p className="text-sm font-black dark:text-white">{product.condition || 'Novo'}</p>
+                        <p className="text-sm font-black">{product.condition || 'Novo'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Vendedor</p>
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden">
+                          <div className="w-6 h-6 bg-zinc-100 rounded-lg overflow-hidden">
                             <img src={getAvatarUrl(product.sellerAvatar, product.sellerName)} alt={product.sellerName} className="w-full h-full object-cover" />
                           </div>
-                          <p className="text-sm font-black dark:text-white truncate">{product.sellerName}</p>
+                          <p className="text-sm font-black truncate">{product.sellerName}</p>
                         </div>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Data</p>
-                        <p className="text-sm font-black dark:text-white">{new Date(product.createdAt).toLocaleDateString('pt-AO')}</p>
+                        <p className="text-sm font-black">{new Date(product.createdAt).toLocaleDateString('pt-AO')}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex flex-row lg:flex-col gap-4 justify-center mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <div className="flex flex-row lg:flex-col gap-4 justify-center mt-4 pt-4 border-t border-zinc-100">
                     {product.status !== 'approved' && (
                       <button 
                         onClick={(e) => {
@@ -379,7 +379,7 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                             </button>
                             <button 
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmRejectId(null); }}
-                              className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-4 py-3 rounded-xl font-black text-sm transition-all"
+                              className="flex-1 bg-zinc-200 text-zinc-700 px-4 py-3 rounded-xl font-black text-sm transition-all"
                             >
                               Não
                             </button>
@@ -409,7 +409,7 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                           </button>
                           <button 
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(null); }}
-                            className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-4 py-3 rounded-xl font-black text-sm transition-all"
+                            className="flex-1 bg-zinc-200 text-zinc-700 px-4 py-3 rounded-xl font-black text-sm transition-all"
                           >
                             Não
                           </button>
@@ -433,22 +433,22 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
         )
       ) : (
         filteredPayments.length === 0 ? (
-          <div className="text-center py-20 bg-zinc-50 dark:bg-zinc-900/50 rounded-[40px] border border-zinc-200 dark:border-zinc-800">
-            <div className="w-24 h-24 bg-zinc-100 dark:bg-zinc-800 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-300 dark:text-zinc-700">
+          <div className="text-center py-20 bg-zinc-50 rounded-[40px] border border-zinc-200">
+            <div className="w-24 h-24 bg-zinc-100 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-300">
               <CreditCard size={48} />
             </div>
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Nenhum pagamento pendente</h3>
-            <p className="text-zinc-500 dark:text-zinc-400 max-w-md mx-auto font-medium">Todos os comprovativos já foram verificados.</p>
+            <h3 className="text-2xl font-black text-zinc-900 mb-2">Nenhum pagamento pendente</h3>
+            <p className="text-zinc-500 max-w-md mx-auto font-medium">Todos os comprovativos já foram verificados.</p>
           </div>
         ) : (
           <div className="grid gap-6">
             {filteredPayments.map((order) => (
               <div 
                 key={order.id}
-                className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-[40px] border border-zinc-200 dark:border-zinc-800 hover:border-purple-500/50 transition-all group shadow-xl shadow-zinc-500/5"
+                className="bg-white p-6 md:p-8 rounded-[40px] border border-zinc-200 hover:border-purple-500/50 transition-all group shadow-xl shadow-zinc-500/5"
               >
                 <div className="flex flex-col lg:flex-row gap-8">
-                  <div className="w-full lg:w-64 h-80 bg-zinc-100 dark:bg-zinc-800 rounded-[32px] overflow-hidden flex-shrink-0 relative group-hover:scale-105 transition-transform border-4 border-zinc-200 dark:border-zinc-800">
+                  <div className="w-full lg:w-64 h-80 bg-zinc-100 rounded-[32px] overflow-hidden flex-shrink-0 relative group-hover:scale-105 transition-transform border-4 border-zinc-200">
                     {order.paymentReceipt ? (
                       <a href={order.paymentReceipt} target="_blank" rel="noreferrer">
                         <img src={order.paymentReceipt} alt="Comprovativo" className="w-full h-full object-cover" />
@@ -466,28 +466,28 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
                   <div className="flex-1 space-y-6">
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-900/20 px-3 py-1 rounded-lg border border-purple-100 dark:border-purple-800">Pedido: #{order.id.slice(-6)}</span>
+                        <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-lg border border-purple-100">Pedido: #{order.id.slice(-6)}</span>
                         <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{order.paymentMethod}</span>
                       </div>
-                      <h3 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white leading-tight">Comprador: {order.buyerName}</h3>
-                      <p className="text-xl font-black text-purple-600 dark:text-purple-400">Total: Kz {order.total.toLocaleString('pt-AO')}</p>
+                      <h3 className="text-2xl md:text-3xl font-black text-zinc-900 leading-tight">Comprador: {order.buyerName}</h3>
+                      <p className="text-xl font-black text-purple-600">Total: Kz {order.total.toLocaleString('pt-AO')}</p>
                     </div>
 
                     <div className="space-y-4">
                       <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Produtos no Pedido</p>
                       <div className="flex flex-wrap gap-2">
                         {order.products.map((p: Product, i: number) => (
-                          <div key={i} className="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-900 p-2 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                          <div key={i} className="flex items-center gap-2 bg-zinc-50 p-2 rounded-xl border border-zinc-100">
                             <img src={p.image} alt={p.title} className="w-8 h-8 rounded-lg object-cover" />
-                            <span className="text-xs font-bold dark:text-white">{p.title}</span>
+                            <span className="text-xs font-bold">{p.title}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <div className="pt-4 border-t border-zinc-100">
                       <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Endereço de Entrega</p>
-                      <p className="text-sm font-bold dark:text-white">{order.shippingAddress}</p>
+                      <p className="text-sm font-bold">{order.shippingAddress}</p>
                     </div>
                   </div>
 

@@ -20,13 +20,13 @@ export const OfertasDoDia: React.FC<CommonProps> = ({
   const display = (deals.length >= 6 ? deals : products).slice(0, 6);
 
   return (
-    <section className="py-8 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-900">
+    <section className="py-8 bg-white border-b border-zinc-100">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <Flame size={20} className="text-rose-500 fill-rose-500" />
-            <h2 className="text-lg font-black text-zinc-900 dark:text-white">Ofertas do Dia</h2>
-            <span className="hidden sm:flex items-center gap-1 text-[10px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full font-semibold">
+            <h2 className="text-lg font-black text-zinc-900">Ofertas do Dia</h2>
+            <span className="hidden sm:flex items-center gap-1 text-[10px] text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full font-semibold">
               <Clock size={10} /> Renova em 24h
             </span>
           </div>
@@ -80,17 +80,29 @@ const SHOWCASE_PODS = [
 export const CategoryShowcaseSection: React.FC<CommonProps & { onSelectCategory: (name: string) => void }> = ({
   products, onProductClick, onSelectCategory,
 }) => (
-  <section className="py-8 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-900">
+  <section className="py-8 bg-white border-b border-zinc-100">
     <div className="max-w-[1400px] mx-auto px-4 md:px-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {SHOWCASE_PODS.map((pod) => {
+        {SHOWCASE_PODS.map((pod, podIdx) => {
           const items = products.filter(p => p.category === pod.cat).slice(0, 4);
+
+          // Pod 1 = very pale purple, Pod 3 = black/dark
+          const isDark = podIdx === 3;
+          const isPale = podIdx === 1;
+          const podBg   = isDark ? 'bg-zinc-900 border-zinc-800' : isPale ? 'bg-purple-50 border-purple-100' : 'bg-white border-zinc-200';
+          const headClr = isDark ? 'text-white' : 'text-zinc-900';
+          const subClr  = isDark ? 'text-zinc-400' : 'text-zinc-500';
+          const titleClr= isDark ? 'text-zinc-300' : 'text-zinc-600';
+          const imgBg   = isDark ? 'bg-zinc-800' : isPale ? 'bg-white/70' : 'bg-zinc-100';
+          const divider = isDark ? 'border-zinc-700' : isPale ? 'border-purple-200' : 'border-zinc-100';
+          const linkClr = isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700';
+
           return (
-            <div key={pod.cat} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-3">
+            <div key={pod.cat} className={`rounded-2xl border p-4 flex flex-col gap-3 ${podBg}`}>
               {/* Pod header */}
               <div>
-                <h3 className="text-sm font-black text-zinc-900 dark:text-white leading-tight">{pod.title}</h3>
-                <p className="text-[11px] text-zinc-500 mt-0.5">{pod.sub}</p>
+                <h3 className={`text-sm font-black leading-tight ${headClr}`}>{pod.title}</h3>
+                <p className={`text-[11px] mt-0.5 ${subClr}`}>{pod.sub}</p>
               </div>
 
               {/* 2×2 image grid */}
@@ -101,14 +113,14 @@ export const CategoryShowcaseSection: React.FC<CommonProps & { onSelectCategory:
                     onClick={() => onProductClick(p)}
                     className="cursor-pointer group"
                   >
-                    <div className="aspect-square rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-1">
+                    <div className={`aspect-square rounded-xl overflow-hidden mb-1 ${imgBg}`}>
                       <img
                         src={p.image}
                         alt={p.title}
                         className="w-full h-full object-cover group-hover:scale-[1.05] transition-transform duration-200"
                       />
                     </div>
-                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400 line-clamp-1 font-medium leading-tight">
+                    <p className={`text-[10px] line-clamp-1 font-medium leading-tight ${titleClr}`}>
                       {p.title.split(' ').slice(0, 3).join(' ')}
                     </p>
                   </div>
@@ -118,7 +130,7 @@ export const CategoryShowcaseSection: React.FC<CommonProps & { onSelectCategory:
               {/* Footer link */}
               <button
                 onClick={() => onSelectCategory(pod.cat)}
-                className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 mt-auto pt-1 border-t border-zinc-100 dark:border-zinc-800"
+                className={`text-xs font-bold flex items-center gap-1 mt-auto pt-1 border-t ${divider} ${linkClr}`}
               >
                 {pod.link} <ArrowRight size={12} />
               </button>
@@ -138,10 +150,10 @@ export const StripSection: React.FC<CommonProps & { category: string; onViewAll:
   if (cats.length === 0) return null;
 
   return (
-    <section className="py-8 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-900">
+    <section className="py-8 bg-white border-b border-zinc-100">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-black text-zinc-900 dark:text-white">{category}</h2>
+          <h2 className="text-lg font-black text-zinc-900">{category}</h2>
           <button onClick={onViewAll} className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1">
             Ver mais <ArrowRight size={13} />
           </button>
@@ -193,12 +205,12 @@ export const DuoGrid: React.FC<CommonProps & { categories: string[]; onSelectCat
   if (display.length < 2) return null;
 
   return (
-    <section className="py-8 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
+    <section className="py-8 bg-zinc-50 border-b border-zinc-100">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <Percent size={18} className="text-amber-500" />
-            <h2 className="text-lg font-black text-zinc-900 dark:text-white">{cats.join(' & ')}</h2>
+            <h2 className="text-lg font-black text-zinc-900">{cats.join(' & ')}</h2>
           </div>
           <div className="flex gap-2">
             {cats.map(cat => (
@@ -222,7 +234,7 @@ export const DuoGrid: React.FC<CommonProps & { categories: string[]; onSelectCat
 
 /* ─── 6. STATS TRUST STRIP ─── */
 export const StatsBanner: React.FC = () => (
-  <section className="py-10 bg-zinc-900 dark:bg-zinc-950">
+  <section className="py-10 bg-zinc-900">
     <div className="max-w-[1400px] mx-auto px-4 md:px-8">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
         {[

@@ -63,19 +63,19 @@ const ImportFeed = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 text-purple-600 rounded-xl flex items-center justify-center">
+        <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center">
           <Globe size={24} />
         </div>
         <div>
-          <h2 className="text-2xl font-black dark:text-white tracking-tight">Marketplace de Importações</h2>
+          <h2 className="text-2xl font-black tracking-tight">Marketplace de Importações</h2>
           <p className="text-sm font-medium text-zinc-500">Pedidos abertos aguardando propostas de Micheiros</p>
         </div>
       </div>
 
       {requests.length === 0 ? (
-        <div className="text-center py-20 bg-white dark:bg-zinc-900 rounded-[40px] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-          <Package className="mx-auto h-16 w-16 text-zinc-300 dark:text-zinc-700 mb-6" />
-          <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Nenhum pedido pendente</h3>
+        <div className="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-zinc-200">
+          <Package className="mx-auto h-16 w-16 text-zinc-300 mb-6" />
+          <h3 className="text-2xl font-black text-zinc-900 mb-2">Nenhum pedido pendente</h3>
           <p className="text-zinc-500 font-medium max-w-xs mx-auto">Novas oportunidades de importação aparecerão aqui assim que os compradores postarem.</p>
         </div>
       ) : (
@@ -85,32 +85,32 @@ const ImportFeed = () => {
               key={req.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border border-zinc-100 dark:border-zinc-800 shadow-xl shadow-zinc-500/5 hover:border-purple-500/30 transition-all flex flex-col group"
+              className="bg-white p-8 rounded-[32px] border border-zinc-100 shadow-xl shadow-zinc-500/5 hover:border-purple-500/30 transition-all flex flex-col group"
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <span className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-[0.2em] mb-2 block">Oportunidade de Importação</span>
-                  <h3 className="text-2xl font-black dark:text-white leading-tight capitalize group-hover:text-purple-600 transition-colors">{req.item_name}</h3>
+                  <span className="text-[10px] font-black uppercase text-purple-600 tracking-[0.2em] mb-2 block">Oportunidade de Importação</span>
+                  <h3 className="text-2xl font-black leading-tight capitalize group-hover:text-purple-600 transition-colors">{req.item_name}</h3>
                 </div>
-                <div className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-xl">
+                <div className="bg-zinc-100 p-2 rounded-xl">
                   <Globe size={20} className="text-zinc-400" />
                 </div>
               </div>
               
-              <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-8 line-clamp-3 flex-grow leading-relaxed">
+              <div className="text-sm font-medium text-zinc-500 mb-8 line-clamp-3 flex-grow leading-relaxed">
                 {req.description}
               </div>
               
-              <div className="grid grid-cols-2 gap-4 mb-8 bg-zinc-50 dark:bg-zinc-950/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+              <div className="grid grid-cols-2 gap-4 mb-8 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
                 <div>
                   <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest mb-1 font-mono">Orçamento</p>
-                  <p className="font-black text-lg text-emerald-600 dark:text-emerald-400">{req.budget}</p>
+                  <p className="font-black text-lg text-emerald-600">{req.budget}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest mb-1 font-mono flex items-center justify-end gap-1">
                     <Clock size={12} /> Freshness
                   </p>
-                  <p className="font-bold text-xs text-zinc-600 dark:text-zinc-300 uppercase">
+                  <p className="font-bold text-xs text-zinc-600 uppercase">
                     {timeAgo(req.created_at)}
                   </p>
                 </div>

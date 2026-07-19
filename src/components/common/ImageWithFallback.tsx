@@ -12,7 +12,7 @@ const ImageWithFallback = ({ src, alt, className }: ImageWithFallbackProps) => {
 
   if (!src || error) {
     return (
-      <div className={`flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-400 ${className}`}>
+      <div className={`flex items-center justify-center bg-zinc-100 text-zinc-400 ${className}`}>
         <ImageIcon size={48} />
       </div>
     );
