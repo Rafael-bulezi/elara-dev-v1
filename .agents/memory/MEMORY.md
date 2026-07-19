@@ -1,0 +1,2 @@
+- [Elara routing pattern](elara-routing.md) — state-based routing in App.tsx, no router library; 'product' view added for dedicated product page
+- [Elara homepage structure](elara-homepage.md) — max 7 sections, CategoryMegaMenu strip above hero, no pills below hero; section layouts vary (1+4, 1×5, 2×2, stats)

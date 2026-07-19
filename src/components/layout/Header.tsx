@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Search, ShoppingCart, Moon, Sun, Menu, MapPin, ChevronDown, Bell, Heart, User, PlusCircle, Globe, X } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { getAvatarUrl } from '../../utils/avatar';
-import { categories } from '../../constants';
 
 interface Notification {
   id: string;
@@ -30,7 +29,6 @@ interface HeaderProps {
   onSellProduct: () => void;
   onOpenImport: () => void;
   onNavigate: (view: 'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote' | 'category') => void;
-  onSelectCategory: (name: string) => void;
   appLogo?: string | null;
 }
 
@@ -42,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({
   userProfile, onOpenAuth,
   searchQuery, setSearchQuery,
   onSellProduct, onOpenImport,
-  onNavigate, onSelectCategory,
+  onNavigate,
   appLogo,
 }) => {
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -197,22 +195,6 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Category Nav Strip */}
-      <div className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 hidden md:block">
-        <div className="max-w-[1400px] mx-auto px-6">
-          <div className="flex items-center gap-0 overflow-x-auto custom-scrollbar">
-            <button onClick={() => onNavigate('home')} className="shrink-0 px-3 py-2 text-xs font-bold text-purple-600 dark:text-purple-400 border-b-2 border-purple-600">
-              Início
-            </button>
-            {categories.map((cat) => (
-              <button key={cat.id} onClick={() => onSelectCategory(cat.name)}
-                className="shrink-0 px-3 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white uppercase tracking-wide whitespace-nowrap">
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
     </header>
   );
 };

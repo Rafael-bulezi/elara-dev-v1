@@ -16,7 +16,6 @@ import MobileMenu from './components/layout/MobileMenu';
 import AuthModal from './components/auth/AuthModal';
 import CartDrawer from './components/cart/CartDrawer';
 import ProfileDrawer from './components/auth/ProfileDrawer';
-import ProductDetailsModal from './components/product/ProductDetailsModal';
 import ProductFormModal from './components/product/ProductFormModal';
 import CheckoutModal from './components/cart/CheckoutModal';
 import InstallPrompt from './components/common/InstallPrompt';
@@ -25,7 +24,12 @@ import ImportRequestForm from './components/product/ImportRequestForm';
 import ImportFeed from './components/product/ImportFeed';
 import ProductListingView from './views/ProductListingView';
 import { DiscoveryFilters } from './types/discovery';
-import { CategoryPills, OfertasDoDia, FeaturedSection } from './components/layout/HomePageSections';
+import CategoryMegaMenu from './components/layout/CategoryMegaMenu';
+import {
+  OfertasDoDia, FeatureHeroSection, StripSection,
+  ImportCTA, DuoGrid, StatsBanner,
+} from './components/layout/HomePageSections';
+import ProductDetailPage from './views/ProductDetailPage';
 
 // Views
 import OrdersView from './views/OrdersView';
@@ -68,7 +72,7 @@ const App = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote' | 'category'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote' | 'category' | 'product'>('home');
   const [activeTab, setActiveTab] = useState('home');
   
   // Data State
@@ -95,7 +99,6 @@ const App = () => {
   const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -478,6 +481,11 @@ const App = () => {
     navigateTo('category');
   }, [navigateTo]);
 
+  const handleProductClick = React.useCallback((p: Product) => {
+    setSelectedProduct(p);
+    navigateTo('product');
+  }, [navigateTo]);
+
   const handleImportSubmit = async (data: { name: string; description: string; budget: string; whatsapp: string }) => {
     console.log("Import Request Submitted:", data);
     showNotification("Pedido de importação enviado com sucesso! Entraremos em contacto em breve.", "success");
@@ -505,8 +513,18 @@ const App = () => {
           onSellProduct={() => userProfile ? setIsProductModalOpen(true) : setIsAuthModalOpen(true)}
           onOpenImport={() => setIsImportModalOpen(true)}
           onNavigate={navigateTo}
-          onSelectCategory={handleSelectCategory}
           appLogo={appLogo}
+        />
+
+        <CategoryMegaMenu
+          categories={categories}
+          products={products}
+          onSelectCategory={handleSelectCategory}
+          onProductClick={handleProductClick}
+          onAddToCart={addToCart}
+          wishlist={wishlistIds}
+          onToggleWishlist={toggleWishlist}
+          onNavigate={(v) => navigateTo(v)}
         />
 
         <main className="relative flex-1">
@@ -526,35 +544,81 @@ const App = () => {
                 filters={discoveryFilters}
                 onChangeFilters={setDiscoveryFilters}
                 onBack={() => { setSearchQuery(''); navigateTo('home'); }}
-                onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
+                onProductClick={handleProductClick}
                 onAddToCart={addToCart}
                 wishlist={wishlistIds}
                 onToggleWishlist={toggleWishlist}
               />
             ) : (
-              <div>
+              /* ── 7-section homepage ── */
+              <div id="home-content">
+                {/* 1. Hero */}
                 <Hero onCtaClick={() => document.getElementById('ofertas')?.scrollIntoView({ behavior: 'smooth' })} />
-                <CategoryPills categories={categories} onSelect={handleSelectCategory} />
+
+                {/* 2. Ofertas do Dia */}
                 <div id="ofertas">
                   <OfertasDoDia
                     products={products}
                     onAddToCart={addToCart}
-                    onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
+                    onProductClick={handleProductClick}
                     wishlist={wishlistIds}
                     onToggleWishlist={toggleWishlist}
                   />
                 </div>
-                <FeaturedSection
+
+                {/* 3. Smartphones — 1 large + 2×2 */}
+                <FeatureHeroSection
+                  category="Smartphones"
                   products={products}
                   onAddToCart={addToCart}
-                  onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
+                  onProductClick={handleProductClick}
+                  wishlist={wishlistIds}
+                  onToggleWishlist={toggleWishlist}
+                  onViewAll={() => handleSelectCategory('Smartphones')}
+                />
+
+                {/* 4. Moda — 1×5 strip */}
+                <StripSection
+                  category="Moda"
+                  products={products}
+                  onAddToCart={addToCart}
+                  onProductClick={handleProductClick}
+                  wishlist={wishlistIds}
+                  onToggleWishlist={toggleWishlist}
+                  onViewAll={() => handleSelectCategory('Moda')}
+                />
+
+                {/* 5. Import CTA */}
+                <ImportCTA onOpenImport={() => setIsImportModalOpen(true)} />
+
+                {/* 6. Computadores & Casa — 2×2 grid */}
+                <DuoGrid
+                  categories={['Computadores', 'Casa']}
+                  products={products}
+                  onAddToCart={addToCart}
+                  onProductClick={handleProductClick}
                   wishlist={wishlistIds}
                   onToggleWishlist={toggleWishlist}
                   onSelectCategory={handleSelectCategory}
-                  onOpenImport={() => setIsImportModalOpen(true)}
                 />
+
+                {/* 7. Stats strip */}
+                <StatsBanner />
               </div>
             )
+          )}
+
+          {currentView === 'product' && selectedProduct && (
+            <ProductDetailPage
+              product={selectedProduct}
+              onBack={() => navigateTo('home')}
+              onAddToCart={addToCart}
+              onBuyNow={(p) => { addToCart(p); setIsCheckoutOpen(true); }}
+              onContactSeller={(id) => { navigateTo('home'); startChat(id); }}
+              onViewSeller={(id) => { setSelectedSellerId(id); navigateTo('seller'); }}
+              wishlisted={wishlistIds.includes(selectedProduct.id)}
+              onToggleWishlist={toggleWishlist}
+            />
           )}
 
           {currentView === 'category' && (
@@ -563,7 +627,7 @@ const App = () => {
               filters={discoveryFilters}
               onChangeFilters={setDiscoveryFilters}
               onBack={() => { setActiveCategory(null); navigateTo('home'); }}
-              onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }}
+              onProductClick={handleProductClick}
               onAddToCart={addToCart}
               wishlist={wishlistIds}
               onToggleWishlist={toggleWishlist}
@@ -605,10 +669,7 @@ const App = () => {
             <SellerProfileView 
               sellerId={selectedSellerId}
               onBack={() => navigateTo('home')}
-              onProductClick={(p) => {
-                setSelectedProduct(p);
-                setIsProductDetailsOpen(true);
-              }}
+              onProductClick={handleProductClick}
               onAddToCart={addToCart}
               onContactSeller={startChat}
             />
@@ -708,26 +769,7 @@ const App = () => {
         onNavigate={navigateTo}
       />
 
-      <ProductDetailsModal
-        isOpen={isProductDetailsOpen}
-        onClose={() => setIsProductDetailsOpen(false)}
-        product={selectedProduct}
-        onAddToCart={addToCart}
-        onBuyNow={(p) => {
-          addToCart(p);
-          setIsProductDetailsOpen(false);
-          setIsCheckoutOpen(true);
-        }}
-        onContactSeller={(id) => {
-          setIsProductDetailsOpen(false);
-          startChat(id);
-        }}
-        onViewSeller={(id) => {
-          setSelectedSellerId(id);
-          setIsProductDetailsOpen(false);
-          navigateTo('seller');
-        }}
-      />
+      {/* ProductDetailsModal kept for legacy — no longer opened by card click */}
 
       <ProductFormModal 
         isOpen={isProductModalOpen}
