@@ -10,7 +10,7 @@ interface ProductCardProps {
   onProductClick: (product: Product) => void;
 }
 
-const ProductCard = ({ product, onAddToCart, onProductClick }: ProductCardProps) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onProductClick }) => {
   const discount = product.originalPrice && product.originalPrice > product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
@@ -18,35 +18,35 @@ const ProductCard = ({ product, onAddToCart, onProductClick }: ProductCardProps)
   return (
     <div
       onClick={() => onProductClick(product)}
-      className="group bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all duration-300 cursor-pointer flex flex-col h-full shadow-sm hover:shadow-md"
+      className="group bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:border-purple-500/50 cursor-pointer flex flex-col h-full"
     >
       <div className="relative aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-800">
         <ImageWithFallback
           src={product.image}
           alt={product.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover"
         />
-        <div className="absolute top-2 left-2 flex flex-col gap-1.5">
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
           {discount && discount > 0 && (
-            <div className="bg-rose-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider shadow-lg">
+            <span className="bg-rose-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase">
               -{discount}%
-            </div>
+            </span>
           )}
           {product.emPromocao && !discount && (
-            <div className="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider shadow-lg">
+            <span className="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase">
               Promo
-            </div>
+            </span>
           )}
           {product.isImport && (
-            <div className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider shadow-lg">
+            <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase">
               Import
-            </div>
+            </span>
           )}
           {product.verified && (
-            <div className="bg-emerald-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1">
+            <span className="bg-emerald-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase flex items-center gap-1">
               <ShieldCheck size={10} />
-              Verificado
-            </div>
+              Verif.
+            </span>
           )}
         </div>
       </div>

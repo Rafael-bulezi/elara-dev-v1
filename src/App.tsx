@@ -9,6 +9,7 @@ import { CLOUD_LOGO } from './constants/logo';
 // Components
 import Header from './components/layout/Header';
 import Hero from './components/layout/Hero';
+import CategoryGrid from './components/layout/CategoryGrid';
 import ProductCard from './components/product/ProductCard';
 import Footer from './components/layout/Footer';
 import BottomNav from './components/layout/BottomNav';
@@ -450,6 +451,11 @@ const App = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const handleSelectCategory = React.useCallback((name: string) => {
+    setActiveCategory(name);
+    navigateTo('category');
+  }, [navigateTo]);
+
   const handleImportSubmit = async (data: { name: string; description: string; budget: string; whatsapp: string }) => {
     console.log("Import Request Submitted:", data);
     showNotification("Pedido de importação enviado com sucesso! Entraremos em contacto em breve.", "success");
@@ -473,6 +479,7 @@ const App = () => {
           onSellProduct={() => userProfile ? setIsProductModalOpen(true) : setIsAuthModalOpen(true)}
           onOpenImport={() => setIsImportModalOpen(true)}
           onNavigate={navigateTo}
+          onSelectCategory={handleSelectCategory}
           appLogo={appLogo}
         />
 
@@ -500,62 +507,58 @@ const App = () => {
                 onAddToCart={addToCart}
               />
             ) : (
-              <div className="space-y-8">
-                <Hero />
+              <div className="space-y-8 md:space-y-12">
+                <Hero onCtaClick={() => document.getElementById('destaques')?.scrollIntoView({ behavior: 'smooth' })} />
 
-                {/* Category Pills */}
-                <section className="px-4">
-                  <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2">
-                    {categories.map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => { setActiveCategory(cat.name); setCurrentView('category'); }}
-                        className="shrink-0 px-5 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm font-black text-zinc-700 dark:text-zinc-300 hover:border-purple-500/50 hover:text-purple-600 dark:hover:text-purple-400 transition-all shadow-sm"
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
-                  </div>
-                </section>
+                <CategoryGrid onCategoryClick={(name) => handleSelectCategory(name)} />
 
                 {/* Featured Products */}
-                <section className="px-4">
-                  <h2 className="text-xl font-bold dark:text-white mb-4">Destaques</h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    {products.slice(0, 4).map(p => (
-                      <ProductCard key={p.id} product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
-                    ))}
+                <section id="destaques" className="px-4">
+                  <div className="container mx-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white">Destaques</h2>
+                      <button className="text-sm font-semibold text-purple-600 hover:text-purple-700">Ver todos</button>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {products.slice(0, 8).map(p => (
+                        <ProductCard key={p.id} product={p} onAddToCart={addToCart} onProductClick={(p) => { setSelectedProduct(p); setIsProductDetailsOpen(true); }} />
+                      ))}
+                    </div>
                   </div>
                 </section>
 
                 {/* Import CTA Section */}
                 <section className="px-4">
-                  <div className="bg-gradient-to-br from-[#5A189A] to-[#3c1066] p-8 rounded-[32px] overflow-hidden relative group shadow-xl shadow-purple-900/10">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-                      <Globe size={160} />
-                    </div>
-                    <div className="relative z-10 space-y-4 max-w-sm">
-                      <h3 className="text-2xl font-black text-white leading-tight">
-                        Não encontrou o que procura?
-                      </h3>
-                      <p className="text-purple-200 font-medium">
-                        Peça uma importação personalizada diretamente da China, EUA ou Europa com as melhores taxas do mercado.
-                      </p>
-                      <button
-                        onClick={() => setIsImportModalOpen(true)}
-                        className="bg-white text-[#5A189A] px-6 py-3 rounded-2xl font-black text-sm hover:bg-zinc-100 active:scale-95 transition-all inline-flex items-center gap-2"
-                      >
-                        Peça uma Importação
-                      </button>
+                  <div className="container mx-auto">
+                    <div className="bg-[#5A189A] p-6 md:p-8 rounded-2xl overflow-hidden relative">
+                      <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                        <div className="space-y-2 max-w-md">
+                          <h3 className="text-xl md:text-2xl font-black text-white leading-tight">
+                            Não encontrou o que procura?
+                          </h3>
+                          <p className="text-purple-100 text-sm font-medium">
+                            Peça uma importação personalizada da China, EUA ou Europa com as melhores taxas do mercado.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setIsImportModalOpen(true)}
+                          className="shrink-0 bg-white text-[#5A189A] px-6 py-3 rounded-xl font-bold text-sm hover:bg-zinc-100 transition-colors inline-flex items-center justify-center gap-2"
+                        >
+                          <Globe size={18} />
+                          Peça uma Importação
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </section>
 
                 {categories.map(cat => (
                   <section key={cat.id} className="space-y-4">
-                    <div className="flex items-center justify-between px-4">
-                      <h2 className="text-xl font-bold dark:text-white">{cat.name}</h2>
-                      <button onClick={() => { setActiveCategory(cat.name); setCurrentView('category'); }} className="text-purple-600 font-semibold text-sm">Ver Mais</button>
+                    <div className="container mx-auto px-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white">{cat.name}</h2>
+                        <button onClick={() => handleSelectCategory(cat.name)} className="text-sm font-semibold text-purple-600 hover:text-purple-700">Ver Mais</button>
+                      </div>
                     </div>
                     <div className="flex gap-4 overflow-x-auto px-4 scroll-snap-x custom-scrollbar">
                       {products.filter(p => p.category === cat.name).slice(0, 10).map(p => (

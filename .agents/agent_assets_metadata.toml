@@ -6,3 +6,9 @@ id = "yhELiwmBetbpv55GuRMbj"
 uri = "file://screenshots/homepage.jpg"
 type = "image"
 title = "Elara home page after Product Discovery updates"
+
+[[outputs]]
+id = "a61f_IGRNxCKgjXdox96P"
+uri = "file://screenshots/homepage-v2.jpg"
+type = "image"
+title = "Elara home page — Amazon-inspired redesign"
