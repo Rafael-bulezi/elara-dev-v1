@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ShoppingCart, Menu, MapPin, ChevronDown, Bell, Heart, User, PlusCircle, Globe, X } from 'lucide-react';
+import { Search, ShoppingCart, Menu, MapPin, ChevronDown, Bell, Heart, User, PlusCircle, Globe, X, MessageCircle } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { getAvatarUrl } from '../../utils/avatar';
 
@@ -191,6 +191,12 @@ const Header: React.FC<HeaderProps> = ({
                     {cartCount}
                   </span>
                 )}
+              </button>
+
+              {/* Chat */}
+              <button onClick={() => onNavigate('messages')} className="hidden md:flex items-center gap-1 text-zinc-600 hover:text-purple-600 px-2 py-1.5 rounded-lg font-bold text-xs transition-colors">
+                <MessageCircle size={15} />
+                <span className="hidden lg:inline">Mensagens</span>
               </button>
 
               {/* Sell */}

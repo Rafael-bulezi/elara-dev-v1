@@ -29,7 +29,7 @@ export type UserProfile = {
   createdAt?: any;
 };
 
-export type ProductCondition = 'Novo' | 'Usado';
+export type ProductCondition = 'Novo' | 'Semi-novo' | 'Usado';
 export type ProductOrigin = 'China' | 'Europa' | 'Local';
 export type ProductStatus = 'pending' | 'approved' | 'rejected';
 

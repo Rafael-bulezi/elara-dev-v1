@@ -11,7 +11,7 @@ interface FiltersPanelProps {
   maxPrice?: number;
 }
 
-const CONDITIONS: ProductCondition[] = ['Novo', 'Usado'];
+const CONDITIONS: ProductCondition[] = ['Novo', 'Semi-novo', 'Usado'];
 
 const formatKz = (value: number) => `Kz ${value.toLocaleString('pt-AO')}`;
 

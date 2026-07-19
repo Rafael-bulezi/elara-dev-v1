@@ -158,9 +158,9 @@ export const StripSection: React.FC<CommonProps & { category: string; onViewAll:
             Ver mais <ArrowRight size={13} />
           </button>
         </div>
-        <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-5 md:overflow-x-visible">
+        <div className="flex gap-3 overflow-x-auto scroll-snap-x custom-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-5 md:overflow-x-visible touch-pan-x">
           {cats.map(p => (
-            <div key={p.id} className="min-w-[155px] md:min-w-0 shrink-0 md:shrink">
+            <div key={p.id} className="min-w-[155px] md:min-w-0 shrink-0 md:shrink scroll-snap-item">
               <ProductCard product={p} onAddToCart={onAddToCart} onProductClick={onProductClick}
                 wishlisted={wishlist.includes(p.id)} onToggleWishlist={onToggleWishlist} />
             </div>

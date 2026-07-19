@@ -143,10 +143,10 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
         </div>
       </div>
 
-      {/* ── eBay-style dropdown ── */}
+      {/* ── eBay-style dropdown (desktop only) ── */}
       {hovered && hovered !== '' && subs && (
         <div
-          className="absolute left-0 right-0 top-full bg-white border-b border-zinc-200 shadow-2xl z-50"
+          className="hidden md:block absolute left-0 right-0 top-full bg-white border-b border-zinc-200 shadow-2xl z-50"
           onMouseEnter={keepOpen}
           onMouseLeave={close}
         >

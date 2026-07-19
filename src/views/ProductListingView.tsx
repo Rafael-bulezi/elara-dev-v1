@@ -173,25 +173,10 @@ const FilterPanel: React.FC<{
           </div>
         </FilterSection>
 
-        {/* Rating */}
-        <FilterSection title="Avaliação" defaultOpen={false}>
-          <div className="space-y-2">
-            {[4, 3, 2].map(r => (
-              <button key={r} className="flex items-center gap-2 w-full group">
-                <div className="flex">
-                  {[1,2,3,4,5].map(s => <Star key={s} size={13} className={s <= r ? 'text-amber-400 fill-amber-400' : 'text-zinc-300 fill-zinc-300'} />)}
-                </div>
-                <span className="text-xs text-zinc-500">&amp; acima</span>
-                <span className="text-[10px] text-zinc-400 ml-auto">({Math.floor(Math.random() * 300) + 50})</span>
-              </button>
-            ))}
-          </div>
-        </FilterSection>
-
         {/* Condition */}
         <FilterSection title="Condição" defaultOpen={false}>
           <div className="flex gap-2 flex-wrap">
-            {['Novo', 'Usado'].map(c => (
+            {['Novo', 'Semi-novo', 'Usado'].map(c => (
               <button key={c} onClick={() => onChange({ ...filters, condition: filters.condition === c ? null : c as ProductCondition })}
                 className={`text-xs px-3 py-1.5 rounded-full border font-bold transition-colors ${filters.condition === c ? 'bg-purple-600 border-purple-600 text-white' : 'border-zinc-300 text-zinc-600 hover:border-purple-500'}`}>
                 {c}

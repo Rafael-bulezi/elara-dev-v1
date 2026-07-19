@@ -24,14 +24,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       onClick={() => onProductClick(product)}
-      className="group bg-white rounded-xl border border-zinc-200 overflow-hidden hover:shadow-md hover:border-zinc-300 cursor-pointer flex flex-col h-full transition-shadow"
+      className="group bg-white rounded-xl border border-zinc-200 overflow-hidden hover:shadow-md hover:border-zinc-300 active:border-purple-300 active:shadow-sm cursor-pointer flex flex-col h-full transition-shadow select-none"
     >
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-zinc-50">
         <ImageWithFallback
           src={product.image}
           alt={product.title}
-          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-[1.03] group-active:scale-[1.02] transition-transform duration-300"
         />
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">

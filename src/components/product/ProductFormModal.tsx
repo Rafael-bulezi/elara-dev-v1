@@ -244,6 +244,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
                       className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-zinc-900 py-5 pl-16 pr-8 rounded-[24px] text-zinc-900 font-black text-lg outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="Novo">Produto Novo</option>
+                      <option value="Semi-novo">Semi-novo</option>
                       <option value="Usado">Produto Usado</option>
                     </select>
                   </div>
