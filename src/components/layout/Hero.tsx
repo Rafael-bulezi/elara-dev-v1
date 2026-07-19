@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowRight, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface HeroProps {
@@ -60,7 +60,7 @@ const Hero: React.FC<HeroProps> = ({ onCtaClick }) => {
   const [dir, setDir] = useState<Direction>('next');
   const lockRef = useRef(false);
 
-  const navigate = (newIdx: number, direction: Direction) => {
+  const navigate = useCallback((newIdx: number, direction: Direction) => {
     if (lockRef.current || newIdx === activeIdx) return;
     lockRef.current = true;
     setPrevIdx(activeIdx);
@@ -70,15 +70,15 @@ const Hero: React.FC<HeroProps> = ({ onCtaClick }) => {
       setPrevIdx(null);
       lockRef.current = false;
     }, 480);
-  };
+  }, [activeIdx]);
 
   const goPrev = () => navigate((activeIdx - 1 + BANNERS.length) % BANNERS.length, 'prev');
-  const goNext = () => navigate((activeIdx + 1) % BANNERS.length, 'next');
+  const goNext = useCallback(() => navigate((activeIdx + 1) % BANNERS.length, 'next'), [activeIdx, navigate]);
 
   useEffect(() => {
     const t = setInterval(goNext, 5000);
     return () => clearInterval(t);
-  }, [activeIdx]);
+  }, [goNext]);
 
   // direction 'next'  → right arrow: current exits LEFT,  new enters from RIGHT
   // direction 'prev'  → left arrow:  current exits RIGHT, new enters from LEFT

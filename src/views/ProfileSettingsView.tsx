@@ -20,8 +20,7 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
     displayName: userProfile?.displayName || userProfile?.name || '',
     phoneNumber: userProfile?.phoneNumber || userProfile?.phone || '',
     address: userProfile?.address || '',
-    bio: userProfile?.bio || userProfile?.description || '',
-    role: userProfile?.role || 'buyer'
+    bio: userProfile?.bio || userProfile?.description || ''
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,8 +101,7 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
           full_name: formData.displayName,
           phone: formData.phoneNumber,
           address: formData.address,
-          bio: formData.bio,
-          role: formData.role
+          bio: formData.bio
         })
         .eq('id', userProfile.uid);
 
@@ -111,8 +109,7 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
       onUpdateProfile({
         name: formData.displayName,
         phone: formData.phoneNumber,
-        address: formData.address,
-        role: formData.role as UserProfile['role'],
+        address: formData.address
       });
       setSuccess('Perfil atualizado com sucesso!');
       setTimeout(() => setSuccess(null), 3000);
@@ -189,8 +186,14 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
                 </p>
                 <div className="flex items-center justify-center md:justify-start gap-2">
                   <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-lg border border-purple-100">
-                    {userProfile?.role === 'seller' ? 'Vendedor Verificado' : 'Comprador'}
+                    {userProfile?.role === 'seller' ? 'Vendedor' : 'Comprador'}
                   </span>
+                  {userProfile?.sellerStatus === 'pending' && (
+                    <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-lg border border-amber-100">Loja Pendente</span>
+                  )}
+                  {userProfile?.mixeiroVerified && (
+                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">Mixeiro Verificado</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -218,25 +221,6 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
                     onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
                     className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 pl-14 pr-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
                   />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-black text-zinc-500 uppercase tracking-widest px-1">Tipo de Conta</label>
-              <div className="relative group">
-                <select 
-                  value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value as UserProfile['role']})}
-                  className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all appearance-none"
-                >
-                  <option value="buyer">Comprador</option>
-                  <option value="seller">Vendedor</option>
-                  <option value="intermediary">Intermediário (Micheiro)</option>
-                  {userProfile?.role === 'admin' && <option value="admin">Administrador</option>}
-                </select>
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
-                  ▼
                 </div>
               </div>
             </div>

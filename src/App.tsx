@@ -19,10 +19,8 @@ import ProfileDrawer from './components/auth/ProfileDrawer';
 import ProductFormModal from './components/product/ProductFormModal';
 import CheckoutModal from './components/cart/CheckoutModal';
 import InstallPrompt from './components/common/InstallPrompt';
-import DevTools from './components/common/DevTools';
 import OnboardingFlow from './components/common/OnboardingFlow';
 import ImportRequestForm from './components/product/ImportRequestForm';
-import ImportFeed from './components/product/ImportFeed';
 import ProductListingView from './views/ProductListingView';
 import { DiscoveryFilters } from './types/discovery';
 import CategoryMegaMenu from './components/layout/CategoryMegaMenu';
@@ -37,6 +35,8 @@ import OrdersView from './views/OrdersView';
 import ProductsView from './views/ProductsView';
 import ProfileSettingsView from './views/ProfileSettingsView';
 import SellerProfileView from './views/SellerProfileView';
+import SellerOnboardingView from './views/SellerOnboardingView';
+import SellerDashboardView from './views/SellerDashboardView';
 import AdminView from './views/AdminView';
 import ChatListView from './views/ChatListView';
 import ChatRoomView from './views/ChatRoomView';
@@ -75,8 +75,9 @@ const App = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote' | 'category' | 'product'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote' | 'category' | 'product' | 'seller-dashboard' | 'seller-onboarding'>('home');
   const [activeTab, setActiveTab] = useState('home');
+  const [sellerMode, setSellerMode] = useState(false);
   
   // Data State
   const [products, setProducts] = useState<Product[]>([]);
@@ -202,7 +203,7 @@ const App = () => {
           try {
             const { data: profile, error } = await supabase
               .from('profiles')
-              .select('*')
+              .select('*, seller_profiles(*)')
               .eq('id', session.user.id)
               .single();
 
@@ -214,7 +215,8 @@ const App = () => {
                 full_name: session.user.user_metadata?.full_name || 'Usuário',
                 email: session.user.email || '',
                 avatar_url: session.user.user_metadata?.avatar_url || '',
-                role: isAdmin ? 'admin' : 'buyer'
+                role: isAdmin ? 'admin' : 'buyer',
+                seller_status: 'none'
               };
               await supabase.from('profiles').insert(newProfile);
               setUserProfile({ 
@@ -222,15 +224,24 @@ const App = () => {
                 name: newProfile.full_name, 
                 email: newProfile.email,
                 avatar: newProfile.avatar_url, 
-                role: newProfile.role as 'buyer' | 'seller' | 'admin'
+                role: newProfile.role as 'buyer' | 'seller' | 'admin',
+                sellerStatus: 'none'
               });
             } else if (profile) {
+              const sellerProfile = (profile.seller_profiles?.[0] || profile) as Record<string, unknown>;
               setUserProfile({ 
                 uid: profile.id, 
                 name: profile.full_name, 
                 email: profile.email,
                 avatar: profile.avatar_url, 
                 role: profile.role as 'buyer' | 'seller' | 'admin',
+                sellerStatus: (profile.seller_status || sellerProfile.seller_status || 'none') as UserProfile['sellerStatus'],
+                shopName: (profile.shop_name || sellerProfile.shop_name) as string | undefined,
+                verificationLevel: (profile.verification_level || sellerProfile.verification_level) as UserProfile['verificationLevel'],
+                idDocumentUrl: (profile.id_document_url || sellerProfile.id_document_url) as string | undefined,
+                bankDetails: (profile.bank_details || sellerProfile.bank_details) as string | undefined,
+                mixeiroStatus: (profile.mixeiro_status || sellerProfile.mixeiro_status) as UserProfile['mixeiroStatus'],
+                mixeiroVerified: !!(profile.mixeiro_verified || sellerProfile.mixeiro_verified),
                 phone: profile.phone,
                 address: profile.address
               } as UserProfile);
@@ -500,8 +511,32 @@ const App = () => {
     try {
       localStorage.setItem('elara_onboarded', '1');
       if (city) localStorage.setItem('elara_city', city);
-    } catch {}
+    } catch { /* localStorage may be unavailable */ }
     setShowOnboarding(false);
+  };
+
+  const handleStartSelling = () => {
+    if (!userProfile) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    setCurrentView('seller-onboarding');
+    setIsProfileOpen(false);
+    setIsMobileMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  const handleEnterSellerDashboard = () => {
+    setSellerMode(true);
+    setCurrentView('seller-dashboard');
+    setIsProfileOpen(false);
+    setIsMobileMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  const handleExitSellerMode = () => {
+    setSellerMode(false);
+    navigateTo('home');
   };
 
   return (
@@ -520,7 +555,18 @@ const App = () => {
           onOpenAuth={() => setIsAuthModalOpen(true)}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          onSellProduct={() => userProfile ? setIsProductModalOpen(true) : setIsAuthModalOpen(true)}
+          onSellProduct={() => {
+            if (!userProfile) {
+              setIsAuthModalOpen(true);
+            } else if (userProfile.role === 'seller') {
+              setIsProductModalOpen(true);
+            } else {
+              setCurrentView('seller-onboarding');
+              setIsProfileOpen(false);
+              setIsMobileMenuOpen(false);
+              window.scrollTo(0, 0);
+            }
+          }}
           onOpenImport={() => setIsImportModalOpen(true)}
           onNavigate={navigateTo}
           appLogo={appLogo}
@@ -546,9 +592,7 @@ const App = () => {
             exit="exit"
           >
           {currentView === 'home' && (
-            userProfile?.role === 'intermediary' ? (
-              <ImportFeed />
-            ) : searchQuery.trim() !== '' ? (
+            searchQuery.trim() !== '' ? (
               <ProductListingView
                 products={products}
                 filters={discoveryFilters}
@@ -669,6 +713,34 @@ const App = () => {
             />
           )}
 
+          {currentView === 'seller-dashboard' && (
+            <SellerDashboardView
+              userProfile={userProfile}
+              onBack={handleExitSellerMode}
+              onEditProduct={(p) => {
+                setEditingProduct(p);
+                setIsProductModalOpen(true);
+              }}
+              onAddProduct={() => {
+                setEditingProduct(null);
+                setIsProductModalOpen(true);
+              }}
+              onViewOrders={() => navigateTo('orders')}
+            />
+          )}
+
+          {currentView === 'seller-onboarding' && (
+            <SellerOnboardingView
+              userProfile={userProfile}
+              onBack={() => navigateTo('home')}
+              onComplete={(updates) => {
+                setUserProfile(prev => prev ? { ...prev, ...updates } : null);
+                setSellerMode(true);
+                setCurrentView('seller-dashboard');
+              }}
+            />
+          )}
+
           {currentView === 'settings' && (
             <ProfileSettingsView 
               userProfile={userProfile}
@@ -743,7 +815,18 @@ const App = () => {
         onOpenProfile={() => setIsProfileOpen(true)}
         userProfile={userProfile}
         onOpenAuth={() => setIsAuthModalOpen(true)}
-        onSellProduct={() => userProfile ? setIsProductModalOpen(true) : setIsAuthModalOpen(true)}
+        onSellProduct={() => {
+          if (!userProfile) {
+            setIsAuthModalOpen(true);
+          } else if (userProfile.role === 'seller') {
+            setIsProductModalOpen(true);
+          } else {
+            setCurrentView('seller-onboarding');
+            setIsProfileOpen(false);
+            setIsMobileMenuOpen(false);
+            window.scrollTo(0, 0);
+          }
+        }}
       />
 
       <MobileMenu 
@@ -779,6 +862,10 @@ const App = () => {
         userProfile={userProfile}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onNavigate={navigateTo}
+        onStartSelling={handleStartSelling}
+        onEnterSellerDashboard={handleEnterSellerDashboard}
+        onExitSellerMode={handleExitSellerMode}
+        sellerMode={sellerMode}
       />
 
       {/* ProductDetailsModal kept for legacy — no longer opened by card click */}
@@ -838,8 +925,6 @@ const App = () => {
         appLogo={appLogo}
       />
       
-      <DevTools setUserProfile={setUserProfile} />
-
       {/* Onboarding — shown only on first visit */}
       {showOnboarding && (
         <OnboardingFlow

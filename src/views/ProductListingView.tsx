@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, SlidersHorizontal, X, Star, ChevronDown, ChevronUp, Search, Check } from 'lucide-react';
+import { ArrowLeft, SlidersHorizontal, X, ChevronDown, ChevronUp, Search, Check } from 'lucide-react';
 import { Product, ProductCondition } from '../types';
 import { DiscoveryFilters } from '../types/discovery';
 import ProductCard from '../components/product/ProductCard';

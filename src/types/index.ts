@@ -8,13 +8,24 @@ export interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-export type UserRole = 'buyer' | 'seller' | 'admin' | 'intermediary';
+export type UserRole = 'buyer' | 'seller' | 'admin';
+
+export type SellerStatus = 'none' | 'pending' | 'active' | 'suspended' | 'rejected';
+export type VerificationLevel = 'basic' | 'verified' | 'premium';
+export type MixeiroStatus = 'none' | 'pending' | 'active' | 'verified';
 
 export type UserProfile = {
   uid: string;
   name: string;
   email: string;
   role: UserRole;
+  sellerStatus?: SellerStatus;
+  shopName?: string;
+  verificationLevel?: VerificationLevel;
+  idDocumentUrl?: string;
+  bankDetails?: string;
+  mixeiroStatus?: MixeiroStatus;
+  mixeiroVerified?: boolean;
   avatar?: string;
   photoURL?: string; // For compatibility
   displayName?: string; // For compatibility

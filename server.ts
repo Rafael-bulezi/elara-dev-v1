@@ -63,7 +63,7 @@ async function startServer() {
       return res.status(500).json({ error: "Server-side Supabase admin is not configured." });
     }
 
-    const { email, password, fullName, phone, role } = req.body;
+    const { email, password, fullName, phone } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required." });
     }
@@ -79,7 +79,7 @@ async function startServer() {
         user_metadata: {
           full_name: fullName || 'Usuário',
           phone: phone || '',
-          role: role || 'buyer'
+          role: 'buyer'
         }
       });
 

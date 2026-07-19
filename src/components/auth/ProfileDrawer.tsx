@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, Tag, CreditCard, Settings, LogOut, Shield, ArrowLeft, User, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Tag, CreditCard, Settings, LogOut, Shield, ArrowLeft, User, ChevronRight, Store, RefreshCw } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { getAvatarUrl } from '../../utils/avatar';
@@ -9,7 +9,11 @@ interface ProfileDrawerProps {
   onClose: () => void;
   userProfile: UserProfile | null;
   onOpenAuth: () => void;
-  onNavigate: (view: 'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote') => void;
+  onNavigate: (view: 'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote' | 'seller-dashboard' | 'seller-onboarding') => void;
+  onStartSelling?: () => void;
+  onEnterSellerDashboard?: () => void;
+  onExitSellerMode?: () => void;
+  sellerMode?: boolean;
 }
 
 const ProfileDrawer = ({ 
@@ -17,7 +21,11 @@ const ProfileDrawer = ({
   onClose, 
   userProfile, 
   onOpenAuth, 
-  onNavigate
+  onNavigate,
+  onStartSelling,
+  onEnterSellerDashboard,
+  onExitSellerMode,
+  sellerMode = false
 }: ProfileDrawerProps) => (
   <>
     <div className={`fixed inset-0 bg-zinc-950/40 backdrop-blur-md z-[60] transition-opacity duration-500 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose} />
@@ -41,8 +49,14 @@ const ProfileDrawer = ({
               <h3 className="font-black text-2xl truncate tracking-tighter leading-none mb-2">{userProfile.name}</h3>
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 bg-zinc-100 text-[9px] font-black text-zinc-500 uppercase tracking-widest rounded-md border border-zinc-200">
-                  {userProfile.role === 'seller' ? 'Vendedor' : userProfile.role === 'intermediary' ? 'Intermediário' : 'Comprador'}
+                  {userProfile.role === 'seller' ? 'Vendedor' : 'Comprador'}
                 </span>
+                {userProfile.sellerStatus === 'pending' && (
+                  <span className="px-2 py-0.5 bg-amber-100 text-[9px] font-black text-amber-600 uppercase tracking-widest rounded-md">Loja Pendente</span>
+                )}
+                {userProfile.mixeiroVerified && (
+                  <span className="px-2 py-0.5 bg-blue-100 text-[9px] font-black text-blue-600 uppercase tracking-widest rounded-md">Mixeiro Verificado</span>
+                )}
                 {userProfile.email === '7dark7cloud7@gmail.com' && (
                   <span className="px-2 py-0.5 bg-rose-500 text-[9px] font-black text-white uppercase tracking-widest rounded-md">Admin</span>
                 )}
@@ -78,6 +92,30 @@ const ProfileDrawer = ({
           </button>
           
           {userProfile?.role === 'seller' && (
+            <button onClick={onEnterSellerDashboard} className="w-full flex items-center justify-between p-4 rounded-[24px] text-zinc-900 hover:bg-zinc-50 transition-all group">
+              <div className="flex items-center gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100 group-hover:scale-110 transition-transform">
+                  <Store size={22} />
+                </div>
+                <span className="font-black text-sm uppercase tracking-widest">Painel do Vendedor</span>
+              </div>
+              <ChevronRight size={18} className="text-zinc-300 group-hover:translate-x-1 transition-transform" />
+            </button>
+          )}
+
+          {userProfile?.role === 'buyer' && (
+            <button onClick={onStartSelling} className="w-full flex items-center justify-between p-4 rounded-[24px] text-zinc-900 hover:bg-zinc-50 transition-all group">
+              <div className="flex items-center gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 group-hover:scale-110 transition-transform">
+                  <Tag size={22} />
+                </div>
+                <span className="font-black text-sm uppercase tracking-widest">Começar a Vender</span>
+              </div>
+              <ChevronRight size={18} className="text-zinc-300 group-hover:translate-x-1 transition-transform" />
+            </button>
+          )}
+
+          {userProfile?.role === 'seller' && (
             <button onClick={() => onNavigate('products')} className="w-full flex items-center justify-between p-4 rounded-[24px] text-zinc-900 hover:bg-zinc-50 transition-all group">
               <div className="flex items-center gap-5">
                 <div className="w-12 h-12 rounded-2xl bg-zinc-50 flex items-center justify-center text-zinc-900 border border-zinc-100 group-hover:scale-110 transition-transform">
@@ -112,6 +150,20 @@ const ProfileDrawer = ({
             </div>
             <ChevronRight size={18} className="text-zinc-300 group-hover:translate-x-1 transition-transform" />
           </button>
+
+          {userProfile?.role === 'seller' && (
+            <button onClick={sellerMode ? onExitSellerMode : onEnterSellerDashboard} className="w-full flex items-center justify-between p-4 rounded-[24px] text-purple-700 hover:bg-purple-50 transition-all group">
+              <div className="flex items-center gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100 group-hover:scale-110 transition-transform">
+                  <RefreshCw size={22} />
+                </div>
+                <span className="font-black text-sm uppercase tracking-widest">
+                  {sellerMode ? 'Modo Comprador' : 'Modo Vendedor'}
+                </span>
+              </div>
+              <ChevronRight size={18} className="text-purple-300 group-hover:translate-x-1 transition-transform" />
+            </button>
+          )}
 
           {userProfile?.email === '7dark7cloud7@gmail.com' && (
             <button onClick={() => onNavigate('admin')} className="w-full flex items-center justify-between p-4 rounded-[24px] text-rose-600 hover:bg-rose-50 transition-all group">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   X, CheckCircle, ArrowLeft, ArrowRight, ShieldCheck, Truck,
   MapPin, Smartphone, Banknote, Copy, Check, Loader2, Package,
-  MessageCircle, QrCode,
+  QrCode,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Product, UserProfile } from '../../types';
@@ -73,7 +73,7 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
         delivery_option: form.delivery,
         total,
         status: 'pending' as const,
-        payment_status: (form.payment === 'cod' ? 'pending' : 'verifying') as const,
+        payment_status: (form.payment === 'cod' ? 'pending' : 'verifying') as 'pending' | 'verifying',
       };
 
       const { data: orderRow, error: orderError } = await supabase

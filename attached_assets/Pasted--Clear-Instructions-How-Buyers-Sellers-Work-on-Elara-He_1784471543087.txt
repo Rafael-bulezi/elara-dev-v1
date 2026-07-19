@@ -1,0 +1,141 @@
+**Clear Instructions: How Buyers & Sellers Work on Elara**
+
+Here’s a practical, documented design based on how Amazon, eBay, and Jumia handle this, adapted for Angola and Elara.
+
+---
+
+### 1. Core Model: One Account, Multiple Roles
+
+Like **eBay** (and to a large extent Amazon), Elara should use **one user account** that can have different roles.
+
+- Every user starts as a **Buyer**.
+- A user can later activate the **Seller** role (and later the **Mixeiro** role).
+- The same login works for everything.
+- Permissions and menus change based on the active roles.
+
+This is simpler for users and easier to manage in the database than separate buyer/seller accounts.
+
+---
+
+### 2. How the User Experience Works
+
+#### For Normal Users (Buyers)
+- They see the normal shopping experience: Home, Search, Categories, Cart, Orders, Profile.
+- In their Profile / Account menu there is a clear button: **“Start Selling”** or **“Become a Seller”**.
+
+#### When They Become a Seller
+- After completing seller onboarding, a new section appears.
+- Common patterns used by big platforms:
+
+| Platform | How switching works | What the user sees |
+|---------|---------------------|--------------------|
+| **Amazon** | Separate Seller Central (different interface) | Once approved, they log into Seller Central (or switch via account menu) |
+| **eBay** | Same account, Seller Hub / Selling tools appear | “Seller Hub” or “Selling” tab/section appears in the navigation |
+| **Recommended for Elara** | Same account + clear mode switch | A toggle or prominent menu item: **“Switch to Seller Dashboard”** |
+
+**Recommended UI for Elara:**
+
+- In the top navigation or account dropdown:
+  - “My Orders” (buyer)
+  - “Seller Dashboard” (only visible after becoming a seller)
+- Or a simple toggle: **Buyer Mode** ↔ **Seller Mode**
+- When in Seller Mode, the main navigation changes to:
+  - Dashboard
+  - My Products
+  - Orders (to fulfill)
+  - Earnings / Payouts
+  - Settings
+
+This is cleaner than forcing users into a completely separate website.
+
+---
+
+### 3. Seller Onboarding Flow (What Credentials to Ask For)
+
+Based on Jumia (Africa), Amazon, eBay, and general marketplace KYC best practices, here’s a realistic and practical set for Angola:
+
+#### Minimum Requirements (MVP – Individual Sellers)
+
+| Field | Required? | Why |
+|------|-----------|-----|
+| Full Legal Name | Yes | Identity |
+| Phone Number (verified via SMS) | Yes | Contact + security |
+| Email | Yes | Already have from signup |
+| Government ID (Bilhete de Identidade or Passport) – photo/front | Yes | KYC / trust |
+| Selfie holding the ID (optional at start) | Recommended | Stronger verification |
+| Bank Account / Multicaixa details for payouts | Yes | To receive money |
+| Store / Shop Name | Yes | Public facing |
+| Address (Province + City + detailed) | Yes | Logistics |
+| Accept Seller Terms & Conditions | Yes | Legal |
+
+#### Later / Higher Tier (Business or High Volume)
+
+- Business registration documents (if they have a company)
+- NIF (tax number)
+- Proof of address
+- Higher verification for “Verified Seller” or “Verified Mixeiro”
+
+**Important:**  
+Start relatively light so people can begin selling, then increase requirements as they sell more (risk-based approach). This is what most successful marketplaces do.
+
+---
+
+### 4. Database Structure (How It Scales)
+
+Simple and scalable design:
+
+```text
+users
+- id
+- email
+- phone
+- full_name
+- ... normal auth fields
+
+seller_profiles
+- user_id (FK to users)
+- shop_name
+- status (pending, active, suspended, rejected)
+- verification_level (basic, verified, premium)
+- bank_details (encrypted or tokenized)
+- id_document_url
+- created_at
+- approved_at
+
+roles or user_roles (optional but clean)
+- user_id
+- role (buyer, seller, mixeiro, admin)
+```
+
+**Why this scales well:**
+- One user row stays light.
+- Seller-specific data lives in a separate table.
+- You only join `seller_profiles` when needed.
+- Easy to add `mixeiro_profiles` later with extra fields (success rate, specialties, etc.).
+- Indexes on `user_id` and `status` keep queries fast even with hundreds of thousands of sellers.
+
+Chat messages (when you add them) go into their own tables (`conversations` + `messages`) and are indexed by `conversation_id`. This will not collapse the database if you paginate and don’t load full history at once.
+
+---
+
+### 5. Recommended Flow Summary for Elara
+
+1. User signs up → automatically a **Buyer**.
+2. In Account menu → “Start Selling on Elara”.
+3. Fills a short form + uploads ID + bank details.
+4. Status = `pending` (you or an admin can approve, or auto-approve basic sellers at the beginning).
+5. Once approved → “Seller Dashboard” appears.
+6. User can switch between normal shopping and Seller Dashboard easily.
+7. Later you can add “Become a Mixeiro” as an additional role with extra requirements (e.g. minimum completed sales + rating).
+
+---
+
+### Final Recommendation
+
+- Use **one account + roles** (eBay-style).
+- Show a clear **Seller Dashboard** entry after approval (not a completely separate website at the beginning).
+- Ask for ID + bank details + basic info for individual sellers.
+- Keep the database normalized (`users` + `seller_profiles`).
+- Make Mixeiro a special type of seller later, with verification badges.
+
+Would you like me to write the exact step-by-step user flow (with screens) + the database tables in more detail so you can give clear instructions to your agents?

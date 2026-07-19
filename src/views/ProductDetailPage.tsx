@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft, ShoppingCart, Zap, MessageCircle, Heart, Star,
-  ShieldCheck, Truck, Package, ChevronRight, Share2, RotateCcw,
-  ChevronLeft, Store, CheckCircle, MapPin, Clock,
+  ShieldCheck, Truck, ChevronRight, Share2, RotateCcw,
+  ChevronLeft, CheckCircle, MapPin, Clock,
 } from 'lucide-react';
 import { Product } from '../types';
 import { getAvatarUrl } from '../utils/avatar';

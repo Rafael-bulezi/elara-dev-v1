@@ -11,7 +11,6 @@ type AuthView = 'login' | 'register' | 'forgot';
 
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [view, setView] = useState<AuthView>('login');
-  const [role, setRole] = useState<'buyer' | 'seller'>('buyer');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
@@ -52,8 +51,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             email: dummyEmail,
             password,
             fullName,
-            phone,
-            role
+            phone
           })
         });
 
@@ -125,18 +123,6 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
           {view !== 'forgot' ? (
             <>
-              {/* Role selector (register only) */}
-              {view === 'register' && (
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  {(['buyer', 'seller'] as const).map(r => (
-                    <button key={r} onClick={() => setRole(r)}
-                      className={`py-3 rounded-xl border-2 font-black text-xs uppercase tracking-wider transition-all ${role === r ? 'border-purple-600 bg-purple-600 text-white' : 'border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}>
-                      {r === 'buyer' ? '🛒 Comprar' : '🏪 Vender'}
-                    </button>
-                  ))}
-                </div>
-              )}
-
               <form onSubmit={handleAuth} className="space-y-3">
                 {view === 'register' && (
                   <div className="relative">
