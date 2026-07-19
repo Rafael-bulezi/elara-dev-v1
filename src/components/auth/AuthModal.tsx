@@ -43,13 +43,27 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         if (error) throw error;
         onClose();
       } else {
-        const { error } = await supabase.auth.signUp({
-          email: dummyEmail, password,
-          options: { data: { role, full_name: fullName, phone } }
+        // Use server-side signup to auto-confirm the email, since the
+        // dummy @elara.ao address cannot receive confirmation links.
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: dummyEmail,
+            password,
+            fullName,
+            phone,
+            role
+          })
         });
-        if (error) throw error;
-        setSuccess('Conta criada! Pode iniciar sessão agora.');
-        setView('login');
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Erro ao criar conta.');
+
+        // Auto-login after successful signup
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email: dummyEmail, password });
+        if (loginError) throw loginError;
+        onClose();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro na autenticação.');
