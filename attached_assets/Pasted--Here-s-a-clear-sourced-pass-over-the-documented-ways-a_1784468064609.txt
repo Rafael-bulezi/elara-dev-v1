@@ -1,0 +1,88 @@
+**Here’s a clear, sourced pass over the documented ways auth commonly breaks (especially Supabase + Next.js), plus how to scale a database toward millions of users.**
+
+---
+
+### 1. Documented Ways Auth Breaks (Supabase + Next.js Focus)
+
+These are real, repeatedly reported issues from official docs, GitHub issues, and production reports.
+
+| Problem | What Happens | Why It Breaks | Key Sources |
+|-------|--------------|---------------|-------------|
+| **Middleware cookie loss** | User appears logged out after refresh or navigation | Middleware refreshes the token but the new cookies are not returned in the response (especially on redirects) | [iamuvin.com production patterns](https://iamuvin.com/blog/fullstack-authentication-nextjs-supabase-production), Supabase SSR advanced guide |
+| **getSession() vs getUser()** | Security holes or random logouts | `getSession()` only reads the local JWT (can be stale/spoofed). `getUser()` validates with the Auth server | Supabase docs + multiple GitHub issues |
+| **Single-use refresh tokens + race conditions** | Silent session loss (user suddenly logged out) | Middleware calls `getUser()` on every request → burns the single-use refresh token. If the browser doesn’t fully receive the new cookies (double-click, slow network, background tab), the old token is dead | [supabase/ssr #190](https://github.com/supabase/ssr/issues/190) |
+| **httpOnly cookies** | Client thinks user is logged out while server thinks they are logged in → redirect loops | Supabase browser client needs to read the cookies. Setting `httpOnly: true` breaks client-side session restore | [DEV Community article](https://dev.to/introlohq/why-setting-httponly-on-your-supabase-auth-cookies-breaks-everything-in-nextjs-3eg3) |
+| **Large cookies / chunking** | Auth fails or headers explode (especially on Vercel/Cloudflare) | Big user_metadata causes the session cookie to be split into multiple chunks. Corruption or header size limits break things | GitHub discussions #34260, supabase/ssr issues |
+| **OAuth / exchangeCodeForSession fails to set cookies** | User lands on success page unauthenticated | Regression or cookie Domain / Set-Cookie timing issues in certain versions of supabase-js | [supabase/auth #2344](https://github.com/supabase/auth/issues/2344) |
+| **CDN / caching of Set-Cookie** | One user receives another user’s session | Cached responses that contain refreshed auth cookies are served to different users | Supabase Advanced SSR guide |
+| **Production vs Dev differences** | Works in `npm run dev`, breaks after `build` + `start` | Cookie handling, middleware, or Turbopack differences | Multiple production reports |
+| **Redirect loops after login** | Endless bounce between login and protected page | Cookies not set/available in the next middleware run, or Site URL mismatch (localhost vs 127.0.0.1) | Stack Overflow + GitHub issues |
+| **Auth errors crash middleware** | Whole app returns 500 or blocks public routes | Unhandled errors (network timeout, JWT expired, etc.) in middleware | Various troubleshooting posts |
+| **Stale user data after profile changes** | UI shows old email/name | `getUser()` returns fresh data but the client session is not automatically updated | GitHub discussions |
+
+**Official Supabase documentation you should treat as primary:**
+
+- [Server-Side Rendering](https://supabase.com/docs/guides/auth/server-side)
+- [Creating a Supabase client for SSR](https://supabase.com/docs/guides/auth/server-side/creating-a-client)
+- [Advanced guide (caching, prefetching, etc.)](https://supabase.com/docs/guides/auth/server-side/advanced-guide)
+- [Migrating from Auth Helpers to @supabase/ssr](https://supabase.com/docs/guides/auth/server-side/migrating-to-ssr-from-auth-helpers)
+- [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
+- Troubleshooting pages for 500 errors, missing sub claim, etc.
+
+**Key GitHub issue trackers:**
+- `supabase/ssr`
+- `supabase/auth`
+- `supabase/supabase-js`
+
+These are the places where the real edge cases surface.
+
+---
+
+### 2. How to Scale a Database to Host Millions of People
+
+PostgreSQL (what Supabase uses) can scale to millions of users, but you have to be deliberate. Here’s the realistic progression:
+
+| Stage | Strategy | When You Need It | Notes / Sources |
+|------|----------|------------------|-----------------|
+| **1. Vertical scaling** | Bigger compute + more RAM/disk | First 10k–100k+ users | Easiest. Supabase compute add-ons |
+| **2. Connection pooling** | PgBouncer or **Supavisor** | When you hit connection limits (serverless especially) | Supabase has Supavisor (designed for 1M+ connections) |
+| **3. Read replicas** | Offload SELECT queries | Read-heavy apps | OpenAI scaled Postgres this way for ChatGPT |
+| **4. Heavy indexing + query optimization** | Proper indexes, avoid N+1, analyze slow queries | Always | Biggest early win |
+| **5. Caching layer** | Redis / in-memory cache for hot data | High traffic | Reduces load on Postgres dramatically |
+| **6. Partitioning** | Split large tables by date/user/region | Very large tables | Postgres native partitioning |
+| **7. Sharding** | Split data across multiple databases | Extreme scale (write-heavy, hundreds of millions+) | Complex. Usually last resort |
+| **8. Move write-heavy workloads** | Separate systems for certain data | When writes become the bottleneck | Common pattern at large scale |
+
+**Supabase-specific scaling notes:**
+- Use the **connection pooling** string (port 6543) for serverless/edge.
+- Enable **Supavisor**.
+- Watch disk size (auto-scales on paid plans, but has limits).
+- RLS performance can degrade on huge tables → design policies carefully and index the columns used in policies.
+- For very large scale, people often keep Supabase as the operational database and offload heavy analytics/search elsewhere.
+
+**Strong sources on scaling:**
+- OpenAI: [Scaling PostgreSQL to power 800 million ChatGPT users](https://openai.com/index/scaling-postgresql/)
+- Supabase: Supavisor blog (1 million connections)
+- Supabase docs on database size, high RAM, performance
+- General Postgres: connection pooling, read replicas, partitioning, sharding guides
+
+---
+
+### Practical Takeaway for Elara
+
+**Auth:**  
+The combination of Next.js App Router + `@supabase/ssr` is powerful but fragile. The most common production killers are:
+1. Incorrect middleware cookie handling
+2. Race conditions with single-use refresh tokens
+3. Using `getSession()` where you should use `getUser()`
+
+Even strong agents struggle here because the bugs are subtle and timing-dependent.
+
+**Database scaling:**  
+You are very far from needing sharding. Focus on:
+- Good indexes
+- Connection pooling
+- Reasonable compute size
+- Clean RLS policies
+
+Would you like me to turn this into a **checklist** you can give your agent (or use yourself) so it avoids the most common auth failure modes?

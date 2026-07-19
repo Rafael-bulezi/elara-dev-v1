@@ -1,0 +1,249 @@
+**Extremely Detailed Auth Report for Elara on Replit**
+
+This is a complete, production-minded guide you can give directly to your agent.
+
+---
+
+### 1. Recommended Auth Stack for Elara (Replit)
+
+| Layer | Choice | Reason |
+|------|--------|--------|
+| Framework | Next.js 15 (App Router) | Best for modern React + SSR |
+| Auth Provider | **Supabase Auth** | Excellent DX, secure, free tier is strong, works great with Replit |
+| Package | `@supabase/supabase-js` + `@supabase/ssr` | Official way to handle cookies + server components |
+| Secrets | Replit Secrets | Secure way to store keys |
+| Session Strategy | Cookie-based (via `@supabase/ssr`) | Works on both server and client |
+| Guest Support | Yes (important) | Users can browse and checkout without account |
+
+---
+
+### 2. High-Level Auth Architecture for Elara
+
+```
+User
+  ↓
+Login / Signup / Guest
+  ↓
+Supabase Auth (handles password hashing, tokens, sessions)
+  ↓
+Cookies (httpOnly, secure) ← managed by @supabase/ssr
+  ↓
+Next.js Middleware (refreshes session automatically)
+  ↓
+Server Components / Server Actions / Route Handlers
+  ↓
+Optional: profiles table (extra user data)
+```
+
+**Important rules:**
+- Never store the session only in `localStorage`
+- Always use `getUser()` on the server (not just `getSession()`)
+- Support **Guest checkout** (do not force login to buy)
+
+---
+
+### 3. What You Must Tell Your Agent (Copy-Paste Prompt)
+
+Here’s a ready-to-use, extremely detailed prompt for your agent:
+
+---
+
+**AGENT PROMPT – Elara Authentication System (Replit + Next.js + Supabase)**
+
+You are implementing the complete authentication system for **Elara**, an e-commerce platform for Angola.
+
+### Tech Requirements
+- Next.js 15 (App Router)
+- TypeScript
+- Supabase Auth using `@supabase/ssr`
+- Tailwind + shadcn/ui
+- Running on Replit
+
+### Goals
+1. Secure email + password authentication
+2. Proper cookie-based sessions that work on both server and client
+3. Middleware that keeps the session fresh
+4. Ability to browse and checkout as **Guest**
+5. Protected routes (account, orders, etc.)
+6. Clean user profile system
+7. Good error handling and loading states
+8. Ready for future Google login
+
+### Step-by-Step Implementation
+
+#### A. Install Dependencies
+```bash
+npm install @supabase/supabase-js @supabase/ssr
+```
+
+#### B. Environment Variables (Replit Secrets)
+Create these secrets in Replit (Tools → Secrets):
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server only – never expose to client)
+
+#### C. Create Supabase Clients
+
+Create these files:
+
+**1. `lib/supabase/client.ts`** (Browser client)
+```ts
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+```
+
+**2. `lib/supabase/server.ts`** (Server client)
+```ts
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export async function createClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing sessions.
+          }
+        },
+      },
+    }
+  )
+}
+```
+
+#### D. Middleware (Critical)
+
+Create `middleware.ts` in the root:
+
+- Refresh the session on every request
+- Protect specific routes (e.g. `/account`, `/orders`, `/checkout` if you want)
+- Allow public access to homepage, product pages, cart, etc.
+
+Use the official Supabase middleware pattern for Next.js App Router.
+
+#### E. Auth Pages to Create
+
+1. `/login`
+2. `/signup`
+3. `/auth/callback` (for email confirmation and OAuth later)
+4. Optional: `/forgot-password`
+
+Requirements for Login & Signup pages:
+- Clean UI using shadcn/ui
+- Email + Password
+- Loading states
+- Clear error messages in Portuguese
+- Link between Login ↔ Signup
+- Option to continue as guest
+
+#### F. Database – Profiles Table
+
+Create a `profiles` table in Supabase:
+
+```sql
+create table public.profiles (
+  id uuid references auth.users on delete cascade primary key,
+  full_name text,
+  phone text,
+  avatar_url text,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+-- Enable RLS
+alter table public.profiles enable row level security;
+
+-- Policies
+create policy "Users can view their own profile"
+  on profiles for select using (auth.uid() = id);
+
+create policy "Users can update their own profile"
+  on profiles for update using (auth.uid() = id);
+```
+
+Also create a trigger to automatically create a profile when a user signs up.
+
+#### G. Auth Helper Functions
+
+Create useful helpers:
+- `getUser()` – server side
+- `getSession()` – client side
+- `signOut()`
+- `requireUser()` – redirects if not logged in
+
+#### H. Protected Routes Strategy
+
+- Homepage, Category, Product, Cart → Public
+- Account, Orders, Order Details → Protected
+- Checkout → Prefer login but allow Guest
+
+#### I. Guest Cart Strategy
+
+- Store cart in `localStorage` when user is guest
+- When user logs in → merge guest cart with user cart in database
+
+#### J. Security Rules the Agent Must Follow
+
+- Never expose `SUPABASE_SERVICE_ROLE_KEY` to the browser
+- Always use `getUser()` on the server for important checks
+- Use Row Level Security (RLS) on all tables
+- Use HTTPS only cookies in production
+- Add proper error handling for network failures
+- Show friendly Portuguese error messages
+
+#### K. Deliverables Expected from Agent
+
+1. Working Login + Signup pages
+2. Working Logout
+3. Middleware that refreshes sessions
+4. Protected account routes
+5. Profiles table + automatic profile creation
+6. Clear documentation of how auth works
+7. Support for Guest browsing
+
+---
+
+### 4. Extra Recommendations Specific to Replit
+
+- Always store keys in **Replit Secrets**, never in code
+- After adding secrets, restart the Repl
+- Test auth thoroughly in the Replit webview and in a real browser
+- Make sure the Site URL and Redirect URLs are correctly set in Supabase Dashboard (Authentication → URL Configuration)
+
+---
+
+### 5. What Success Looks Like
+
+After the agent finishes, you should be able to:
+
+- Sign up with email/password
+- Receive confirmation email (or disable confirmations temporarily for testing)
+- Log in and stay logged in after refresh
+- Access `/account` only when logged in
+- Browse and add to cart as guest
+- Log out cleanly
+- See no sensitive keys in the browser
+
+---
+
+Would you like me to also give you the **exact middleware.ts code** + the **login/signup page structure** so you can paste even more precise instructions to your agent?

@@ -1,0 +1,55 @@
+**No, even Fable 5 will likely struggle with this auth setup on the first try.**
+
+Here's the honest truth:
+
+### Why It's Hard for AI Agents (Including Fable 5)
+
+The Supabase + Next.js 15 App Router auth (with `@supabase/ssr`) is one of the trickiest parts of modern web development because:
+
+- It involves **very precise cookie handling** between client and server
+- Middleware must refresh sessions correctly
+- Server Components + Client Components behave differently
+- There are many subtle edge cases (redirect loops, stale sessions, prefetching issues, etc.)
+- RLS policies + profile creation on signup add another layer
+
+Even the best coding agents (Claude 4, Grok 4, Cursor, Replit Agents, Fable 5, etc.) frequently get parts of this wrong on the first attempt. It's not that they are stupid — it's just a complex, moving-target integration.
+
+**Common things that break:**
+- Wrong client creation (server vs browser)
+- Middleware not refreshing tokens properly
+- Session not available in Server Components
+- Cookie settings not matching
+- Auth callback route not handling everything
+- RLS policies that are either too loose or too strict
+
+---
+
+### My Realistic Advice for You
+
+**Best approach right now:**
+
+1. **Give Fable 5 the detailed prompt I wrote earlier** (the long one with clients, middleware, etc.)
+2. Tell it to **do it step by step**, not all at once.
+3. After each major step, test it yourself.
+4. Be prepared to fix 2–4 things manually.
+
+**Alternative (Easier path):**
+
+If you want to reduce risk and move faster, you can simplify the auth for the first version:
+
+- Use **Supabase Auth** with their basic setup first
+- Skip complex middleware at the beginning
+- Use client-side session management initially
+- Add proper SSR later
+
+Or even use **Clerk** or **NextAuth** (now Auth.js) if Supabase keeps giving trouble — they sometimes have simpler DX for Next.js.
+
+---
+
+**Would you like me to do one of these?**
+
+A. Refine the prompt specifically for Fable 5 (make it even more defensive and step-by-step)  
+B. Give you a **simpler auth version** that is easier for the agent to implement correctly  
+C. Walk you through debugging common Supabase auth issues yourself
+
+Just tell me which direction you prefer and I’ll give you exactly what you need.
