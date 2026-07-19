@@ -419,43 +419,54 @@ const App = () => {
 
     if (userProfile.uid === sellerId) return;
 
-    // Check if chat exists
-    const { data: existingChats, error: fetchError } = await supabase
-      .from('chats')
-      .select('*')
-      .contains('participants', [userProfile.uid, sellerId]);
+    try {
+      // Use the atomic RPC to create or get a chat between buyer and seller
+      const { data: chatId, error: rpcError } = await supabase
+        .rpc('create_or_get_chat', {
+          p_user_id: userProfile.uid,
+          p_other_user_id: sellerId
+        });
 
-    if (fetchError) {
-      console.error('Error fetching chat:', fetchError);
-      return;
+      if (rpcError) throw rpcError;
+      if (!chatId) throw new Error('Could not create chat');
+
+      // Fetch the chat row and both participant profiles
+      const [{ data: chatRow }, { data: sellerProfile }] = await Promise.all([
+        supabase.from('chats').select('*').eq('id', chatId).single(),
+        supabase.from('profiles').select('id, full_name, avatar_url').eq('id', sellerId).single()
+      ]);
+
+      if (!chatRow) throw new Error('Chat not found');
+
+      const names: { [uid: string]: string } = {
+        [userProfile.uid]: userProfile.name || 'Eu',
+        [sellerId]: sellerProfile?.full_name || 'Vendedor'
+      };
+      const avatars: { [uid: string]: string } = {
+        [userProfile.uid]: userProfile.avatar || '',
+        [sellerId]: sellerProfile?.avatar_url || ''
+      };
+
+      // Update denormalized participant metadata so the chat list renders correctly
+      await supabase.from('chats').update({
+        participant_names: names,
+        participant_avatars: avatars
+      }).eq('id', chatId);
+
+      setActiveChat({
+        id: chatRow.id,
+        participants: chatRow.participants,
+        participantNames: names,
+        participantAvatars: avatars,
+        lastMessage: chatRow.last_message,
+        lastMessageAt: chatRow.updated_at,
+        lastSenderId: chatRow.last_sender_id
+      } as Chat);
+      setCurrentView('chat');
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      alert('Erro ao iniciar conversa. Tente novamente.');
     }
-
-    let chat = existingChats?.[0];
-
-    if (!chat) {
-      const { data: newChat, error: insertError } = await supabase
-        .from('chats')
-        .insert({
-          participants: [userProfile.uid, sellerId]
-        })
-        .select()
-        .single();
-      
-      if (insertError) {
-        console.error('Error creating chat:', insertError);
-        return;
-      }
-      chat = newChat;
-    }
-
-    setActiveChat({
-      id: chat.id,
-      participants: chat.participants,
-      lastMessage: chat.last_message,
-      lastMessageAt: chat.updated_at,
-      lastSenderId: chat.last_sender_id
-    } as Chat);
-    setCurrentView('chat');
   };
 
   // Navigation

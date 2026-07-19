@@ -3,20 +3,22 @@ const path = require('path');
 const { Client } = require('pg');
 
 const url = process.env.VITE_SUPABASE_URL;
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const dbPassword = process.env.SUPABASE_DB_PASSWORD;
 
-if (!url || !key) {
-  console.error('Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+if (!url || !dbPassword) {
+  console.error('Missing VITE_SUPABASE_URL or SUPABASE_DB_PASSWORD');
   process.exit(1);
 }
 
 const projectRef = url.replace(/^https:\/\/([^/]+).*$/, '$1');
-const connectionString = `postgresql://postgres:${key}@db.${projectRef}:5432/postgres`;
+const projectId = projectRef.replace('.supabase.co', '');
+// Supabase transaction pooler connection string (required for external connections)
+const connectionString = `postgresql://postgres.${projectId}:${dbPassword}@aws-0-eu-west-1.pooler.supabase.com:6543/postgres`;
 
 const sqlFile = process.argv[2] || path.join(__dirname, '..', 'supabase', 'migrations', '001_initial_schema.sql');
 const sql = fs.readFileSync(sqlFile, 'utf8');
 
-const client = new Client({ connectionString });
+const client = new Client({ connectionString, ssl: { rejectUnauthorized: false } });
 
 (async () => {
   try {

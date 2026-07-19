@@ -62,6 +62,8 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
   const handleOrder = async () => {
     setLoading(true); setError('');
     try {
+      if (!supabase) throw new Error('Supabase não está inicializado');
+
       const orderData = {
         buyer_id: userProfile?.uid || null,
         buyer_name: form.name,
@@ -70,15 +72,41 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
         payment_method: form.payment,
         delivery_option: form.delivery,
         total,
-        status: 'pending',
-        payment_status: form.payment === 'cod' ? 'pending' : 'verifying',
+        status: 'pending' as const,
+        payment_status: (form.payment === 'cod' ? 'pending' : 'verifying') as const,
       };
-      if (supabase) {
-        await supabase.from('orders').insert([orderData]);
+
+      const { data: orderRow, error: orderError } = await supabase
+        .from('orders')
+        .insert([orderData])
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Insert order items for real-time order tracking
+      const orderItems = cart.map(item => ({
+        order_id: orderRow.id,
+        product_id: item.id,
+        seller_id: item.sellerId,
+        quantity: item.cartQuantity || 1,
+        price: item.price,
+        total: item.price * (item.cartQuantity || 1),
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('Error creating order items:', itemsError);
+        // Non-fatal: order exists, items may need manual review
       }
+
       setStep(4);
-    } catch {
-      setError('Erro ao processar pedido. Tente novamente.');
+    } catch (err) {
+      console.error('Checkout error:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao processar pedido. Tente novamente.');
     } finally {
       setLoading(false);
     }
