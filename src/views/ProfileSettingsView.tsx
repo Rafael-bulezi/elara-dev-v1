@@ -3,6 +3,7 @@ import { ArrowLeft, User, Mail, Phone, MapPin, Shield, Bell, Moon, LogOut, Camer
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
 import { getAvatarUrl } from '../utils/avatar';
+import { validateImageFile, compressImage } from '../lib/imageUtils';
 
 interface ProfileSettingsViewProps {
   userProfile: UserProfile | null;
@@ -27,65 +28,44 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
     const file = e.target.files?.[0];
     if (!file || !userProfile) return;
 
-    setIsUploading(true);
     setError(null);
 
+    const validation = validateImageFile(file);
+    if (!validation.ok) {
+      setError(validation.error ?? 'Ficheiro inválido.');
+      return;
+    }
+
+    setIsUploading(true);
     try {
-      console.log('DEBUG - Iniciando upload de avatar (SEM COMPRESSÃO)...');
-      
-      // Pula a compressão para teste
-      const compressedFile = file; 
-
-      const fileExt = compressedFile.name.split('.').pop();
-      const fileName = `${userProfile.uid}/${Date.now()}.${fileExt}`;
+      // Avatar: compress to 200 px square, target ~30 KB
+      const compressed = await compressImage(file, 'avatar');
+      const fileName = `${userProfile.uid}/${Date.now()}.webp`;
       const filePath = `avatars/${fileName}`;
-
-      console.log('DEBUG - Caminho do arquivo:', filePath);
 
       const { error: uploadError } = await supabase.storage
         .from('images')
-        .upload(filePath, compressedFile);
+        .upload(filePath, compressed, { cacheControl: '3600', upsert: true });
 
-      if (uploadError) {
-        console.error('DEBUG - Erro no upload de avatar:', uploadError);
-        throw uploadError;
-      }
-
-      console.log('DEBUG - Upload de avatar concluído.');
+      if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('images')
         .getPublicUrl(filePath);
-      
-      console.log('DEBUG - URL pública:', publicUrl);
-      
+
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          avatar_url: publicUrl
-        })
+        .update({ avatar_url: publicUrl })
         .eq('id', userProfile.uid);
 
-      if (updateError) {
-        console.error('DEBUG - Erro ao atualizar perfil:', updateError);
-        throw updateError;
-      }
-      
+      if (updateError) throw updateError;
+
       onUpdateProfile({ photoURL: publicUrl, avatar: publicUrl });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao fazer upload da imagem.';
+      setError(msg);
+    } finally {
       setIsUploading(false);
-    } catch (error: unknown) {
-      console.error('Error uploading avatar:', error);
-      setIsUploading(false);
-      
-      // Tenta extrair a mensagem do erro do Supabase
-      let errorMessage = 'Erro ao fazer upload da imagem.';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      setError(`Erro técnico: ${errorMessage}`);
     }
   };
 

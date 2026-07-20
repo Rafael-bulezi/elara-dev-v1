@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingCart, Star, Heart, Truck, ShieldCheck } from 'lucide-react';
 import { Product } from '../../types';
 import ImageWithFallback from '../common/ImageWithFallback';
+import { thumbUrl } from '../../lib/imageUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -29,9 +30,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-zinc-50">
         <ImageWithFallback
-          src={product.image}
+          src={thumbUrl(product.image)}
           alt={product.title}
-          className="w-full h-full object-cover group-hover:scale-[1.03] group-active:scale-[1.02] transition-transform duration-300"
+          objectFit="cover"
+          className="w-full h-full group-hover:scale-[1.03] group-active:scale-[1.02] transition-transform duration-300"
         />
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">

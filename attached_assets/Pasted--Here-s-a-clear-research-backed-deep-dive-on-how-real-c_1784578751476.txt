@@ -1,0 +1,117 @@
+**Here’s a clear, research-backed deep dive** on how real companies handle image compression and optimization for e-commerce, plus exact instructions you can give your agents.
+
+---
+
+### 1. How Big Companies Actually Do It
+
+| Company / Platform | Approach | Key Details |
+|--------------------|----------|-------------|
+| **Amazon** | Strict upload rules + heavy server-side optimization | Main image: pure white background, min 1000px (preferably 2000px+), product fills ≥85% of frame. They serve multiple sizes and optimized formats behind the scenes. |
+| **Shopify** | Upload high-res original → Shopify CDN auto-optimizes | Recommend 2048×2048px. Their CDN automatically serves WebP/AVIF, resizes, and lazy-loads. |
+| **Shopee / Mercado Livre / Jumia** | Platform enforces size limits + optimizes delivery | Usually 1024–1200px recommended, max file size limits (2–8 MB). They compress and serve modern formats. |
+| **Modern web apps (using Next.js, etc.)** | Upload original → on-the-fly or pre-generated optimized versions | Almost never serve the raw uploaded file to users. |
+
+**Common pattern across almost everyone:**
+1. Accept a high-quality original from the seller.
+2. Never serve that original directly to the website.
+3. Generate multiple sizes (thumbnail, medium, large).
+4. Convert to modern formats (WebP first, AVIF when possible).
+5. Apply good compression (quality ~75–85).
+6. Serve the right size + format based on device and screen.
+
+---
+
+### 2. Current Best Practices (2026)
+
+| Aspect | Recommendation | Why |
+|--------|----------------|-----|
+| **Formats** | WebP (primary) + AVIF (when supported) + JPEG fallback | WebP is ~25–35% smaller than JPEG. AVIF can be 40–50% smaller. |
+| **Quality** | 75–85 for product photos | Best balance between visual quality and file size. |
+| **Sizes to generate** | Thumbnail (300–400px), Medium (800–1000px), Large (1600px) | Different places on the site need different sizes. |
+| **Upload limit** | Max 5–8 MB per image | Prevents abuse and storage bloat. |
+| **Aspect ratio** | Prefer square (1:1) for product cards | Cleaner grid. |
+| **Lazy loading** | Always | Critical for mobile performance. |
+| **Target file size** | Product card < 50–80 KB, Detail image < 150–250 KB | Very important for Angola mobile data. |
+
+---
+
+### 3. Best Options for Elara (Next.js + Supabase)
+
+You have three realistic paths:
+
+**Option A – Recommended for Elara (Simplest & Excellent)**
+- Store original images in **Supabase Storage**.
+- Use **Next.js `<Image>` component** + Supabase Image Transformations.
+- Supabase can resize + convert to WebP on the fly.
+- Next.js handles responsive sizes, lazy loading, and modern formats.
+
+**Option B – More control**
+- On upload → use **Sharp** (Node.js library) to generate multiple optimized versions (thumb, medium, large) and save them.
+- Serve the pre-generated versions.
+
+**Option C – Premium (later)**
+- Use a dedicated image CDN (Cloudinary, ImageKit, Cloudflare Images, Bunny). These automatically handle everything and are used by many large sites.
+
+For an MVP on Replit + Supabase, **Option A is the smartest**.
+
+---
+
+### 4. Exact Prompt You Can Give Your Agents
+
+Copy and paste this:
+
+---
+
+**AGENT INSTRUCTION – Image Compression & Optimization for Elara**
+
+Implement a proper image optimization system for product images.
+
+**Requirements:**
+
+1. Sellers upload original high-quality images (max 8 MB, accept JPEG/PNG/WebP).
+2. Store the original in Supabase Storage.
+3. Never serve the original image directly on the website.
+4. Use Supabase Image Transformations + Next.js `<Image>` component.
+
+**Required sizes:**
+- Thumbnail: width 400px (for product cards / grid)
+- Medium: width 1000px (for Product Detail Page)
+- Large: width 1600px (for zoom)
+
+**Technical rules:**
+- Convert to WebP automatically (quality 80).
+- Use Next.js Image component everywhere images are displayed.
+- Enable lazy loading.
+- Add proper `width`, `height` or `fill` + `sizes` attributes.
+- Configure `next.config.js` to allow Supabase remote images and use a custom loader if needed.
+- Prefer Supabase’s built-in transformation API:
+  `?width=400&quality=80` (and similar).
+
+**Also implement:**
+- Maximum upload size validation.
+- Basic image validation (reject non-image files).
+- Show loading skeletons while images load.
+- Store the original URL + generated variant URLs (or generate on the fly).
+
+**Priority:** Performance on mobile (Angola users) is more important than perfect quality.
+
+Deliver:
+- Working upload flow
+- Optimized display on Product Cards and Product Detail Page
+- Clear documentation of how the system works
+
+---
+
+### Summary Recommendation for Elara
+
+- **Do compress and optimize** — do not keep original quality for the website.
+- Use **Supabase Image Transformations + Next.js Image** as the main solution.
+- Generate or request different sizes (400px / 1000px / 1600px).
+- Target WebP at quality ~80.
+- This is exactly how modern e-commerce platforms operate.
+
+Would you like me to also give you:
+1. The exact `next.config.js` + Supabase loader code, or  
+2. A step-by-step upload + display implementation plan?
+
+Just tell me which one you prefer.

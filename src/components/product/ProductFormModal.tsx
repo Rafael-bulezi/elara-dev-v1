@@ -3,7 +3,7 @@ import { X, Tag, DollarSign, Package, LayoutGrid, Image as ImageIcon, Save, Aler
 import { motion } from 'motion/react';
 import { supabase } from '../../lib/supabase';
 import { Product, UserProfile, ProductCondition } from '../../types';
-import imageCompression from 'browser-image-compression';
+import { validateImageFile, compressImage } from '../../lib/imageUtils';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -66,57 +66,43 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
     const file = e.target.files?.[0];
     if (!file || !userProfile) return;
 
-    if (!supabase) {
-      setError('Supabase não está inicializado. Verifique as configurações.');
+    setError(null);
+
+    // Validate type + size
+    const validation = validateImageFile(file);
+    if (!validation.ok) {
+      setError(validation.error ?? 'Ficheiro inválido.');
       return;
     }
 
     setIsUploading(true);
     setUploadProgress(10);
-    setError(null);
 
     try {
-      console.log('DEBUG - Iniciando upload para bucket images...');
-      // Compress image
-      const options = {
-        maxSizeMB: 0.5, // Max 500KB
-        maxWidthOrHeight: 800,
-        useWebWorker: true,
-      };
-      const compressedFile = await imageCompression(file, options);
+      // Compress to medium size for product images (1000px, ~200 KB target)
+      setUploadProgress(30);
+      const compressed = await compressImage(file, 'medium');
 
-      const fileExt = compressedFile.name.split('.').pop();
-      const fileName = `${userProfile.uid}/${Date.now()}.${fileExt}`;
+      setUploadProgress(55);
+      const fileName = `${userProfile.uid}/${Date.now()}.webp`;
       const filePath = `products/${fileName}`;
 
-      console.log('DEBUG - Caminho do arquivo:', filePath);
-
-      const { data, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('images')
-        .upload(filePath, compressedFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
+        .upload(filePath, compressed, { cacheControl: '3600', upsert: false });
 
-      if (uploadError) {
-        console.error('DEBUG - Erro no upload:', uploadError);
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
-      console.log('DEBUG - Upload concluído:', data);
       setUploadProgress(90);
 
       const { data: publicUrlData } = supabase.storage
         .from('images')
         .getPublicUrl(filePath);
-      
-      console.log('DEBUG - URL pública:', publicUrlData.publicUrl);
 
-      setFormData(prev => ({ ...prev, imageUrl: publicUrlData.publicUrl }));
+      setFormData(prev => ({ ...prev, imageUrl: publicUrlData.publicUrl, image: publicUrlData.publicUrl }));
       setUploadProgress(100);
-    } catch (error) {
-      console.error('Upload error:', error);
-      setError(error instanceof Error ? error.message : 'Erro ao fazer upload da imagem.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao fazer upload da imagem.');
     } finally {
       setIsUploading(false);
     }

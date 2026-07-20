@@ -1,0 +1,77 @@
+**Yes — you should definitely compress and optimize images.**  
+Keeping every image at original quality is a bad idea for an e-commerce site like Elara.
+
+### Why You Must Compress Images
+
+| Reason | Impact on Elara |
+|------|-----------------|
+| **Mobile data costs in Angola** | Many users have limited or expensive data. Large images = slow loading = people leave. |
+| **Page speed** | Google and users punish slow sites. Slow product pages kill conversion. |
+| **Storage costs** | Supabase Storage (and any CDN) charges by storage + bandwidth. Unoptimized images get expensive fast. |
+| **Mobile experience** | Most of your traffic will be mobile. Heavy images destroy the experience. |
+| **SEO & ranking** | Faster sites rank better. |
+
+### Best Practice for E-commerce Images (What Amazon, Jumia, Shopee, etc. do)
+
+You should **never** serve the original uploaded image directly.
+
+Instead, create a smart image pipeline:
+
+1. **User/Seller uploads** high-quality original (e.g. 2000–4000px)
+2. **Your system automatically generates multiple optimized versions**:
+   - Thumbnail (for product cards / grid) → ~300–400px
+   - Medium (for product detail page main image) → ~800–1000px
+   - Large / Zoom (optional) → ~1600px
+3. Convert to modern formats: **WebP** (and AVIF if possible)
+4. Apply good compression (quality 75–85 is usually the sweet spot)
+5. Serve the right size depending on the device and place on the page (responsive images)
+
+### Recommended Approach for Elara
+
+**Option A – Best & Recommended (Next.js + Supabase)**
+- Use **Next.js Image component** (`next/image`) — it automatically optimizes, converts to WebP, resizes, and lazy-loads.
+- Store the original in Supabase Storage.
+- Let Next.js handle on-the-fly optimization (or pre-generate sizes).
+
+**Option B – More control**
+- When a seller uploads an image:
+  1. Upload original to Supabase Storage (private or protected folder)
+  2. Use a library (Sharp on the server) or Supabase Edge Function / external service to generate:
+     - `thumb.webp`
+     - `medium.webp`
+     - `large.webp`
+  3. Save the different versions
+  4. Store the URLs in your `products` table
+
+### Practical Settings I Recommend
+
+| Image Type              | Max Width | Format     | Quality | Usage                     |
+|-------------------------|-----------|------------|---------|---------------------------|
+| Product Card (grid)     | 400px     | WebP       | 80      | Homepage, PLP, search     |
+| Product Detail main     | 1000px    | WebP       | 85      | PDP main image            |
+| Zoom / Fullscreen       | 1600px    | WebP       | 85      | When user clicks to zoom  |
+| Original (archive)      | Original  | JPEG/PNG   | 90–95   | Keep for future use       |
+
+### Extra Important Tips
+
+- Always use **lazy loading**
+- Add proper `width` and `height` (or aspect-ratio) to avoid layout shift
+- Use a CDN in front of Supabase Storage (Cloudflare is great and cheap)
+- Limit upload size (e.g. max 5–8 MB per image)
+- Accept only JPEG, PNG, WebP (reject HEIC, TIFF, etc. or convert them)
+- Show a loading skeleton while images load
+
+---
+
+**Bottom line for Elara:**
+
+- Do **not** keep images at original quality for the website.
+- Compress + resize + convert to WebP.
+- Use multiple sizes.
+- Prefer `next/image` — it solves 80% of the problem with very little work.
+
+Would you like me to give you:
+1. The exact recommended image upload + optimization flow (step-by-step), or  
+2. Ready-to-use code/prompt for your agent to implement image compression correctly?
+
+Just say which one you want.

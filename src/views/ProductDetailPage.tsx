@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Product } from '../types';
 import { getAvatarUrl } from '../utils/avatar';
+import { mediumUrl, thumbUrl } from '../lib/imageUtils';
 
 interface ProductDetailPageProps {
   product: Product;
@@ -97,7 +98,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   {copied ? <CheckCircle size={15} className="text-green-500" /> : <Share2 size={15} />}
                 </button>
               </div>
-              <img src={images[activeImg]} alt={product.title} className="w-full h-full object-contain p-4" />
+              <img src={mediumUrl(images[activeImg])} alt={product.title} loading="lazy" decoding="async" className="w-full h-full object-contain p-4" />
 
               {/* Arrow nav */}
               {images.length > 1 && (
@@ -119,7 +120,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               {images.map((img, i) => (
                 <button key={i} onClick={() => setActiveImg(i)}
                   className={`shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-purple-600 shadow-sm shadow-purple-200' : 'border-zinc-200 hover:border-zinc-400'}`}>
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={thumbUrl(img)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

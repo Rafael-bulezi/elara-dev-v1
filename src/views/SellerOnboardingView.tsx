@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { ArrowLeft, Store, User, Phone, MapPin, CreditCard, FileText, CheckCircle, Loader2, AlertCircle, Camera } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
+import { validateImageFile, compressImage } from '../lib/imageUtils';
 
 interface SellerOnboardingViewProps {
   userProfile: UserProfile | null;
@@ -28,18 +29,26 @@ const SellerOnboardingView = ({ userProfile, onBack, onComplete }: SellerOnboard
   const handleUploadId = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userProfile) return;
-    setIsUploading(true);
+
     setError(null);
+
+    const validation = validateImageFile(file);
+    if (!validation.ok) {
+      setError(validation.error ?? 'Ficheiro inválido.');
+      return;
+    }
+
+    setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userProfile.uid}/seller_id_${Date.now()}.${fileExt}`;
+      // ID docs: compress to medium so text stays legible but file is manageable
+      const compressed = await compressImage(file, 'medium');
+      const fileName = `${userProfile.uid}/seller_id_${Date.now()}.webp`;
       const filePath = `documents/${fileName}`;
-      const { error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
+      const { error: uploadError } = await supabase.storage.from('images').upload(filePath, compressed);
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
       setIdDocumentUrl(publicUrl);
     } catch (err) {
-      console.error('Error uploading ID:', err);
       setError('Erro ao carregar o documento. Tente novamente.');
     } finally {
       setIsUploading(false);
