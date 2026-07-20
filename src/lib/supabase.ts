@@ -1,10 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-console.log('DEBUG - VITE_SUPABASE_URL:', supabaseUrl);
-console.log('DEBUG - VITE_SUPABASE_ANON_KEY:', supabaseAnonKey);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 const isValidUrl = (url: string) => {
   try {
@@ -14,18 +11,24 @@ const isValidUrl = (url: string) => {
   }
 };
 
-// Inicializa o cliente com placeholders se as variáveis estiverem ausentes para evitar crashes
-const placeholderUrl = 'https://placeholder-project.supabase.co';
-const placeholderKey = 'placeholder-key';
-
-export const supabase = createClient(
-  (supabaseUrl && isValidUrl(supabaseUrl)) ? supabaseUrl : placeholderUrl,
-  supabaseAnonKey || placeholderKey
-);
-
 if (!supabaseUrl || !supabaseAnonKey || !isValidUrl(supabaseUrl)) {
-  console.error('Supabase não inicializado corretamente. Verifique se VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY estão configurados.');
+  console.error('[Elara] Supabase não inicializado. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
 }
+
+// Falls back to placeholder so the client never throws during construction,
+// but all network calls will fail gracefully when credentials are missing.
+export const supabase = createClient(
+  (supabaseUrl && isValidUrl(supabaseUrl)) ? supabaseUrl : 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-anon-key',
+  {
+    auth: {
+      // Automatically exchange PKCE code from redirect URLs (OAuth callback)
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  }
+);
 
 // Helper for Auth
 export const getSession = async () => {

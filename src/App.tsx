@@ -14,6 +14,7 @@ import BottomNav from './components/layout/BottomNav';
 import WishlistDrawer from './components/layout/WishlistDrawer';
 import MobileMenu from './components/layout/MobileMenu';
 import AuthModal from './components/auth/AuthModal';
+import AuthCallback from './components/auth/AuthCallback';
 import CartDrawer from './components/cart/CartDrawer';
 import ProfileDrawer from './components/auth/ProfileDrawer';
 import ProductFormModal from './components/product/ProductFormModal';
@@ -57,6 +58,11 @@ import { initOneSignal } from './lib/notifications';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 const App = () => {
+  // OAuth callback detection (e.g. after Google sign-in redirect)
+  const [authCallbackActive, setAuthCallbackActive] = useState(
+    () => window.location.pathname === '/auth/callback'
+  );
+
   // Auth & Profile State
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -135,13 +141,13 @@ const App = () => {
           .from('profiles')
           .select('avatar_url')
           .eq('email', '7dark7cloud7@gmail.com')
-          .single();
-        
-        if (data && data.avatar_url) {
+          .maybeSingle();
+
+        if (data?.avatar_url) {
           setAppLogo(data.avatar_url);
         }
-      } catch (err) {
-        console.error('Failed to fetch admin logo', err);
+      } catch {
+        // Non-critical; keep the default logo
       }
     };
     fetchAdminLogo();
@@ -538,6 +544,15 @@ const App = () => {
     setSellerMode(false);
     navigateTo('home');
   };
+
+  // Render the OAuth callback screen while Supabase exchanges the PKCE code
+  if (authCallbackActive) {
+    return (
+      <ErrorBoundary>
+        <AuthCallback onComplete={() => setAuthCallbackActive(false)} />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 transition-colors duration-500 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 font-sans selection:bg-purple-500/30 relative">
