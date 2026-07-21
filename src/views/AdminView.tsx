@@ -22,13 +22,8 @@ const AdminView = ({ userProfile, onBack }: AdminViewProps) => {
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('DEBUG - AdminView - userProfile:', userProfile);
     if (!userProfile) return;
-    
-    // Verifica se é admin pelo e-mail ou pelo role
     const isAdmin = userProfile.email === '7dark7cloud7@gmail.com' || userProfile.role === 'admin';
-    console.log('DEBUG - isAdmin:', isAdmin);
-    
     if (!isAdmin) return;
 
     setLoading(true);

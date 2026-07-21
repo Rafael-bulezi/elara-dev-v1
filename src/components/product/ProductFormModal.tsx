@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Tag, DollarSign, Package, LayoutGrid, Image as ImageIcon, Save, AlertCircle, Upload, Loader2, CheckCircle, MessageCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { supabase } from '../../lib/supabase';
-import { Product, UserProfile, ProductCondition } from '../../types';
+import { Product, UserProfile, ProductCondition, ProductOrigin } from '../../types';
 import { validateImageFile, compressImage } from '../../lib/imageUtils';
+import ImageWithFallback from '../common/ImageWithFallback';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -24,13 +25,15 @@ const categoriesList = [
   'Outros'
 ];
 
+const originsList: ProductOrigin[] = ['Local', 'China', 'Europa'];
+
 const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: ProductFormModalProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState<Partial<Product>>({
+  const buildEmptyForm = useCallback((): Partial<Product> => ({
     title: '',
     price: 0,
     category: categoriesList[0],
@@ -39,28 +42,22 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
     stock: 1,
     status: 'pending',
     condition: 'Novo',
+    origin: 'Local',
     isImport: false,
     sellerPhone: userProfile?.phoneNumber || userProfile?.phone || ''
-  });
+  }), [userProfile]);
 
+  const [formData, setFormData] = useState<Partial<Product>>(buildEmptyForm());
+
+  // Reset form every time the modal opens or product changes.
   useEffect(() => {
-    if (product) {
-      setFormData(product);
-    } else {
-      setFormData({
-        title: '',
-        price: 0,
-        category: categoriesList[0],
-        description: '',
-        image: '',
-        stock: 1,
-        status: 'pending',
-        condition: 'Novo',
-        isImport: false,
-        sellerPhone: userProfile?.phoneNumber || userProfile?.phone || ''
-      });
+    if (isOpen) {
+      setFormData(product ? { ...product } : buildEmptyForm());
+      setError(null);
+      setIsUploading(false);
+      setUploadProgress(0);
     }
-  }, [product, isOpen, userProfile]);
+  }, [isOpen, product, buildEmptyForm]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,7 +96,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
         .from('images')
         .getPublicUrl(filePath);
 
-      setFormData(prev => ({ ...prev, imageUrl: publicUrlData.publicUrl, image: publicUrlData.publicUrl }));
+      setFormData(prev => ({ ...prev, image: publicUrlData.publicUrl }));
       setUploadProgress(100);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer upload da imagem.');
@@ -108,8 +105,25 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
     }
   };
 
+  const validateForm = (): string | null => {
+    if (!formData.title || formData.title.trim().length < 3) return 'O título deve ter pelo menos 3 caracteres.';
+    if (!formData.price || formData.price <= 0) return 'Introduza um preço válido maior que 0.';
+    if (!formData.stock || formData.stock < 0) return 'O stock não pode ser negativo.';
+    if (!formData.description || formData.description.trim().length < 10) return 'A descrição deve ter pelo menos 10 caracteres.';
+    if (!formData.image || !formData.image.trim()) return 'Adicione uma imagem do produto.';
+    if (!formData.category) return 'Selecione uma categoria.';
+    if (!formData.condition) return 'Selecione a condição do produto.';
+    if (!formData.sellerPhone || formData.sellerPhone.replace(/\D/g, '').length < 9) return 'Introduza um número de telefone válido com pelo menos 9 dígitos.';
+    return null;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     onSubmit(formData);
   };
 
@@ -224,7 +238,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
 
                   <div className="relative group">
                     <Package className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-zinc-900 transition-colors pointer-events-none" size={20} />
-                    <select 
+                    <select
                       value={formData.condition}
                       onChange={(e) => setFormData({...formData, condition: e.target.value as ProductCondition})}
                       className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-zinc-900 py-5 pl-16 pr-8 rounded-[24px] text-zinc-900 font-black text-lg outline-none transition-all appearance-none cursor-pointer"
@@ -232,6 +246,19 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
                       <option value="Novo">Produto Novo</option>
                       <option value="Semi-novo">Semi-novo</option>
                       <option value="Usado">Produto Usado</option>
+                    </select>
+                  </div>
+
+                  <div className="relative group">
+                    <Package className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-zinc-900 transition-colors pointer-events-none" size={20} />
+                    <select
+                      value={formData.origin}
+                      onChange={(e) => setFormData({...formData, origin: e.target.value as ProductOrigin})}
+                      className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-zinc-900 py-5 pl-16 pr-8 rounded-[24px] text-zinc-900 font-black text-lg outline-none transition-all appearance-none cursor-pointer"
+                    >
+                      {originsList.map(o => (
+                        <option key={o} value={o}>{o === 'Local' ? 'Produção Local' : o === 'China' ? 'Importado da China' : 'Importado da Europa'}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -262,7 +289,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
                   type="file" 
                   ref={fileInputRef}
                   onChange={handleImageUpload}
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   className="hidden"
                 />
 
@@ -289,7 +316,12 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
                     </div>
                   ) : formData.image ? (
                     <>
-                      <img src={formData.image} alt="Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <ImageWithFallback
+                        src={formData.image}
+                        alt="Preview do produto"
+                        objectFit="cover"
+                        className="w-full h-full transition-transform duration-700 group-hover:scale-110"
+                      />
                       <div className="absolute inset-0 bg-zinc-950/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
                         <div className="bg-white text-zinc-900 p-6 rounded-[32px] shadow-2xl scale-90 group-hover:scale-100 transition-transform">
                           <Upload size={32} />
@@ -317,11 +349,11 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
 
                 <div className="relative group">
                   <ImageIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" size={20} />
-                  <input 
-                    type="url" 
+                  <input
+                    type="url"
                     placeholder="Link da imagem (URL)"
-                    value={formData.imageUrl || ''}
-                    onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
+                    value={formData.image || ''}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                     className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-zinc-900 py-5 pl-16 pr-8 rounded-[24px] text-zinc-900 font-black text-lg outline-none transition-all placeholder:text-zinc-400"
                   />
                 </div>

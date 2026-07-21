@@ -18,7 +18,10 @@ const ProductsView = ({ userProfile, onBack, onEditProduct, onAddProduct }: Prod
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userProfile) return;
+    if (!userProfile) {
+      setLoading(false);
+      return;
+    }
 
     const fetchProducts = async () => {
       const { data, error } = await supabase
@@ -162,6 +165,14 @@ const ProductsView = ({ userProfile, onBack, onEditProduct, onAddProduct }: Prod
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : !userProfile ? (
+        <div className="text-center py-20 bg-zinc-50 rounded-[40px] border border-zinc-200">
+          <div className="w-24 h-24 bg-zinc-100 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-300">
+            <Tag size={48} />
+          </div>
+          <h3 className="text-2xl font-black text-zinc-900 mb-2">Inicie sessão</h3>
+          <p className="text-zinc-500 max-w-md mx-auto font-medium">Faça login para ver e gerir os seus produtos.</p>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="text-center py-20 bg-zinc-50 rounded-[40px] border border-zinc-200">

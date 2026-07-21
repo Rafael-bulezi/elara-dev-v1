@@ -69,6 +69,7 @@ export type Product = {
   productRating?: number;
   productReviews?: number;
   deliveryStatus?: string;
+  origin?: ProductOrigin;
 };
 
 export type OrderStatus = 'pending' | 'held' | 'shipped' | 'received';

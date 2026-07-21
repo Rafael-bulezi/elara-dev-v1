@@ -376,54 +376,52 @@ const App = () => {
   }, []);
 
   // Product Handlers
-  const handleSaveProduct = async (productData: Partial<Product> & { imageUrl?: string }) => {
-    if (!userProfile) return;
-    
+  const handleSaveProduct = async (productData: Partial<Product>) => {
+    if (!userProfile) {
+      showNotification('Inicie sessão para publicar um produto.', 'info');
+      return;
+    }
+
     try {
-      const finalImageUrl = productData.imageUrl || productData.image;
+      const finalImageUrl = productData.image || '';
+      const basePayload = {
+        title: productData.title,
+        description: productData.description,
+        price: productData.price,
+        image_url: finalImageUrl,
+        category: productData.category,
+        condition: productData.condition,
+        stock: productData.stock ?? 1,
+        origin: productData.origin || 'Local',
+        is_import: productData.isImport || false
+      };
 
       if (editingProduct) {
         const { error } = await supabase
           .from('products')
-          .update({
-            title: productData.title,
-            description: productData.description,
-            price: productData.price,
-            image_url: finalImageUrl,
-            category: productData.category,
-            condition: productData.condition,
-            stock: productData.stock,
-            is_import: productData.isImport
-          })
+          .update(basePayload)
           .eq('id', editingProduct.id);
-        
         if (error) throw error;
+        showNotification('Produto atualizado com sucesso!', 'success');
       } else {
         const { error } = await supabase
           .from('products')
           .insert({
-            title: productData.title,
-            description: productData.description,
-            price: productData.price,
-            image_url: finalImageUrl,
-            category: productData.category,
-            condition: productData.condition,
+            ...basePayload,
             seller_id: userProfile.uid,
             seller_name: userProfile.name,
             seller_avatar: userProfile.avatar || '',
             seller_phone: productData.sellerPhone || userProfile.phone || '',
-            status: 'pending',
-            stock: productData.stock || 1,
-            is_import: productData.isImport || false
+            status: 'pending'
           });
-        
         if (error) throw error;
+        showNotification('Produto enviado para aprovação!', 'success');
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('Erro ao salvar produto.');
+      showNotification('Erro ao salvar produto. Tente novamente.', 'info');
     }
   };
 
