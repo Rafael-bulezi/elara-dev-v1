@@ -1,38 +1,78 @@
 import { Product } from '../types';
 
-const MOCK_IMAGES = {
-  Moda: ['/mock-products/boots-black.jpeg', '/mock-products/sneakers-white.jpeg', '/mock-products/running-orange.jpeg'],
-  Smartphones: ['/mock-products/smartphone-black.jpeg', '/mock-products/smartphone-foldable.jpeg'],
-  Eletrónicos: ['/mock-products/espresso-chrome.jpeg', '/mock-products/coffee-pourover.jpeg', '/mock-products/pans-copper.jpeg', '/mock-products/pans-steel.jpeg', '/mock-products/fridge-black.jpeg', '/mock-products/fridge-cream.jpeg'],
-  Computadores: ['/mock-products/art-books.jpeg'],
-  Casa: ['/mock-products/pans-copper.jpeg', '/mock-products/pans-steel.jpeg', '/mock-products/fridge-black.jpeg', '/mock-products/fridge-cream.jpeg', '/mock-products/coffee-pourover.jpeg', '/mock-products/espresso-chrome.jpeg'],
-  Beleza: ['/mock-products/watch-gold.jpeg', '/mock-products/watch-silver.jpeg'],
-  Esportes: ['/mock-products/running-orange.jpeg', '/mock-products/sneakers-white.jpeg', '/mock-products/boots-black.jpeg'],
-  Veículos: ['/mock-products/suv-black.jpeg', '/mock-products/car-silver.jpeg', '/mock-products/sedan-white.jpeg'],
+/* ─────────────────────────────────────────
+   Category map
+   - strip: shown in the top pill strip and mobile menu
+   - extra: available in search / filters but not in the strip
+───────────────────────────────────────── */
+export const categories = [
+  { id: '1', name: 'Tecnologia',     icon: 'Cpu' },      // Smartphones + Computadores + Eletrónicos
+  { id: '2', name: 'Moda',           icon: 'Shirt' },
+  { id: '3', name: 'Beleza',         icon: 'Sparkles' },
+  { id: '4', name: 'Casa',           icon: 'Home' },     // Casa & Eletrodomésticos
+  { id: '5', name: 'Esportes',       icon: 'Dumbbell' },
+  { id: '6', name: 'Veículos',       icon: 'Car' },
+  { id: '7', name: 'Jóias & Acessórios', icon: 'Gem' },
+];
+
+export const extraCategories = [
+  { id: '8',  name: 'Brinquedos & Crianças', icon: 'ToyBrick' },
+  { id: '9',  name: 'Saúde & Bem-estar',    icon: 'HeartPulse' },
+  { id: '10', name: 'Livros & Papelaria',    icon: 'BookOpen' },
+  { id: '11', name: 'Pet & Animais',         icon: 'Dog' },
+  { id: '12', name: 'Alimentos & Bebidas',   icon: 'Coffee' },
+  { id: '13', name: 'Agricultura & Jardim',  icon: 'Leaf' },
+  { id: '14', name: 'Ferramentas & Construção', icon: 'Wrench' },
+];
+
+export const allCategories = [...categories, ...extraCategories];
+
+const MOCK_IMAGES: Record<string, string[]> = {
+  Tecnologia:        ['/mock-products/smartphone-black.jpeg', '/mock-products/smartphone-foldable.jpeg', '/mock-products/art-books.jpeg'],
+  Moda:              ['/mock-products/outfit-summer.jpeg', '/mock-products/dress-cocktail.jpeg', '/mock-products/trench-coat.jpeg', '/mock-products/heels-red.jpeg', '/mock-products/boots-black.jpeg', '/mock-products/sneakers-white.jpeg', '/mock-products/running-orange.jpeg'],
+  Beleza:            ['/mock-products/cream-face.jpeg', '/mock-products/lotion-body.jpeg', '/mock-products/makeup-lipsticks.jpeg', '/mock-products/serum-bottle.jpeg', '/mock-products/skincare-set.jpeg', '/mock-products/watch-gold.jpeg', '/mock-products/watch-silver.jpeg'],
+  Casa:              ['/mock-products/espresso-chrome.jpeg', '/mock-products/coffee-pourover.jpeg', '/mock-products/pans-copper.jpeg', '/mock-products/pans-steel.jpeg', '/mock-products/fridge-black.jpeg', '/mock-products/fridge-cream.jpeg'],
+  Esportes:          ['/mock-products/running-orange.jpeg', '/mock-products/sneakers-white.jpeg', '/mock-products/boots-black.jpeg'],
+  Veículos:          ['/mock-products/suv-black.jpeg', '/mock-products/car-silver.jpeg', '/mock-products/sedan-white.jpeg'],
+  'Jóias & Acessórios': ['/mock-products/necklace-gold.jpeg', '/mock-products/watch-gold.jpeg', '/mock-products/watch-silver.jpeg', '/mock-products/heels-red.jpeg'],
+  'Brinquedos & Crianças': ['/mock-products/art-books.jpeg'],
+  'Saúde & Bem-estar':  ['/mock-products/skincare-set.jpeg'],
+  'Livros & Papelaria': ['/mock-products/art-books.jpeg'],
+  'Pet & Animais':      ['/mock-products/art-books.jpeg'],
+  'Alimentos & Bebidas': ['/mock-products/coffee-pourover.jpeg', '/mock-products/espresso-chrome.jpeg'],
+  'Agricultura & Jardim': ['/mock-products/art-books.jpeg'],
+  'Ferramentas & Construção': ['/mock-products/pans-steel.jpeg'],
 };
 
 const CONDITIONS = ['Novo', 'Novo', 'Semi-novo', 'Usado'] as const;
+
 const TITLES: Record<string, string[]> = {
-  Smartphones: ['Smartphone Aura X5', 'Smartphone Fold Z', 'Galaxy Ultra', 'iPhone 15 Pro', 'Xiaomi Redmi Note', 'Tecno Camon', 'Huawei Pura', 'Infinix Zero'],
-  Moda: ['Botas Chelsea em Couro', 'Ténis Branco Premium', 'Sapatilhas de Corrida', 'Relógio de Pulso', 'Sapatos Formais', 'T-shirt Casual', 'Calças de Ganga', 'Mala de Couro'],
-  Eletrónicos: ['Máquina de Café Espresso', 'Cafeteira Pour-Over', 'Panelas de Cobre', 'Panelas Antiaderentes', 'Frigorífico Preto', 'Frigorífico Vintage', 'Auscultadores Pro', 'Smart Speaker'],
-  Computadores: ['Laptop Ultrabook', 'Monitor 4K', 'Teclado Mecânico', 'Rato Sem Fios', 'SSD 1TB', 'Webcam HD', 'Roteador Wi-Fi 6', 'Livros de Arte Moderna'],
-  Casa: ['Conjunto de Panelas', 'Frigorífico Moderno', 'Máquina de Café', 'Cafeteira Elegante', 'Sofá 2 Lugares', 'Mesa de Jantar', 'Candeeiro LED', 'Tapete Persa'],
-  Beleza: ['Relógio Dourado', 'Relógio Crónografo', 'Perfume Importado', 'Creme Hidratante', 'Serum Facial', 'Protetor Solar', 'Máscara Capilar', 'Esmalte Premium'],
-  Esportes: ['Sapatilhas de Corrida', 'Ténis de Padel', 'Bola de Futebol', 'Halteres 10kg', 'Tapete de Yoga', 'Garrafa Térmica', 'Mochila Desportiva', 'Relógio Desportivo'],
-  Veículos: ['SUV Preto 2024', 'Carro Eléctrico Prateado', 'Sedan Branco', 'Mota Scooter', 'Carrinha Comercial', 'Jipe 4x4', 'Híbrido Compacto', 'Camião Ligeiro'],
+  Tecnologia:        ['Smartphone Aura X5', 'Smartphone Fold Z', 'iPhone 15 Pro', 'Galaxy Ultra', 'Laptop Ultrabook', 'Monitor 4K', 'Teclado Mecânico', 'Rato Sem Fios', 'SSD 1TB', 'Auscultadores Pro', 'Smart Speaker', 'Tablet 10"'],
+  Moda:              ['Vestido de Cocktail', 'Look de Verão', 'Trench Coat', 'Saltos Altos Vermelhos', 'Botas Chelsea', 'Ténis Branco Premium', 'Sapatilhas de Corrida', 'Mala de Couro', 'Calças de Ganga', 'T-shirt Casual', 'Relógio de Pulso', 'Sapatos Formais'],
+  Beleza:            ['Creme Revitalizante', 'Loção Corporal Rosé', 'Batom & Paleta', 'Sérum Facial', 'Kit Skincare', 'Perfume Importado', 'Protetor Solar', 'Máscara Capilar', 'Esmalte Premium', 'Hidratante Corporal', 'Óleo de Rosto', 'Mousse de Limpeza'],
+  Casa:              ['Máquina de Café Espresso', 'Cafeteira Pour-Over', 'Panelas de Cobre', 'Panelas Antiaderentes', 'Frigorífico Preto', 'Frigorífico Vintage', 'Sofá 2 Lugares', 'Mesa de Jantar', 'Candeeiro LED', 'Tapete Persa', 'Conjunto de Copos', 'Aspirador Vertical'],
+  Esportes:          ['Sapatilhas de Corrida', 'Ténis de Padel', 'Bola de Futebol', 'Halteres 10kg', 'Tapete de Yoga', 'Garrafa Térmica', 'Mochila Desportiva', 'Relógio Desportivo', 'Bicicleta Urbana', 'Luvas de Boxe'],
+  Veículos:          ['SUV Preto 2024', 'Carro Eléctrico Prateado', 'Sedan Branco', 'Mota Scooter', 'Carrinha Comercial', 'Jipe 4x4', 'Híbrido Compacto', 'Camião Ligeiro'],
+  'Jóias & Acessórios': ['Colar de Ouro 18k', 'Relógio Dourado', 'Relógio Crónografo', 'Pulseira Elegante', 'Brincos Minimalistas', 'Anel de Noivado', 'Óculos de Sol', 'Carteira de Couro', 'Cinto Premium', 'Lenço de Seda'],
+  'Brinquedos & Crianças': ['Carrinho Telecomandado', 'Boneca Articulada', 'Jogo Educativo', 'Blocos de Construção', 'Peluche Gigante', 'Bicicleta Infantil', 'Quebra-cabeça', 'Pintura Facial'],
+  'Saúde & Bem-estar':  ['Termómetro Digital', 'Balança Inteligente', 'Máscara de Dormir', 'Suplemento Vitamínico', 'Tensiómetro', 'Cadeira de Massagem', 'Difusor de Aromas', 'Protetor Solar FPS50'],
+  'Livros & Papelaria': ['Livros de Arte Moderna', 'Caderno Premium', 'Caneta Esferográfica', 'Agenda 2026', 'Planner Semanal', 'Livro de Cozinha', 'Dicionário Bilíngue', 'Pasta de Arquivo'],
+  'Pet & Animais':      ['Ração Premium Cão', 'Ração Premium Gato', 'Coleira Ajustável', 'Cama para Pet', 'Brinquedo Mordedor', 'Arranhador para Gato', 'Comedouro Automático', 'Shampoo Pet'],
+  'Alimentos & Bebidas': ['Café Gourmet', 'Chá Verde Orgânico', 'Azeite Extra Virgem', 'Chocolate Premium', 'Vinho Tinto', 'Refrigerante Importado', 'Cerveja Artesanal', 'Snack Saudável'],
+  'Agricultura & Jardim': ['Semente de Hortaliças', 'Regador de Metal', 'Tesoura de Poda', 'Vaso Cerâmico', 'Adubo Orgânico', 'Mangueira de Jardim', 'Luvas de Jardinagem', 'Cortador de Relva'],
+  'Ferramentas & Construção': ['Furadeira Eléctrica', 'Chave de Fendas', 'Martelo Profissional', 'Nível a Laser', 'Serra Eléctrica', 'Parafusadora', 'Caixa de Ferramentas', 'Trena 5m'],
 };
 
 const generateProducts = (): Product[] => {
-  const categories = ['Smartphones', 'Moda', 'Eletrónicos', 'Computadores', 'Casa', 'Beleza', 'Esportes'];
+  const catNames = allCategories.map(c => c.name);
   const products: Product[] = [];
 
-  for (let i = 1; i <= 48; i++) {
-    const cat = categories[i % categories.length];
-    const images = MOCK_IMAGES[cat as keyof typeof MOCK_IMAGES] || ['/mock-products/smartphone-black.jpeg'];
+  for (let i = 1; i <= 64; i++) {
+    const cat = catNames[i % catNames.length];
+    const images = MOCK_IMAGES[cat] || ['/mock-products/smartphone-black.jpeg'];
     const image = images[i % images.length];
     const condition = CONDITIONS[i % CONDITIONS.length] as 'Novo' | 'Semi-novo' | 'Usado';
-    const titleList = TITLES[cat] || TITLES['Smartphones'];
+    const titleList = TITLES[cat] || TITLES['Tecnologia'];
     const title = titleList[i % titleList.length] || `${cat} ${i}`;
     const basePrice = Math.floor(Math.random() * 400000) + 15000;
     const originalPrice = Math.random() > 0.5 ? Math.round(basePrice * (1 + Math.random() * 0.4)) : undefined;
@@ -61,13 +101,3 @@ const generateProducts = (): Product[] => {
 };
 
 export const initialProducts: Product[] = generateProducts();
-
-export const categories = [
-  { id: '1', name: 'Smartphones', icon: 'Smartphone' },
-  { id: '2', name: 'Moda', icon: 'Shirt' },
-  { id: '3', name: 'Eletrónicos', icon: 'Cpu' },
-  { id: '4', name: 'Computadores', icon: 'Laptop' },
-  { id: '5', name: 'Casa', icon: 'Home' },
-  { id: '6', name: 'Beleza', icon: 'Sparkles' },
-  { id: '7', name: 'Esportes', icon: 'Dumbbell' }
-];

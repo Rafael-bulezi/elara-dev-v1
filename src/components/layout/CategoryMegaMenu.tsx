@@ -1,76 +1,76 @@
 import React, { useState, useRef } from 'react';
-import { ArrowRight, Home, Smartphone, Shirt, Cpu, Laptop, Home as HomeIcon, Sparkles, Dumbbell } from 'lucide-react';
+import { ArrowRight, Home, Smartphone, Shirt, Cpu, Home as HomeIcon, Sparkles, Dumbbell, Car, Gem } from 'lucide-react';
 import { Product } from '../../types';
 
-/* ─── Icon map ─── */
+/* ─── Icon map (only strip categories) ─── */
 const catIconMap: Record<string, React.ReactNode> = {
-  Smartphones:   <Smartphone size={15} />,
-  Moda:          <Shirt size={15} />,
-  'Eletrónicos': <Cpu size={15} />,
-  Computadores:  <Laptop size={15} />,
-  Casa:          <HomeIcon size={15} />,
-  Beleza:        <Sparkles size={15} />,
-  Esportes:      <Dumbbell size={15} />,
+  Tecnologia:          <Cpu size={15} />,
+  Moda:                <Shirt size={15} />,
+  Beleza:              <Sparkles size={15} />,
+  Casa:                <HomeIcon size={15} />,
+  Esportes:            <Dumbbell size={15} />,
+  Veículos:            <Car size={15} />,
+  'Jóias & Acessórios': <Gem size={15} />,
 };
 
 const catColors: Record<string, string> = {
-  Smartphones:   'text-blue-600',
-  Moda:          'text-pink-600',
-  'Eletrónicos': 'text-purple-600',
-  Computadores:  'text-indigo-600',
-  Casa:          'text-amber-600',
-  Beleza:        'text-rose-600',
-  Esportes:      'text-emerald-600',
+  Tecnologia:          'text-blue-600',
+  Moda:                'text-pink-600',
+  Beleza:              'text-rose-600',
+  Casa:                'text-amber-600',
+  Esportes:            'text-emerald-600',
+  Veículos:            'text-indigo-600',
+  'Jóias & Acessórios': 'text-purple-600',
 };
 
 const catBanners: Record<string, string> = {
-  Smartphones:   '/banner-tech.jpg',
-  Moda:          '/banner-beauty2.jpg',
-  'Eletrónicos': '/banner-eletronicos.jpg',
-  Computadores:  '/banner-tech.jpg',
-  Casa:          '/banner-casa.jpg',
-  Beleza:        '/banner-beauty2.jpg',
-  Esportes:      '/banner-sports.jpg',
+  Tecnologia:          '/banner-tech.jpg',
+  Moda:                '/banner-beauty2.jpg',
+  Beleza:              '/banner-beauty2.jpg',
+  Casa:                '/banner-casa.jpg',
+  Esportes:            '/banner-sports.jpg',
+  Veículos:            '/banner-urban.jpg',
+  'Jóias & Acessórios': '/banner-art.jpg',
 };
 
 const catTaglines: Record<string, string> = {
-  Smartphones:   'Os melhores smartphones e acessórios premium.',
-  Moda:          'Tendências de moda para o dia a dia em Angola.',
-  'Eletrónicos': 'Tecnologia criativa e gadgets inovadores.',
-  Computadores:  'Laptops, desktops e periféricos para todos.',
-  Casa:          'Tudo para a sua cozinha e casa dos sonhos.',
-  Beleza:        'Cuidados de pele e beleza de marcas premium.',
-  Esportes:      'Equipe-se para o sucesso no seu treino.',
+  Tecnologia:          'Smartphones, laptops, tablets e acessórios tech.',
+  Moda:                'Tendências de moda para o dia a dia em Angola.',
+  Beleza:              'Cuidados de pele, maquiagem e perfumes premium.',
+  Casa:                'Tudo para a sua cozinha e casa dos sonhos.',
+  Esportes:            'Equipe-se para o sucesso no seu treino.',
+  Veículos:            'Carros, motos e veículos para todo o terreno.',
+  'Jóias & Acessórios': 'Joias, relógios e acessórios que marcam estilo.',
 };
 
 const catSubs: Record<string, { popular: string[]; more: string[] }> = {
-  Smartphones: {
-    popular: ['iPhone', 'Samsung Galaxy', 'Xiaomi', 'Tecno', 'Infinix', 'Huawei'],
-    more:    ['Capas & Proteção', 'Carregadores', 'Earbuds', 'Películas', 'Power Banks'],
+  Tecnologia: {
+    popular: ['Smartphones', 'Laptops', 'Tablets', 'Auscultadores', 'Smart Watches', 'Acessórios'],
+    more:    ['Capas & Películas', 'Carregadores', 'Power Banks', 'Monitores', 'Teclados', 'Webcams'],
   },
   Moda: {
-    popular: ['Roupas Masculinas', 'Roupas Femininas', 'Calçados', 'Bolsas', 'Acessórios', 'Joias'],
-    more:    ['Relógios', 'Óculos de sol', 'Cintos', 'Chapéus', 'Meias'],
-  },
-  'Eletrónicos': {
-    popular: ['TVs & Monitores', 'Tablets', 'Câmeras', 'Headphones', 'Smart Speakers', 'Drones'],
-    more:    ['GPS & Rastreadores', 'Projetores', 'Cabos & Adaptadores', 'Baterias', 'Microfones'],
-  },
-  Computadores: {
-    popular: ['Laptops', 'Desktops', 'Monitores', 'Teclados & Ratos', 'Impressoras', 'Roteadores'],
-    more:    ['Discos Rígidos', 'SSDs', 'Memória RAM', 'Placas Gráficas', 'Webcams'],
-  },
-  Casa: {
-    popular: ['Cozinha', 'Sala de estar', 'Quarto', 'Casa de Banho', 'Ferramentas', 'Jardim'],
-    more:    ['Decoração', 'Iluminação', 'Tapetes', 'Almofadas', 'Organização'],
+    popular: ['Roupas Femininas', 'Roupas Masculinas', 'Calçados', 'Bolsas', 'Acessórios'],
+    more:    ['Joias', 'Relógios', 'Óculos de sol', 'Cintos', 'Chapéus'],
   },
   Beleza: {
     popular: ['Cuidado da Pele', 'Maquiagem', 'Cabelos', 'Perfumes', 'Corpo & Banho', 'Unhas'],
-    more:    ['Depilação', 'Máscaras Faciais', 'Protetor Solar', 'Sérum', 'Esfoliantes'],
+    more:    ['Sérum', 'Protetor Solar', 'Máscaras Faciais', 'Esmalte', 'Depilação'],
+  },
+  Casa: {
+    popular: ['Eletrodomésticos', 'Cozinha', 'Sala de Estar', 'Quarto', 'Decoração'],
+    more:    ['Iluminação', 'Tapetes', 'Organização', 'Casa de Banho', 'Jardim'],
   },
   Esportes: {
     popular: ['Musculação', 'Corrida', 'Futebol', 'Basquete', 'Ciclismo', 'Yoga'],
     more:    ['Natação', 'Boxe', 'Ténis', 'Camping', 'Artes Marciais'],
+  },
+  Veículos: {
+    popular: ['SUV', 'Carros Eléctricos', 'Sedans', 'Motos', 'Jipes', 'Carrinhas'],
+    more:    ['Peças & Acessórios', 'Pneus', 'Som Automotivo', 'GPS', 'Seguro'],
+  },
+  'Jóias & Acessórios': {
+    popular: ['Colares', 'Pulseiras', 'Brincos', 'Anéis', 'Relógios', 'Óculos de Sol'],
+    more:    ['Carteiras', 'Cintos', 'Lenços', 'Chapéus', 'Semijoias'],
   },
 };
 

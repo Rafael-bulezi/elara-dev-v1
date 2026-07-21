@@ -52,10 +52,10 @@ export const OfertasDoDia: React.FC<CommonProps> = ({
 
 /* ─── 2. CATEGORY SHOWCASE (Amazon-style 4-pod grid) ─── */
 const SHOWCASE_PODS = [
-  { title: 'Smartphones & Tablets', sub: 'Os mais vendidos',   cat: 'Smartphones', link: 'Ver todos os Smartphones' },
-  { title: 'Eletrónicos & Tech',    sub: 'Tendências do momento', cat: 'Eletrónicos', link: 'Ver todos os Eletrónicos' },
-  { title: 'Moda & Estilo',         sub: 'Novidades da semana',  cat: 'Moda',        link: 'Ver toda a Moda' },
-  { title: 'Esportes & Fitness',    sub: 'Equipe-se para treinar', cat: 'Esportes',  link: 'Ver todos os Esportes' },
+  { title: 'Tecnologia',        sub: 'Smartphones, laptops e acessórios', cat: 'Tecnologia',  link: 'Ver toda a Tecnologia' },
+  { title: 'Moda & Estilo',     sub: 'Novidades da semana',               cat: 'Moda',        link: 'Ver toda a Moda' },
+  { title: 'Beleza',            sub: 'Skincare, maquiagem e perfumes',    cat: 'Beleza',      link: 'Ver toda a Beleza' },
+  { title: 'Esportes & Fitness', sub: 'Equipe-se para treinar',             cat: 'Esportes',    link: 'Ver todos os Esportes' },
 ];
 
 export const CategoryShowcaseSection: React.FC<CommonProps & { onSelectCategory: (name: string) => void }> = ({

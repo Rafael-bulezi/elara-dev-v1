@@ -27,7 +27,7 @@ const Footer = () => (
         <div>
           <h4 className="font-bold text-white mb-4 text-sm uppercase tracking-wide">Categorias</h4>
           <ul className="space-y-2.5">
-            {['Eletrónicos', 'Computadores', 'Moda', 'Casa & Cozinha', 'Beleza', 'Esportes'].map((item) => (
+            {['Tecnologia', 'Moda', 'Beleza', 'Casa', 'Esportes', 'Veículos', 'Jóias & Acessórios'].map((item) => (
               <li key={item}>
                 <a href="#" className="text-sm text-zinc-400 hover:text-white transition-colors">{item}</a>
               </li>

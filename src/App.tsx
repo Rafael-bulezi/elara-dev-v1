@@ -669,9 +669,9 @@ const App = () => {
                 {/* 5. Import CTA */}
                 <ImportCTA onOpenImport={() => setIsImportModalOpen(true)} />
 
-                {/* 6. Computadores & Casa — 2×2 grid */}
+                {/* 6. Tecnologia & Casa — 2×2 grid */}
                 <DuoGrid
-                  categories={['Computadores', 'Casa']}
+                  categories={['Tecnologia', 'Casa']}
                   products={products}
                   onAddToCart={addToCart}
                   onProductClick={handleProductClick}

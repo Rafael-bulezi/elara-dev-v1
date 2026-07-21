@@ -1,25 +1,25 @@
 import React from 'react';
-import { X, Home, ShoppingBag, MessageCircle, User, Globe, Shield, Zap, Download, Smartphone, Shirt, Cpu, Laptop, Home as HomeIcon, Sparkles, Dumbbell } from 'lucide-react';
+import { X, Home, ShoppingBag, MessageCircle, User, Globe, Shield, Zap, Download, Shirt, Cpu, Home as HomeIcon, Sparkles, Dumbbell, Car, Gem } from 'lucide-react';
 import { CLOUD_LOGO } from '../../constants/logo';
 
 const catIconMap: Record<string, React.ReactNode> = {
-  Smartphones:   <Smartphone size={18} />,
-  Moda:          <Shirt size={18} />,
-  'Eletrónicos': <Cpu size={18} />,
-  Computadores:  <Laptop size={18} />,
-  Casa:          <HomeIcon size={18} />,
-  Beleza:        <Sparkles size={18} />,
-  Esportes:      <Dumbbell size={18} />,
+  Tecnologia:          <Cpu size={18} />,
+  Moda:                <Shirt size={18} />,
+  Beleza:              <Sparkles size={18} />,
+  Casa:                <HomeIcon size={18} />,
+  Esportes:            <Dumbbell size={18} />,
+  Veículos:            <Car size={18} />,
+  'Jóias & Acessórios': <Gem size={18} />,
 };
 
 const catColors: Record<string, string> = {
-  Smartphones:   'text-blue-500 bg-blue-50',
-  Moda:          'text-pink-500 bg-pink-50',
-  'Eletrónicos': 'text-purple-500 bg-purple-50',
-  Computadores:  'text-indigo-500 bg-indigo-50',
-  Casa:          'text-amber-500 bg-amber-50',
-  Beleza:        'text-rose-500 bg-rose-50',
-  Esportes:      'text-emerald-500 bg-emerald-50',
+  Tecnologia:          'text-blue-500 bg-blue-50',
+  Moda:                'text-pink-500 bg-pink-50',
+  Beleza:              'text-rose-500 bg-rose-50',
+  Casa:                'text-amber-500 bg-amber-50',
+  Esportes:            'text-emerald-500 bg-emerald-50',
+  Veículos:            'text-indigo-500 bg-indigo-50',
+  'Jóias & Acessórios': 'text-purple-500 bg-purple-50',
 };
 
 interface MobileMenuProps {

@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { Product, UserProfile, ProductCondition, ProductOrigin } from '../../types';
 import { validateImageFile, compressImage } from '../../lib/imageUtils';
 import ImageWithFallback from '../common/ImageWithFallback';
+import { allCategories } from '../../constants';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -14,16 +15,7 @@ interface ProductFormModalProps {
   userProfile: UserProfile | null;
 }
 
-const categoriesList = [
-  'Eletrónicos',
-  'Computadores',
-  'Moda',
-  'Casa',
-  'Ferramentas',
-  'Fotografia',
-  'Jogos',
-  'Outros'
-];
+const categoriesList: string[] = allCategories.map((c: { name: string }) => c.name);
 
 const originsList: ProductOrigin[] = ['Local', 'China', 'Europa'];
 

@@ -3,3 +3,4 @@
 - [Elara checkout & payment](elara-checkout.md) — 4-step checkout modal; Angola payment methods: Multicaixa Express QR, Referência, COD
 - [Elara onboarding](elara-onboarding.md) — 3-step flow (welcome→city→account), localStorage key 'elara_onboarded'; shown once, skippable at every step
 - [Elara seller and mixeiro model](elara-seller-roles.md) — one account with buyer/seller/admin roles; seller onboarding + dashboard; mixeiro is a future verified tier, not a role
+- [Replit package firewall blocks tar](replit-package-firewall.md) — transitive tar dependency is blocked by Replit security policy; remove mobile-only deps like @capacitor/cli instead of overriding
