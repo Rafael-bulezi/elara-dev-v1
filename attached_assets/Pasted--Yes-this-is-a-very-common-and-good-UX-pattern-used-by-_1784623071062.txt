@@ -1,0 +1,97 @@
+**Yes**, this is a very common and good UX pattern (used by Amazon, many modern e-commerce sites, and mobile apps).
+
+### How the “Intelligent Navbar” Works
+
+**Behavior:**
+- When the user scrolls **down** → Navbar slides up and disappears
+- When the user scrolls **up** → Navbar slides back down and appears
+- Usually stays visible when you’re near the top of the page
+
+This saves vertical space (especially on mobile) while still giving quick access when the user wants to go back up.
+
+---
+
+### Best Way to Implement It (Modern Approach)
+
+There are two good options:
+
+#### 1. Recommended: Custom React Hook (Clean & Lightweight)
+This is the most common professional way.
+
+**Core logic:**
+- Track the current scroll position
+- Compare it with the previous scroll position
+- If scrolling down and past a small threshold → hide
+- If scrolling up → show
+- Use `transform: translateY()` for smooth and performant animation (better than changing `top`)
+
+#### 2. Library option
+- `react-headroom` → very popular and does exactly this with almost no code
+- Framer Motion / Motion also has ready examples
+
+For full control and no extra dependency, the custom hook is usually better.
+
+---
+
+### Important Details for Good Quality
+
+| Detail | Recommendation | Why |
+|--------|----------------|-----|
+| **Animation** | Use `transform: translateY(-100%)` | Much smoother and better performance than `top` |
+| **Threshold** | 10–20px | Prevents the navbar from flickering on tiny scrolls |
+| **Transition** | `transition: transform 0.3s ease` | Feels natural |
+| **Position** | `fixed` or `sticky` + high `z-index` | Stays on top |
+| **Top of page** | Always show when `scrollY < 50` | Better UX |
+| **Mobile** | Same behavior | Very important for Elara |
+
+---
+
+### Simple Version of the Logic (Conceptual)
+
+```ts
+const [showNavbar, setShowNavbar] = useState(true)
+const lastScrollY = useRef(0)
+
+useEffect(() => {
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY
+
+    if (currentScrollY < 50) {
+      // Always show near the top
+      setShowNavbar(true)
+    } else if (currentScrollY > lastScrollY.current) {
+      // Scrolling down → hide
+      setShowNavbar(false)
+    } else {
+      // Scrolling up → show
+      setShowNavbar(true)
+    }
+
+    lastScrollY.current = currentScrollY
+  }
+
+  window.addEventListener("scroll", handleScroll, { passive: true })
+  return () => window.removeEventListener("scroll", handleScroll)
+}, [])
+```
+
+Then in your Navbar:
+
+```tsx
+<header
+  className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
+    showNavbar ? "translate-y-0" : "-translate-y-full"
+  }`}
+>
+  {/* Your navbar content */}
+</header>
+```
+
+---
+
+### Do you want me to:
+
+1. Give you a **complete ready-to-use React component + hook** for this intelligent navbar, or
+2. Give you a **detailed prompt** you can give directly to your agent to implement it properly?
+
+Which one do you prefer?
