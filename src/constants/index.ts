@@ -64,39 +64,42 @@ const TITLES: Record<string, string[]> = {
 };
 
 const generateProducts = (): Product[] => {
-  const catNames = allCategories.map(c => c.name);
   const products: Product[] = [];
+  let idx = 0;
 
-  for (let i = 1; i <= 64; i++) {
-    const cat = catNames[i % catNames.length];
-    const images = MOCK_IMAGES[cat] || ['/mock-products/smartphone-black.jpeg'];
-    const image = images[i % images.length];
-    const condition = CONDITIONS[i % CONDITIONS.length] as 'Novo' | 'Semi-novo' | 'Usado';
-    const titleList = TITLES[cat] || TITLES['Tecnologia'];
-    const title = titleList[i % titleList.length] || `${cat} ${i}`;
-    const basePrice = Math.floor(Math.random() * 400000) + 15000;
-    const originalPrice = Math.random() > 0.5 ? Math.round(basePrice * (1 + Math.random() * 0.4)) : undefined;
+  // One product per (category, image) pair so every uploaded image is used.
+  allCategories.forEach(cat => {
+    const images = MOCK_IMAGES[cat.name] || ['/mock-products/smartphone-black.jpeg'];
+    images.forEach(image => {
+      idx++;
+      const condition = CONDITIONS[idx % CONDITIONS.length] as 'Novo' | 'Semi-novo' | 'Usado';
+      const titleList = TITLES[cat.name] || TITLES['Tecnologia'];
+      const title = titleList[idx % titleList.length] || `${cat.name} ${idx}`;
+      const basePrice = Math.floor(Math.random() * 400000) + 15000;
+      const originalPrice = Math.random() > 0.5 ? Math.round(basePrice * (1 + Math.random() * 0.4)) : undefined;
 
-    products.push({
-      id: `${i}`,
-      title: `${title} ${Math.floor(i / titleList.length) + 1}`,
-      price: basePrice,
-      originalPrice,
-      image,
-      condition,
-      sellerId: `s${(i % 4) + 1}`,
-      sellerName: ['Loja Premium', 'Tech Angola', 'Moda Luanda', 'Casa & Cia'][i % 4],
-      sellerAvatar: '/mock-products/art-books.jpeg',
-      sellerRating: Number((Math.random() * 2 + 3).toFixed(1)),
-      category: cat,
-      isImport: Math.random() > 0.6,
-      status: 'approved',
-      emPromocao: Math.random() > 0.7,
-      stock: Math.floor(Math.random() * 20) + 1,
-      createdAt: Date.now() - Math.floor(Math.random() * 10000000000),
-      verified: i % 3 === 0,
+      products.push({
+        id: `${idx}`,
+        title: `${title} ${Math.floor(idx / titleList.length) + 1}`,
+        price: basePrice,
+        originalPrice,
+        image,
+        condition,
+        sellerId: `s${(idx % 4) + 1}`,
+        sellerName: ['Loja Premium', 'Tech Angola', 'Moda Luanda', 'Casa & Cia'][idx % 4],
+        sellerAvatar: '/mock-products/art-books.jpeg',
+        sellerRating: Number((Math.random() * 2 + 3).toFixed(1)),
+        category: cat.name,
+        isImport: Math.random() > 0.6,
+        status: 'approved',
+        emPromocao: Math.random() > 0.7,
+        stock: Math.floor(Math.random() * 20) + 1,
+        createdAt: Date.now() - Math.floor(Math.random() * 10000000000),
+        verified: idx % 3 === 0,
+      });
     });
-  }
+  });
+
   return products;
 };
 
