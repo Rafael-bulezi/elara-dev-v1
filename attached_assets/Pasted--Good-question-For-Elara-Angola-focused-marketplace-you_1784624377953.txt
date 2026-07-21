@@ -1,0 +1,120 @@
+**Good question.**  
+For Elara (Angola-focused marketplace), you need sections and categories that feel useful, local, and trustworthy.
+
+Here’s a clear and practical recommendation:
+
+---
+
+### 1. Recommended Homepage Sections (Mock Sections)
+
+These are the main blocks that should appear on the homepage:
+
+| Order | Section Name                  | Purpose                              | Priority |
+|-------|-------------------------------|--------------------------------------|----------|
+| 1     | **Hero / Banner Carousel**    | Big promotions, trust message, main CTA | High |
+| 2     | **Categories Grid**           | Quick access to main categories      | High |
+| 3     | **Flash Deals / Ofertas do Dia** | Limited time deals                  | High |
+| 4     | **Produtos Populares**        | Best selling / most viewed           | High |
+| 5     | **Recém Adicionados**         | Newest products                      | Medium |
+| 6     | **Verificados / Lojas de Confiança** | Verified sellers products       | High |
+| 7     | **Importados / Mixeiro**      | Products or requests related to import | Medium |
+| 8     | **Para Si (Recommended)**     | Simple personalized section          | Medium |
+| 9     | **Shop by City / Luanda**     | Local focus (very important in Angola) | Medium |
+| 10    | **Trust Section**             | Why buy on Elara (badges, benefits)  | High |
+| 11    | **Footer**                    | Links, support, legal                | High |
+
+---
+
+### 2. Recommended Main Categories
+
+Here are strong categories for the Angolan market:
+
+#### Main Categories (Top Level)
+1. **Telefones & Eletrónicos**
+2. **Moda & Beleza**
+3. **Casa & Cozinha**
+4. **Informática**
+5. **Eletrodomésticos**
+6. **Bebé & Crianças**
+7. **Desporto & Lazer**
+8. **Automóvel & Motos**
+9. **Ferramentas & Construção**
+10. **Saúde & Bem-estar**
+11. **Produtos Importados / Mixeiro**
+12. **Supermercado / Mercearia** (optional at the beginning)
+
+---
+
+### 3. Suggested Subcategories (Examples)
+
+**Telefones & Eletrónicos**
+- Smartphones
+- Acessórios de Telemóvel
+- Tablets
+- TVs
+- Áudio & Fones
+
+**Moda & Beleza**
+- Roupa de Homem
+- Roupa de Mulher
+- Calçado
+- Bolsas & Acessórios
+- Produtos de Beleza
+- Perfumes
+
+**Casa & Cozinha**
+- Utensílios de Cozinha
+- Decoração
+- Móveis
+- Cama, Mesa e Banho
+- Limpeza
+
+**Informática**
+- Portáteis
+- Computadores
+- Acessórios de PC
+- Impressoras
+- Gaming
+
+---
+
+### 4. Extra Local Sections That Make Sense for Elara
+
+These will help Elara feel more “Angolan” than a generic marketplace:
+
+- **Entrega Rápida em Luanda**
+- **Vendedores Verificados**
+- **Melhores Mixeiros**
+- **Produtos Mais Procurados esta Semana**
+- **Compre por WhatsApp** (if you want to highlight chat)
+- **Novidades da Semana**
+
+---
+
+### Recommendation
+
+For the first version (mock), I suggest you create these sections:
+
+**Must-have mock sections:**
+1. Hero Banner
+2. Categories Grid
+3. Flash Deals / Ofertas
+4. Produtos Populares
+5. Vendedores Verificados
+6. Recém Adicionados
+7. Trust Badges section
+
+**Must-have categories:**
+- Telefones & Eletrónicos
+- Moda
+- Casa & Cozinha
+- Informática
+- Eletrodomésticos
+- Bebé & Crianças
+- Importados / Mixeiro
+
+---
+
+Would you like me to:
+1. Create a clean **list of sections + categories** ready to give to your agent, or  
+2. Also suggest what each section should contain (example products, layout style, etc.)?

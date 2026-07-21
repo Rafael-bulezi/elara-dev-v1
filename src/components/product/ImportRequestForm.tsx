@@ -61,7 +61,7 @@ const ImportRequestForm = ({ isOpen, onClose, onSubmit, userProfile }: ImportReq
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 bg-zinc-950/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto w-full h-full">
+        <div className="fixed inset-0 bg-zinc-950/60 z-[100] flex items-start justify-center p-4 pt-8 md:pt-12 backdrop-blur-sm overflow-y-auto w-full h-full">
           <motion.div
             variants={modalVariants}
             initial="hidden"

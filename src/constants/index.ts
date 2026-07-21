@@ -28,14 +28,14 @@ export const extraCategories = [
 export const allCategories = [...categories, ...extraCategories];
 
 const MOCK_IMAGES: Record<string, string[]> = {
-  Tecnologia:        ['/mock-products/smartphone-black.jpeg', '/mock-products/smartphone-foldable.jpeg', '/mock-products/art-books.jpeg'],
-  Moda:              ['/mock-products/outfit-summer.jpeg', '/mock-products/dress-cocktail.jpeg', '/mock-products/trench-coat.jpeg', '/mock-products/heels-red.jpeg', '/mock-products/boots-black.jpeg', '/mock-products/sneakers-white.jpeg', '/mock-products/running-orange.jpeg'],
-  Beleza:            ['/mock-products/cream-face.jpeg', '/mock-products/lotion-body.jpeg', '/mock-products/makeup-lipsticks.jpeg', '/mock-products/serum-bottle.jpeg', '/mock-products/skincare-set.jpeg', '/mock-products/watch-gold.jpeg', '/mock-products/watch-silver.jpeg'],
-  Casa:              ['/mock-products/espresso-chrome.jpeg', '/mock-products/coffee-pourover.jpeg', '/mock-products/pans-copper.jpeg', '/mock-products/pans-steel.jpeg', '/mock-products/fridge-black.jpeg', '/mock-products/fridge-cream.jpeg'],
-  Esportes:          ['/mock-products/running-orange.jpeg', '/mock-products/sneakers-white.jpeg', '/mock-products/boots-black.jpeg'],
-  Veículos:          ['/mock-products/suv-black.jpeg', '/mock-products/car-silver.jpeg', '/mock-products/sedan-white.jpeg'],
-  'Jóias & Acessórios': ['/mock-products/necklace-gold.jpeg', '/mock-products/watch-gold.jpeg', '/mock-products/watch-silver.jpeg', '/mock-products/heels-red.jpeg'],
-  'Brinquedos & Crianças': ['/mock-products/art-books.jpeg'],
+  Tecnologia:        ['/mock-products/smartphone-sleek.jpeg', '/mock-products/smartphone-black.jpeg', '/mock-products/smartphone-foldable.jpeg', '/mock-products/camera-dslr-1.jpeg', '/mock-products/camera-dslr-2.jpeg', '/mock-products/headphones-2.jpeg', '/mock-products/art-books.jpeg'],
+  Moda:              ['/mock-products/jacket-winter-1.jpeg', '/mock-products/jacket-winter-2.jpeg', '/mock-products/outfit-summer.jpeg', '/mock-products/dress-cocktail.jpeg', '/mock-products/trench-coat.jpeg', '/mock-products/heels-red.jpeg', '/mock-products/boots-black.jpeg', '/mock-products/sneakers-white.jpeg', '/mock-products/running-orange.jpeg'],
+  Beleza:            ['/mock-products/cream-face.jpeg', '/mock-products/lotion-body.jpeg', '/mock-products/makeup-lipsticks.jpeg', '/mock-products/serum-bottle.jpeg', '/mock-products/skincare-set.jpeg', '/mock-products/watch-gold.jpeg', '/mock-products/watch-silver.jpeg', '/mock-products/watch-luxury-1.jpeg', '/mock-products/watch-luxury-2.jpeg'],
+  Casa:              ['/mock-products/house-luxury-1.jpeg', '/mock-products/house-luxury-2.jpeg', '/mock-products/espresso-chrome.jpeg', '/mock-products/espresso-machine-2.jpeg', '/mock-products/coffee-pourover.jpeg', '/mock-products/cutlery-set.jpeg', '/mock-products/pans-copper.jpeg', '/mock-products/pans-steel.jpeg', '/mock-products/fridge-black.jpeg', '/mock-products/fridge-cream.jpeg'],
+  Esportes:          ['/mock-products/camping-tent-1.jpeg', '/mock-products/camping-tent-2.jpeg', '/mock-products/running-orange.jpeg', '/mock-products/sneakers-white.jpeg', '/mock-products/boots-black.jpeg'],
+  Veículos:          ['/mock-products/sports-car-blue.jpeg', '/mock-products/sports-car-grey.jpeg', '/mock-products/suv-black.jpeg', '/mock-products/car-silver.jpeg', '/mock-products/sedan-white.jpeg'],
+  'Jóias & Acessórios': ['/mock-products/necklace-gold.jpeg', '/mock-products/watch-gold.jpeg', '/mock-products/watch-silver.jpeg', '/mock-products/watch-luxury-1.jpeg', '/mock-products/watch-luxury-2.jpeg', '/mock-products/heels-red.jpeg'],
+  'Brinquedos & Crianças': ['/mock-products/product-box.jpeg', '/mock-products/art-books.jpeg'],
   'Saúde & Bem-estar':  ['/mock-products/skincare-set.jpeg'],
   'Livros & Papelaria': ['/mock-products/art-books.jpeg'],
   'Pet & Animais':      ['/mock-products/art-books.jpeg'],

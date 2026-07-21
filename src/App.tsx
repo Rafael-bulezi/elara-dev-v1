@@ -499,8 +499,9 @@ const App = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleSelectCategory = React.useCallback((name: string) => {
+  const handleSelectCategory = React.useCallback((name: string, query?: string) => {
     setActiveCategory(name);
+    if (query) setSearchQuery(query);
     navigateTo('category');
   }, [navigateTo]);
 
@@ -655,7 +656,18 @@ const App = () => {
                   onSelectCategory={handleSelectCategory}
                 />
 
-                {/* 4. Moda — 1×5 strip */}
+                {/* 4. Recém Adicionados — 1×5 strip */}
+                <StripSection
+                  category="Tecnologia"
+                  products={products}
+                  onAddToCart={addToCart}
+                  onProductClick={handleProductClick}
+                  wishlist={wishlistIds}
+                  onToggleWishlist={toggleWishlist}
+                  onViewAll={() => handleSelectCategory('Tecnologia')}
+                />
+
+                {/* 5. Moda — 1×5 strip */}
                 <StripSection
                   category="Moda"
                   products={products}

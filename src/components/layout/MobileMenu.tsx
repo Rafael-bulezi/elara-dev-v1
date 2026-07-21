@@ -30,7 +30,7 @@ interface MobileMenuProps {
   onOpenImport: () => void;
   appLogo?: string | null;
   categories?: { id: string; name: string; icon: string }[];
-  onSelectCategory?: (name: string) => void;
+  onSelectCategory?: (name: string, query?: string) => void;
 }
 
 const MobileMenu = ({ isOpen, onClose, onNavigate, onInstallClick, onOpenImport, appLogo, categories, onSelectCategory }: MobileMenuProps) => (

@@ -77,7 +77,7 @@ const catSubs: Record<string, { popular: string[]; more: string[] }> = {
 interface CategoryMegaMenuProps {
   categories: { id: string; name: string; icon: string }[];
   products: Product[];
-  onSelectCategory: (name: string) => void;
+  onSelectCategory: (name: string, query?: string) => void;
   onProductClick: (p: Product) => void;
   onAddToCart: (p: Product) => void;
   wishlist: string[];
@@ -161,7 +161,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
                 <ul className="space-y-2">
                   {subs.popular.map(sub => (
                     <li key={sub}>
-                      <button onClick={() => { setHovered(null); onSelectCategory(hovered!); }}
+                      <button onClick={() => { setHovered(null); onSelectCategory(hovered!, sub); }}
                         className="text-sm text-zinc-700 hover:text-purple-600 font-medium transition-colors text-left">
                         {sub}
                       </button>
@@ -174,7 +174,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
                 <ul className="space-y-2">
                   {subs.more.map(sub => (
                     <li key={sub}>
-                      <button onClick={() => { setHovered(null); onSelectCategory(hovered!); }}
+                      <button onClick={() => { setHovered(null); onSelectCategory(hovered!, sub); }}
                         className="text-sm text-zinc-700 hover:text-purple-600 font-medium transition-colors text-left">
                         {sub}
                       </button>

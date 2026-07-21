@@ -126,7 +126,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white w-full max-w-5xl h-full md:h-auto md:max-h-[90vh] md:rounded-[48px] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] relative flex flex-col overflow-hidden border border-zinc-200 my-auto"
+        className="bg-white w-full max-w-5xl h-full md:h-auto md:max-h-[90vh] md:rounded-[48px] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] relative flex flex-col overflow-hidden border border-zinc-200 md:my-auto"
       >
         <div className="p-8 md:p-12 border-b border-zinc-100 flex items-center justify-between flex-shrink-0 bg-white/50 backdrop-blur-xl sticky top-0 z-10">
           <div>
