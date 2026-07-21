@@ -63,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
+    <header className="bg-white shadow-sm">
       {/* Main bar */}
       <div className="border-b border-zinc-200">
         <div className="max-w-[1400px] mx-auto px-3 md:px-6">

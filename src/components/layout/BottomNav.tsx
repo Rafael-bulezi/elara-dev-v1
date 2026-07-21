@@ -12,6 +12,7 @@ interface BottomNavProps {
   userProfile: UserProfile | null;
   onOpenAuth: () => void;
   onSellProduct: () => void;
+  visible?: boolean;
 }
 
 const BottomNav = ({ 
@@ -22,9 +23,10 @@ const BottomNav = ({
   onOpenProfile, 
   userProfile, 
   onOpenAuth, 
-  onSellProduct 
+  onSellProduct,
+  visible = true,
 }: BottomNavProps) => (
-  <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-2xl border-t border-zinc-200 md:hidden pb-[env(safe-area-inset-bottom)]">
+  <nav className={`fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-2xl border-t border-zinc-200 md:hidden pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${visible ? 'translate-y-0' : 'translate-y-full'}`}>
     <div className="flex items-center justify-around h-16 md:h-20 px-2 md:px-4">
       <button 
         onClick={() => setActiveTab('home')} 

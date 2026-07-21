@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { motion } from 'motion/react';
 import { viewVariants } from './utils/animations';
+import { useScrollDirection } from './utils/useScrollDirection';
 import { UserProfile, Product, Chat, CartItem, BeforeInstallPromptEvent } from './types';
 import { categories, initialProducts } from './constants';
 import { CLOUD_LOGO } from './constants/logo';
@@ -77,6 +78,9 @@ const App = () => {
   }, [userProfile]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   
+  // Intelligent navbar — hide on scroll down, show on scroll up
+  const navVisible = useScrollDirection();
+
   // UI State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -554,7 +558,9 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-zinc-50 transition-colors duration-500 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 font-sans selection:bg-purple-500/30 relative">
-      <div className="relative z-10 flex flex-col min-h-screen">
+
+      {/* ── Fixed intelligent navbar (hides on scroll-down, shows on scroll-up) ── */}
+      <div className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${navVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <Header 
           toggleMobileMenu={() => setIsMobileMenuOpen(true)}
           cartCount={cart.reduce((acc, item) => acc + (item.cartQuantity || 1), 0)}
@@ -585,17 +591,23 @@ const App = () => {
           appLogo={appLogo}
         />
 
-        <CategoryMegaMenu
-          categories={categories}
-          products={products}
-          onSelectCategory={handleSelectCategory}
-          onProductClick={handleProductClick}
-          onAddToCart={addToCart}
-          wishlist={wishlistIds}
-          onToggleWishlist={toggleWishlist}
-          onNavigate={(v) => navigateTo(v)}
-        />
+        {/* Category strip — desktop only; on mobile it lives inside the mobile menu */}
+        <div className="hidden md:block">
+          <CategoryMegaMenu
+            categories={categories}
+            products={products}
+            onSelectCategory={handleSelectCategory}
+            onProductClick={handleProductClick}
+            onAddToCart={addToCart}
+            wishlist={wishlistIds}
+            onToggleWishlist={toggleWishlist}
+            onNavigate={(v) => navigateTo(v)}
+          />
+        </div>
+      </div>
 
+      {/* Main content — padded to clear the fixed header (mobile: 56px, desktop: 56px header + 44px strip) */}
+      <div className="relative z-10 flex flex-col min-h-screen pt-14 md:pt-[108px]">
         <main className="relative flex-1">
           <motion.div
             key={currentView}
@@ -840,6 +852,7 @@ const App = () => {
             window.scrollTo(0, 0);
           }
         }}
+        visible={navVisible}
       />
 
       <MobileMenu 
@@ -850,6 +863,8 @@ const App = () => {
         onInstallClick={() => setForceShowInstall(true)}
         onOpenImport={() => setIsImportModalOpen(true)}
         appLogo={appLogo}
+        categories={categories}
+        onSelectCategory={handleSelectCategory}
       />
 
       <AuthModal 

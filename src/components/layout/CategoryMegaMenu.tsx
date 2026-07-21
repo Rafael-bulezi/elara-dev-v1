@@ -106,7 +106,7 @@ const CategoryMegaMenu: React.FC<CategoryMegaMenuProps> = ({
 
   return (
     <div
-      className="sticky top-[56px] md:top-[64px] z-40 bg-white border-b border-zinc-200 shadow-sm"
+      className="bg-white border-b border-zinc-200 shadow-sm"
       onMouseLeave={close}
     >
       {/* ── Pill strip ── */}
