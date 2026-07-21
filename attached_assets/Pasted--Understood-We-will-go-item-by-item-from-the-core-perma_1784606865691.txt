@@ -1,0 +1,105 @@
+**Understood.**  
+We will go item by item from the core permanent list and push each one to its **maximum potential**.
+
+---
+
+### 1. User Accounts
+**Current status vs Maximum Potential**
+
+#### What You Currently Have (from your inventory)
+
+| Feature | Current Implementation | Level |
+|---------|------------------------|-------|
+| Login / Signup | `AuthModal.tsx` – Phone + Password | Basic |
+| Google Login | `AuthCallback.tsx` – Google OAuth PKCE | Exists |
+| Profile | `ProfileSettingsView.tsx` + `ProfileDrawer.tsx` | Basic |
+| Seller Mode Switch | Exists in ProfileDrawer | Basic |
+| Onboarding | `OnboardingFlow.tsx` (city selection) | Light |
+| Roles | Buyer → Seller mentioned | Partial |
+
+**Current state summary:**  
+You already have the skeleton of authentication and basic profile switching. It works, but it is still quite basic.
+
+---
+
+### Maximum Potential for User Accounts (What “Done Properly” Looks Like)
+
+For a marketplace like Elara, User Accounts should feel **trustworthy, clear, and flexible**. Here’s what maximum potential includes:
+
+#### A. Authentication (Login & Signup)
+- Phone number + Password (primary, important in Angola)
+- Google login (keep it)
+- Optional: later add Apple or Facebook if needed
+- Strong password rules + clear error messages
+- “Forgot password” flow that actually works well
+- Ability to login with phone number easily
+- Session stays active properly (no random logouts)
+- Guest browsing fully supported (can browse without account)
+
+#### B. User Profile
+- Clear profile page with:
+  - Profile photo
+  - Full name
+  - Phone number (with verification status)
+  - City / Location
+  - Bio / Short description (especially useful for sellers & mixeiros)
+  - Join date
+  - Verification badges
+- Ability to edit all important fields easily
+- Avatar upload with compression and cropping
+
+#### C. Roles System (Very Important)
+- Every user starts as **Buyer**
+- User can become **Seller** (with a clear “Become a Seller” flow)
+- Later can also act as **Mixeiro**
+- Clean way to switch between modes (Buyer Mode ↔ Seller Mode)
+- Different menus and dashboards depending on the active role
+- Role status clearly visible
+
+#### D. Trust & Safety Elements in the Account
+- Phone verification status (Verified / Not verified)
+- Optional ID verification status (for sellers)
+- Account creation date
+- Number of successful transactions / reviews (later)
+- Ability to report a user
+- Block user option
+
+#### E. Onboarding Experience
+- Smooth first-time experience
+- Collect city / province early (important for delivery and local feel)
+- Simple explanation of how Elara works
+- Encourage completing profile
+
+#### F. Technical Quality
+- Proper Supabase Auth implementation (secure, with correct session handling)
+- Good loading and error states
+- Mobile-first experience
+- Fast and reliable
+
+---
+
+### Contrast Summary
+
+| Area                    | Current Level     | Maximum Potential Level          | Gap |
+|-------------------------|-------------------|----------------------------------|-----|
+| Login / Signup          | Basic             | Polished + reliable              | Medium |
+| Google Auth             | Exists            | Fully stable                     | Small |
+| Profile                 | Basic             | Rich + trustworthy               | Medium–High |
+| Role System             | Partial           | Clear + flexible                 | Medium |
+| Verification            | Weak              | Visible trust signals            | High |
+| Onboarding              | Light             | Helpful + local                  | Medium |
+| Overall Account Feel    | Functional        | Professional & trustworthy       | High |
+
+---
+
+### Recommendation for This Item
+
+We should treat **User Accounts** as a foundation that needs to feel solid and trustworthy, even if we keep the rest of the app light (Facebook Marketplace style).
+
+**Next step options:**
+
+1. I give you a detailed specification of exactly what the User Accounts system should include (fields, flows, screens, and logic).
+2. I write a clear and strong prompt you can give your agent to upgrade the current User Accounts system to maximum potential.
+3. We go screen by screen (Login → Signup → Profile → Role switching → etc.).
+
+Which one do you prefer to do first?
