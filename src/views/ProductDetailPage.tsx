@@ -85,22 +85,119 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   /* ── Shared buy-panel content (used in both desktop sidebar and mobile footer) ── */
   const BuyActions = ({ compact = false }: { compact?: boolean }) => (
-    <div className={compact ? 'grid grid-cols-3 gap-2' : 'grid grid-cols-1 sm:grid-cols-3 gap-3'}>
+    <div className={compact ? 'grid grid-cols-3 gap-2' : 'grid grid-cols-1 sm:grid-cols-3 gap-2.5'}>
       <button
         onClick={() => { for (let i = 0; i < qty; i++) onAddToCart(product); }}
-        className="flex items-center justify-center gap-2 border-2 border-purple-600 text-purple-700 font-black text-sm py-3 rounded-xl hover:bg-purple-50 active:bg-purple-100 transition-colors">
-        <ShoppingCart size={16} /> <span className={compact ? 'hidden' : ''}>Carrinho</span>
+        className="flex items-center justify-center gap-2 border-2 border-purple-600 text-purple-700 font-black text-xs sm:text-sm py-3 rounded-xl hover:bg-purple-50 active:bg-purple-100 transition-colors">
+        <ShoppingCart size={16} /> <span>{compact ? 'Carrinho' : 'Ao Carrinho'}</span>
       </button>
       <button
         onClick={() => setShowOfferModal(true)}
-        className="flex items-center justify-center gap-2 border-2 border-amber-400 text-amber-700 font-black text-sm py-3 rounded-xl hover:bg-amber-50 active:bg-amber-100 transition-colors">
-        <Tag size={16} /> <span className={compact ? 'hidden' : ''}>Fazer Proposta</span>
+        className="flex items-center justify-center gap-2 border-2 border-amber-400 text-amber-700 font-black text-xs sm:text-sm py-3 rounded-xl hover:bg-amber-50 active:bg-amber-100 transition-colors">
+        <Tag size={16} /> <span>Fazer Proposta</span>
       </button>
       <button
         onClick={() => onBuyNow(product)}
-        className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-black text-sm py-3 rounded-xl transition-colors shadow-lg shadow-purple-200">
-        <Zap size={16} /> <span className={compact ? 'hidden' : ''}>Comprar</span>
+        className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-black text-xs sm:text-sm py-3 rounded-xl transition-colors shadow-lg shadow-purple-200">
+        <Zap size={16} /> <span>Comprar</span>
       </button>
+    </div>
+  );
+
+  /* ── Tabs: Description / Specs / Reviews subcomponent ── */
+  const ProductTabs = () => (
+    <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
+      <div className="flex border-b border-zinc-100 overflow-x-auto">
+        {([['desc', 'Descrição'], ['specs', 'Especificações'], ['reviews', 'Avaliações']] as const).map(([k, label]) => (
+          <button key={k} onClick={() => setActiveTab(k)}
+            className={`flex-1 min-w-[100px] py-3.5 text-xs md:text-sm font-bold transition-colors whitespace-nowrap ${activeTab === k ? 'text-purple-600 border-b-2 border-purple-600' : 'text-zinc-400 hover:text-zinc-700'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="p-4 md:p-6">
+        {activeTab === 'desc' && (
+          <p className="text-sm text-zinc-600 leading-relaxed">
+            {product.description || `${product.title} — produto de alta qualidade disponível na Elara com entrega rápida para toda Angola. Compre com confiança com pagamento seguro e política de devolução de 7 dias.`}
+          </p>
+        )}
+
+        {activeTab === 'specs' && (
+          <div className="divide-y divide-zinc-100">
+            {[
+              ['Categoria',      product.category],
+              ['Condição',       product.condition || 'Novo'],
+              ['Vendedor',       product.sellerName],
+              ['Disponibilidade','Em stock'],
+              ['Origem',         product.isImport ? 'Importado' : 'Local'],
+              ['SKU',            `ELARA-${product.id?.toString().padStart(6, '0').toUpperCase()}`],
+            ].map(([l, v]) => (
+              <div key={l} className="flex py-2.5 text-sm">
+                <span className="w-32 md:w-36 text-zinc-400 font-medium shrink-0">{l}</span>
+                <span className="text-zinc-900 font-semibold">{v}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'reviews' && (
+          <div>
+            {/* Summary row */}
+            <div className="flex items-start gap-4 md:gap-6 mb-6 pb-6 border-b border-zinc-100">
+              <div className="text-center shrink-0">
+                <div className="text-4xl md:text-5xl font-black text-zinc-900">{Number(rating).toFixed(1)}</div>
+                <div className="flex gap-0.5 mt-1 justify-center">
+                  {[1,2,3,4,5].map(s => <Star key={s} size={12} className={s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-zinc-200 fill-zinc-200'} />)}
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-1">{reviewCount} avaliações</p>
+              </div>
+              <div className="flex-1 space-y-1">
+                {[5,4,3,2,1].map(n => {
+                  const pct = n === 5 ? 68 : n === 4 ? 20 : n === 3 ? 7 : n === 2 ? 3 : 2;
+                  return (
+                    <div key={n} className="flex items-center gap-2 text-xs text-zinc-500">
+                      <span className="w-3 shrink-0 text-right">{n}</span>
+                      <Star size={10} className="text-amber-400 fill-amber-400 shrink-0" />
+                      <div className="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-8 text-right shrink-0 tabular-nums">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Individual reviews */}
+            <div className="space-y-5">
+              {MOCK_REVIEWS.map((r, i) => (
+                <div key={i} className="border-b border-zinc-100 pb-5 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-xs font-black text-purple-700">
+                        {r.name[0]}
+                      </div>
+                      <div>
+                        <p className="text-xs md:text-sm font-bold text-zinc-900">{r.name}</p>
+                        <p className="text-[10px] text-zinc-400">{r.date}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(s => <Star key={s} size={10} className={s <= r.rating ? 'text-amber-400 fill-amber-400' : 'text-zinc-200 fill-zinc-200'} />)}
+                    </div>
+                  </div>
+                  <p className="text-xs md:text-sm font-bold text-zinc-800 mb-0.5">{r.title}</p>
+                  <p className="text-xs md:text-sm text-zinc-500 leading-relaxed">{r.body}</p>
+                  <p className="text-[10px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                    <CheckCircle size={9} /> Compra verificada
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -143,102 +240,111 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
       {/* ── Main grid ── */}
       <div className="max-w-[1400px] mx-auto px-0 md:px-8 py-0 md:py-6">
-        <div className="flex flex-col lg:flex-row gap-0 lg:gap-8 xl:gap-12">
+        <div className="flex flex-col lg:flex-row gap-0 lg:gap-8 xl:gap-10 items-start">
 
           {/* ═══════════════════════════════════
-              GALLERY  (left col on desktop)
+              LEFT COL: Gallery + Tabs (Desktop)
           ═══════════════════════════════════ */}
-          <div className="lg:w-[54%] flex flex-col md:flex-row gap-0 md:gap-3">
+          <div className="lg:w-[50%] xl:w-[52%] space-y-6 w-full">
 
-            {/* Vertical thumb strip — desktop only */}
-            <div className="hidden md:flex flex-col gap-2 shrink-0">
-              {images.map((img, i) => (
-                <button key={i} onClick={() => setActiveImg(i)}
-                  className={`w-[72px] h-[72px] rounded-xl overflow-hidden border-2 transition-all shrink-0 ${i === activeImg ? 'border-purple-600 shadow-sm shadow-purple-200' : 'border-zinc-200 hover:border-zinc-400'}`}>
-                  <img src={thumbUrl(img)} alt="" loading="lazy" decoding="async"
-                    className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
+            {/* Gallery container */}
+            <div className="flex flex-col md:flex-row gap-0 md:gap-3">
 
-            {/* Main image — capped to viewport height so it never forces a scroll just to see the buy panel */}
-            <div className="relative flex-1 bg-white md:rounded-2xl overflow-hidden"
-              style={{ aspectRatio: '1 / 1', maxHeight: 'min(520px, calc(100vh - 160px))' }}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}>
-
-              {/* Badges */}
-              {discount && (
-                <span className="absolute top-3 left-3 z-10 bg-rose-500 text-white text-xs font-black px-2.5 py-1 rounded-lg shadow">
-                  -{discount}%
-                </span>
-              )}
-              {product.isImport && (
-                <span className={`absolute ${discount ? 'top-12' : 'top-3'} left-3 z-10 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md`}>
-                  IMPORT
-                </span>
-              )}
-
-              {/* Desktop action buttons */}
-              <div className="hidden md:flex absolute top-3 right-3 z-10 flex-col gap-1.5">
-                <button onClick={() => onToggleWishlist(product)}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all ${wishlisted ? 'bg-rose-500 text-white' : 'bg-white text-zinc-400 hover:text-rose-400'}`}>
-                  <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
-                </button>
-                <button onClick={handleShare}
-                  className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md text-zinc-400 hover:text-zinc-700 transition-colors">
-                  {copied ? <CheckCircle size={16} className="text-green-500" /> : <Share2 size={16} />}
-                </button>
+              {/* Vertical thumb strip — desktop only */}
+              <div className="hidden md:flex flex-col gap-2 shrink-0">
+                {images.map((img, i) => (
+                  <button key={i} onClick={() => setActiveImg(i)}
+                    className={`w-[72px] h-[72px] rounded-xl overflow-hidden border-2 transition-all shrink-0 ${i === activeImg ? 'border-purple-600 shadow-sm shadow-purple-200' : 'border-zinc-200 hover:border-zinc-400'}`}>
+                    <img src={thumbUrl(img)} alt="" loading="lazy" decoding="async"
+                      className="w-full h-full object-cover" />
+                  </button>
+                ))}
               </div>
 
-              {/* Image — object-cover, fills the square fully */}
-              <img
-                src={mediumUrl(images[activeImg])}
-                alt={product.title}
-                loading="eager"
-                decoding="async"
-                className="w-full h-full object-cover"
-              />
+              {/* Main image */}
+              <div className="relative flex-1 bg-white md:rounded-2xl overflow-hidden shadow-sm border border-zinc-100"
+                style={{ aspectRatio: '1 / 1', maxHeight: 'min(480px, calc(100vh - 160px))' }}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}>
 
-              {/* Prev / Next arrows */}
-              <button onClick={() => setActiveImg(i => (i - 1 + images.length) % images.length)}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow text-zinc-600 hover:bg-white active:bg-zinc-100 transition-colors">
-                <ChevronLeft size={18} />
-              </button>
-              <button onClick={() => setActiveImg(i => (i + 1) % images.length)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow text-zinc-600 hover:bg-white active:bg-zinc-100 transition-colors">
-                <ChevronRight size={18} />
-              </button>
+                {/* Badges */}
+                {discount && (
+                  <span className="absolute top-3 left-3 z-10 bg-rose-500 text-white text-xs font-black px-2.5 py-1 rounded-lg shadow">
+                    -{discount}%
+                  </span>
+                )}
+                {product.isImport && (
+                  <span className={`absolute ${discount ? 'top-12' : 'top-3'} left-3 z-10 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md`}>
+                    IMPORT
+                  </span>
+                )}
 
-              {/* Mobile dot indicators */}
-              <div className="md:hidden absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                {images.map((_, i) => (
+                {/* Desktop action buttons */}
+                <div className="hidden md:flex absolute top-3 right-3 z-10 flex-col gap-1.5">
+                  <button onClick={() => onToggleWishlist(product)}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all ${wishlisted ? 'bg-rose-500 text-white' : 'bg-white text-zinc-400 hover:text-rose-400'}`}>
+                    <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
+                  </button>
+                  <button onClick={handleShare}
+                    className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md text-zinc-400 hover:text-zinc-700 transition-colors">
+                    {copied ? <CheckCircle size={16} className="text-green-500" /> : <Share2 size={16} />}
+                  </button>
+                </div>
+
+                {/* Image */}
+                <img
+                  src={mediumUrl(images[activeImg])}
+                  alt={product.title}
+                  loading="eager"
+                  decoding="async"
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Prev / Next arrows */}
+                <button onClick={() => setActiveImg(i => (i - 1 + images.length) % images.length)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow text-zinc-600 hover:bg-white active:bg-zinc-100 transition-colors">
+                  <ChevronLeft size={18} />
+                </button>
+                <button onClick={() => setActiveImg(i => (i + 1) % images.length)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow text-zinc-600 hover:bg-white active:bg-zinc-100 transition-colors">
+                  <ChevronRight size={18} />
+                </button>
+
+                {/* Mobile dot indicators */}
+                <div className="md:hidden absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                  {images.map((_, i) => (
+                    <button key={i} onClick={() => setActiveImg(i)}
+                      className={`h-1.5 rounded-full transition-all ${i === activeImg ? 'bg-purple-600 w-5' : 'bg-zinc-300 w-1.5'}`} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Horizontal thumb strip — mobile only */}
+              <div className="md:hidden flex gap-2 px-4 mt-3 overflow-x-auto custom-scrollbar pb-1">
+                {images.map((img, i) => (
                   <button key={i} onClick={() => setActiveImg(i)}
-                    className={`h-1.5 rounded-full transition-all ${i === activeImg ? 'bg-purple-600 w-5' : 'bg-zinc-300 w-1.5'}`} />
+                    className={`shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-purple-600 shadow-sm shadow-purple-200' : 'border-zinc-200 hover:border-zinc-400'}`}>
+                    <img src={thumbUrl(img)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                  </button>
                 ))}
               </div>
             </div>
 
-            {/* Horizontal thumb strip — mobile only */}
-            <div className="md:hidden flex gap-2 px-4 mt-3 overflow-x-auto custom-scrollbar pb-1">
-              {images.map((img, i) => (
-                <button key={i} onClick={() => setActiveImg(i)}
-                  className={`shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-purple-600 shadow-sm shadow-purple-200' : 'border-zinc-200 hover:border-zinc-400'}`}>
-                  <img src={thumbUrl(img)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                </button>
-              ))}
+            {/* Desktop Tabs directly under Gallery on Left Column — Fills empty space! */}
+            <div className="hidden md:block">
+              <ProductTabs />
             </div>
           </div>
 
           {/* ═══════════════════════════════════
-              INFO + BUY  (right col on desktop)
+              RIGHT COL (Info + Buy Box + Delivery + Seller)
           ═══════════════════════════════════ */}
-          <div className="lg:flex-1 px-4 md:px-0 pt-5 md:pt-0 space-y-5">
+          <div className="lg:flex-1 px-4 md:px-0 pt-5 md:pt-0 space-y-4 w-full">
 
             {/* Title block */}
             <div>
-              <p className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-1.5">{product.category}</p>
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-black text-zinc-900 leading-tight">{product.title}</h1>
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-1">{product.category}</p>
+              <h1 className="text-xl md:text-2xl font-black text-zinc-900 leading-tight">{product.title}</h1>
               <p className="text-[11px] text-zinc-400 mt-1 font-mono">SKU: ELARA-{product.id?.toString().padStart(6, '0').toUpperCase()}</p>
             </div>
 
@@ -264,23 +370,23 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             </div>
 
             {/* Price block */}
-            <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-100 rounded-2xl p-4">
+            <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-100 rounded-2xl p-3.5">
               <div className="flex items-end gap-3 flex-wrap">
-                <span className="text-3xl md:text-4xl font-black text-zinc-900 tracking-tight">
+                <span className="text-2xl md:text-3xl font-black text-zinc-900 tracking-tight">
                   Kz {(product.price * qty).toLocaleString('pt-AO')}
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
-                  <span className="text-base text-zinc-400 line-through font-medium mb-0.5">
+                  <span className="text-sm text-zinc-400 line-through font-medium mb-0.5">
                     Kz {(product.originalPrice * qty).toLocaleString('pt-AO')}
                   </span>
                 )}
                 {discount && (
-                  <span className="bg-rose-100 text-rose-600 text-xs font-black px-2.5 py-0.5 rounded-full mb-0.5">
+                  <span className="bg-rose-100 text-rose-600 text-xs font-black px-2 py-0.5 rounded-full mb-0.5">
                     Poupa {discount}%
                   </span>
                 )}
               </div>
-              <p className="text-xs text-zinc-500 mt-1.5">
+              <p className="text-xs text-zinc-500 mt-1">
                 Em até 3x de <span className="font-bold text-purple-700">Kz {installment.toLocaleString('pt-AO')}</span> sem juros
               </p>
             </div>
@@ -289,14 +395,14 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             <VariationsSelector category={product.category} selected={selectedVariations} onChange={setSelectedVariations} />
 
             {/* Quantity */}
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-bold text-zinc-700">Quantidade:</span>
+            <div className="flex items-center gap-4 py-1">
+              <span className="text-xs font-bold text-zinc-700">Quantidade:</span>
               <div className="flex items-center border-2 border-zinc-200 rounded-xl overflow-hidden">
                 <button onClick={() => setQty(q => Math.max(1, q - 1))}
-                  className="w-10 h-10 flex items-center justify-center text-zinc-500 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xl font-black select-none">−</button>
-                <span className="w-10 text-center font-black text-sm">{qty}</span>
+                  className="w-9 h-9 flex items-center justify-center text-zinc-500 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-lg font-black select-none">−</button>
+                <span className="w-9 text-center font-black text-sm">{qty}</span>
                 <button onClick={() => setQty(q => Math.min(product.stock || 99, q + 1))}
-                  className="w-10 h-10 flex items-center justify-center text-zinc-500 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xl font-black select-none">+</button>
+                  className="w-9 h-9 flex items-center justify-center text-zinc-500 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-lg font-black select-none">+</button>
               </div>
               {product.stock != null && product.stock <= 5 && (
                 <span className="text-[11px] text-amber-700 font-bold bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
@@ -305,13 +411,13 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               )}
             </div>
 
-            {/* CTA — desktop only */}
-            <div className="hidden md:block space-y-3">
+            {/* CTA Buttons — Prominent and immediately visible from the get go! */}
+            <div className="hidden md:block space-y-2.5 pt-1">
               <BuyActions />
               {whatsappLink && (
                 <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm py-3 rounded-xl transition-colors w-full">
-                  <MessageCircle size={16} /> Falar com o Vendedor no WhatsApp
+                  className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs py-2.5 rounded-xl transition-colors w-full">
+                  <MessageCircle size={15} /> Falar com o Vendedor no WhatsApp
                 </a>
               )}
             </div>
@@ -323,11 +429,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 { icon: <Truck size={14} className="text-blue-500" />,    bg: 'bg-blue-50',    title: 'Províncias',        sub: 'Entrega em 2–5 dias úteis · Kz 2.500' },
                 { icon: <MapPin size={14} className="text-zinc-500" />,   bg: 'bg-zinc-100',   title: 'Recolha na Loja',   sub: 'Disponível em Luanda · Grátis' },
               ].map(d => (
-                <div key={d.title} className="flex items-center gap-3 px-4 py-3">
-                  <div className={`w-8 h-8 ${d.bg} rounded-lg flex items-center justify-center shrink-0`}>{d.icon}</div>
+                <div key={d.title} className="flex items-center gap-3 px-4 py-2.5">
+                  <div className={`w-7 h-7 ${d.bg} rounded-lg flex items-center justify-center shrink-0`}>{d.icon}</div>
                   <div>
-                    <p className="text-sm font-bold text-zinc-900">{d.title}</p>
-                    <p className="text-xs text-zinc-400">{d.sub}</p>
+                    <p className="text-xs font-bold text-zinc-900">{d.title}</p>
+                    <p className="text-[11px] text-zinc-400">{d.sub}</p>
                   </div>
                 </div>
               ))}
@@ -340,12 +446,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             </div>
 
             {/* Seller */}
-            <div className="border border-zinc-200 rounded-2xl p-4 bg-white">
-              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Vendedor</p>
+            <div className="border border-zinc-200 rounded-2xl p-3.5 bg-white">
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">Vendedor</p>
               <div className="flex items-center gap-3">
                 <button onClick={() => onViewSeller(product.sellerId)} className="shrink-0">
                   <img src={getAvatarUrl(product.sellerAvatar, product.sellerName)}
-                    alt={product.sellerName} className="w-11 h-11 rounded-full object-cover border border-zinc-200" />
+                    alt={product.sellerName} className="w-10 h-10 rounded-full object-cover border border-zinc-200" />
                 </button>
                 <div className="flex-1 min-w-0">
                   <button onClick={() => onViewSeller(product.sellerId)}
@@ -363,7 +469,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   </div>
                 </div>
                 <button onClick={() => onContactSeller(product.sellerId)}
-                  className="shrink-0 flex items-center gap-1.5 text-xs font-bold text-purple-600 border border-purple-200 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors">
+                  className="shrink-0 flex items-center gap-1.5 text-xs font-bold text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
                   <MessageCircle size={12} /> Mensagem
                 </button>
               </div>
@@ -372,13 +478,13 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {/* Trust badges */}
             <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: <ShieldCheck size={16} className="text-purple-600" />, label: 'Pagamento seguro',   sub: '100% protegido' },
-                { icon: <Package size={16} className="text-purple-600" />,     label: 'Compra garantida',   sub: 'Devolução de 7 dias' },
-                { icon: <Clock size={16} className="text-purple-600" />,       label: 'Suporte 24/7',       sub: 'Estamos aqui' },
-                { icon: <Truck size={16} className="text-purple-600" />,       label: 'Entrega rápida',     sub: 'Luanda em 24–48h' },
+                { icon: <ShieldCheck size={15} className="text-purple-600" />, label: 'Pagamento seguro',   sub: '100% protegido' },
+                { icon: <Package size={15} className="text-purple-600" />,     label: 'Compra garantida',   sub: 'Devolução de 7 dias' },
+                { icon: <Clock size={15} className="text-purple-600" />,       label: 'Suporte 24/7',       sub: 'Estamos aqui' },
+                { icon: <Truck size={15} className="text-purple-600" />,       label: 'Entrega rápida',     sub: 'Luanda em 24–48h' },
               ].map(b => (
-                <div key={b.label} className="flex items-center gap-2.5 bg-white border border-zinc-100 rounded-xl p-3">
-                  <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center shrink-0">{b.icon}</div>
+                <div key={b.label} className="flex items-center gap-2.5 bg-white border border-zinc-100 rounded-xl p-2.5">
+                  <div className="w-7 h-7 bg-purple-50 rounded-lg flex items-center justify-center shrink-0">{b.icon}</div>
                   <div>
                     <p className="text-[11px] font-bold text-zinc-800">{b.label}</p>
                     <p className="text-[10px] text-zinc-400">{b.sub}</p>
@@ -389,99 +495,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
         </div>
 
-        {/* ── Tabs: Description / Specs / Reviews ── */}
-        <div className="mt-8 mx-4 md:mx-0 bg-white rounded-2xl border border-zinc-200 overflow-hidden">
-          <div className="flex border-b border-zinc-100 overflow-x-auto">
-            {([['desc', 'Descrição'], ['specs', 'Especificações'], ['reviews', 'Avaliações']] as const).map(([k, label]) => (
-              <button key={k} onClick={() => setActiveTab(k)}
-                className={`flex-1 min-w-[110px] py-4 text-sm font-bold transition-colors whitespace-nowrap ${activeTab === k ? 'text-purple-600 border-b-2 border-purple-600' : 'text-zinc-400 hover:text-zinc-700'}`}>
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className="p-5 md:p-7">
-            {activeTab === 'desc' && (
-              <p className="text-sm text-zinc-600 leading-relaxed">
-                {product.description || `${product.title} — produto de alta qualidade disponível na Elara com entrega rápida para toda Angola. Compre com confiança com pagamento seguro e política de devolução de 7 dias.`}
-              </p>
-            )}
-
-            {activeTab === 'specs' && (
-              <div className="divide-y divide-zinc-100">
-                {[
-                  ['Categoria',      product.category],
-                  ['Condição',       product.condition || 'Novo'],
-                  ['Vendedor',       product.sellerName],
-                  ['Disponibilidade','Em stock'],
-                  ['Origem',         product.isImport ? 'Importado' : 'Local'],
-                  ['SKU',            `ELARA-${product.id?.toString().padStart(6, '0').toUpperCase()}`],
-                ].map(([l, v]) => (
-                  <div key={l} className="flex py-3 text-sm">
-                    <span className="w-36 text-zinc-400 font-medium shrink-0">{l}</span>
-                    <span className="text-zinc-900 font-semibold">{v}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {activeTab === 'reviews' && (
-              <div>
-                {/* Summary row */}
-                <div className="flex items-start gap-6 mb-7 pb-7 border-b border-zinc-100">
-                  <div className="text-center shrink-0">
-                    <div className="text-5xl font-black text-zinc-900">{Number(rating).toFixed(1)}</div>
-                    <div className="flex gap-0.5 mt-1.5 justify-center">
-                      {[1,2,3,4,5].map(s => <Star key={s} size={13} className={s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-zinc-200 fill-zinc-200'} />)}
-                    </div>
-                    <p className="text-xs text-zinc-400 mt-1">{reviewCount} avaliações</p>
-                  </div>
-                  <div className="flex-1 space-y-1.5">
-                    {[5,4,3,2,1].map(n => {
-                      const pct = n === 5 ? 68 : n === 4 ? 20 : n === 3 ? 7 : n === 2 ? 3 : 2;
-                      return (
-                        <div key={n} className="flex items-center gap-2 text-xs text-zinc-500">
-                          <span className="w-3 shrink-0 text-right">{n}</span>
-                          <Star size={10} className="text-amber-400 fill-amber-400 shrink-0" />
-                          <div className="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                          </div>
-                          <span className="w-8 text-right shrink-0 tabular-nums">{pct}%</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Individual reviews */}
-                <div className="space-y-6">
-                  {MOCK_REVIEWS.map((r, i) => (
-                    <div key={i} className="border-b border-zinc-100 pb-6 last:border-0 last:pb-0">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-xs font-black text-purple-700">
-                            {r.name[0]}
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-zinc-900">{r.name}</p>
-                            <p className="text-[10px] text-zinc-400">{r.date}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-0.5">
-                          {[1,2,3,4,5].map(s => <Star key={s} size={11} className={s <= r.rating ? 'text-amber-400 fill-amber-400' : 'text-zinc-200 fill-zinc-200'} />)}
-                        </div>
-                      </div>
-                      <p className="text-sm font-bold text-zinc-800 mb-0.5">{r.title}</p>
-                      <p className="text-sm text-zinc-500 leading-relaxed">{r.body}</p>
-                      <p className="text-[10px] text-emerald-600 font-bold mt-1.5 flex items-center gap-1">
-                        <CheckCircle size={9} /> Compra verificada
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Mobile Tabs — shown below Info block on mobile */}
+        <div className="md:hidden mt-6 mx-4">
+          <ProductTabs />
         </div>
 
         {/* ── Recommendations ── */}

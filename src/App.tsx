@@ -101,12 +101,15 @@ const App = () => {
     verified: false,
     localOnly: false,
     importOnly: false,
-    sort: 'relevance'
+    province: null,
+    sort: 'relevance',
+    page: 1,
+    perPage: 24,
   });
 
   const searchQuery = discoveryFilters.query;
-  const setSearchQuery = (q: string) => setDiscoveryFilters(prev => ({ ...prev, query: q }));
-  const setActiveCategory = (cat: string | null) => setDiscoveryFilters(prev => ({ ...prev, category: cat }));
+  const setSearchQuery = (q: string) => setDiscoveryFilters(prev => ({ ...prev, query: q, page: 1 }));
+  const setActiveCategory = (cat: string | null) => setDiscoveryFilters(prev => ({ ...prev, category: cat, page: 1 }));
   
   // Selection State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);

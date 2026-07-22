@@ -97,6 +97,20 @@ const FiltersPanel = ({ filters, onChange, isMobile, onClose, maxPrice = 1000000
       </div>
 
       <div>
+        <h3 className="text-sm font-black uppercase tracking-widest text-zinc-500 mb-4">Província / Localização</h3>
+        <select
+          value={filters.province || ''}
+          onChange={(e) => update({ province: e.target.value || null })}
+          className="w-full bg-zinc-100 border border-zinc-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-purple-500/50 text-zinc-800"
+        >
+          <option value="">Todas as Províncias</option>
+          {['Luanda', 'Bengo', 'Benguela', 'Bié', 'Cabinda', 'Cuando Cubango', 'Cuanza Norte', 'Cuanza Sul', 'Cunene', 'Huambo', 'Huíla', 'Lunda Norte', 'Lunda Sul', 'Malanje', 'Moxico', 'Namibe', 'Uíge', 'Zaire'].map(prov => (
+            <option key={prov} value={prov}>{prov}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
         <h3 className="text-sm font-black uppercase tracking-widest text-zinc-500 mb-4">Vendedor</h3>
         <div className="space-y-3">
           <label className="flex items-center justify-between cursor-pointer group">

@@ -1,11 +1,12 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, SlidersHorizontal, X, ChevronDown, ChevronUp, Search, Check, LayoutGrid, List, ShoppingCart, Star, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, SlidersHorizontal, X, ChevronDown, ChevronUp, Search, Check, LayoutGrid, List, ShoppingCart, Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product, ProductCondition } from '../types';
-import { DiscoveryFilters } from '../types/discovery';
+import { DiscoveryFilters, SearchResult } from '../types/discovery';
 import ProductCard from '../components/product/ProductCard';
+import { searchProducts } from '../lib/searchService';
 
 interface Props {
-  products: Product[];
+  products: Product[]; // Fallback list
   filters: DiscoveryFilters;
   onChangeFilters: (f: DiscoveryFilters) => void;
   onBack: () => void;
@@ -43,12 +44,13 @@ const FilterSection: React.FC<{ title: string; children: React.ReactNode; defaul
 const AppliedFilters: React.FC<{ filters: DiscoveryFilters; onChange: (f: DiscoveryFilters) => void }> = ({ filters, onChange }) => {
   const chips: { label: string; clear: () => void }[] = [];
 
-  if (filters.minPrice) chips.push({ label: `Mín: ${filters.minPrice.toLocaleString('pt-AO')} Kz`, clear: () => onChange({ ...filters, minPrice: null }) });
-  if (filters.maxPrice) chips.push({ label: `Máx: ${filters.maxPrice.toLocaleString('pt-AO')} Kz`, clear: () => onChange({ ...filters, maxPrice: null }) });
-  if (filters.condition) chips.push({ label: filters.condition, clear: () => onChange({ ...filters, condition: null }) });
-  if (filters.verified) chips.push({ label: 'Verificado', clear: () => onChange({ ...filters, verified: false }) });
-  if (filters.localOnly) chips.push({ label: 'Local', clear: () => onChange({ ...filters, localOnly: false }) });
-  if (filters.importOnly) chips.push({ label: 'Importado', clear: () => onChange({ ...filters, importOnly: false }) });
+  if (filters.minPrice) chips.push({ label: `Mín: ${filters.minPrice.toLocaleString('pt-AO')} Kz`, clear: () => onChange({ ...filters, minPrice: null, page: 1 }) });
+  if (filters.maxPrice) chips.push({ label: `Máx: ${filters.maxPrice.toLocaleString('pt-AO')} Kz`, clear: () => onChange({ ...filters, maxPrice: null, page: 1 }) });
+  if (filters.condition) chips.push({ label: filters.condition, clear: () => onChange({ ...filters, condition: null, page: 1 }) });
+  if (filters.verified) chips.push({ label: 'Verificado', clear: () => onChange({ ...filters, verified: false, page: 1 }) });
+  if (filters.localOnly) chips.push({ label: 'Local', clear: () => onChange({ ...filters, localOnly: false, page: 1 }) });
+  if (filters.importOnly) chips.push({ label: 'Importado', clear: () => onChange({ ...filters, importOnly: false, page: 1 }) });
+  if (filters.province) chips.push({ label: filters.province, clear: () => onChange({ ...filters, province: null, page: 1 }) });
 
   if (chips.length === 0) return null;
   return (
@@ -59,7 +61,7 @@ const AppliedFilters: React.FC<{ filters: DiscoveryFilters; onChange: (f: Discov
           <button onClick={chip.clear} className="ml-0.5 hover:text-purple-900"><X size={12} /></button>
         </span>
       ))}
-      <button onClick={() => onChange({ ...filters, minPrice: null, maxPrice: null, condition: null, verified: false, localOnly: false, importOnly: false })}
+      <button onClick={() => onChange({ ...filters, minPrice: null, maxPrice: null, condition: null, verified: false, localOnly: false, importOnly: false, province: null, page: 1 })}
         className="text-xs font-bold text-zinc-500 hover:text-rose-500 underline">
         Limpar tudo
       </button>
@@ -67,7 +69,7 @@ const AppliedFilters: React.FC<{ filters: DiscoveryFilters; onChange: (f: Discov
   );
 };
 
-// Filter Panel (sidebar content reused for both desktop + mobile)
+// Filter Panel
 const FilterPanel: React.FC<{
   filters: DiscoveryFilters;
   onChange: (f: DiscoveryFilters) => void;
@@ -85,7 +87,7 @@ const FilterPanel: React.FC<{
       <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 shrink-0">
         <h3 className="font-black text-zinc-900">Filtros</h3>
         <div className="flex items-center gap-3">
-          <button onClick={() => onChange({ ...filters, minPrice: null, maxPrice: null, condition: null, verified: false, localOnly: false, importOnly: false })}
+          <button onClick={() => onChange({ ...filters, minPrice: null, maxPrice: null, condition: null, verified: false, localOnly: false, importOnly: false, province: null, page: 1 })}
             className="text-xs font-bold text-purple-600 hover:underline">
             Limpar tudo
           </button>
@@ -94,26 +96,36 @@ const FilterPanel: React.FC<{
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-contain px-4">
-        {/* Delivery */}
-        <FilterSection title="Entrega" defaultOpen>
-          <div className="space-y-2">
-            {[
-              { label: 'Rápida em Luanda (24-48h)', key: 'localOnly' as const },
-            ].map(opt => (
-              <label key={opt.key} className="flex items-center gap-2 cursor-pointer group">
-                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${filters[opt.key] ? 'bg-purple-600 border-purple-600' : 'border-zinc-300'}`}
-                  onClick={() => onChange({ ...filters, [opt.key]: !filters[opt.key] })}>
-                  {filters[opt.key] && <Check size={10} className="text-white" />}
-                </div>
-                <span className="text-sm text-zinc-700 group-hover:text-zinc-900">{opt.label}</span>
-              </label>
+        {/* Location / Province */}
+        <FilterSection title="Província / Localização" defaultOpen>
+          <select
+            value={filters.province || ''}
+            onChange={(e) => onChange({ ...filters, province: e.target.value || null, page: 1 })}
+            className="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-zinc-800 outline-none focus:border-purple-500"
+          >
+            <option value="">Todas as Províncias</option>
+            {['Luanda', 'Bengo', 'Benguela', 'Bié', 'Cabinda', 'Quando Cubango', 'Cuanza Norte', 'Cuanza Sul', 'Cunene', 'Huambo', 'Huíla', 'Lunda Norte', 'Lunda Sul', 'Malanje', 'Moxico', 'Namibe', 'Uíge', 'Zaire'].map(prov => (
+              <option key={prov} value={prov}>{prov}</option>
             ))}
+          </select>
+        </FilterSection>
+
+        {/* Delivery */}
+        <FilterSection title="Origem & Entrega" defaultOpen>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${filters.localOnly ? 'bg-purple-600 border-purple-600' : 'border-zinc-300'}`}
+                onClick={() => onChange({ ...filters, localOnly: !filters.localOnly, importOnly: false, page: 1 })}>
+                {filters.localOnly && <Check size={10} className="text-white" />}
+              </div>
+              <span className="text-sm text-zinc-700 group-hover:text-zinc-900">Produtos Locais</span>
+            </label>
             <label className="flex items-center gap-2 cursor-pointer group">
               <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${filters.importOnly ? 'bg-purple-600 border-purple-600' : 'border-zinc-300'}`}
-                onClick={() => onChange({ ...filters, importOnly: !filters.importOnly })}>
+                onClick={() => onChange({ ...filters, importOnly: !filters.importOnly, localOnly: false, page: 1 })}>
                 {filters.importOnly && <Check size={10} className="text-white" />}
               </div>
-              <span className="text-sm text-zinc-700 group-hover:text-zinc-900">Províncias (1-5 dias)</span>
+              <span className="text-sm text-zinc-700 group-hover:text-zinc-900">Produtos Importados</span>
             </label>
           </div>
         </FilterSection>
@@ -125,25 +137,25 @@ const FilterPanel: React.FC<{
               <label className="text-[10px] text-zinc-500 font-bold uppercase">Mín</label>
               <input ref={minPriceRef} type="number" placeholder="5.000"
                 defaultValue={filters.minPrice ?? ''}
-                onBlur={(e) => onChange({ ...filters, minPrice: e.target.value ? Number(e.target.value) : null })}
+                onBlur={(e) => onChange({ ...filters, minPrice: e.target.value ? Number(e.target.value) : null, page: 1 })}
                 className="w-full mt-1 border border-zinc-300 rounded-lg px-2.5 py-1.5 text-sm text-zinc-900 bg-white outline-none focus:border-purple-500" />
             </div>
             <div>
               <label className="text-[10px] text-zinc-500 font-bold uppercase">Máx</label>
               <input ref={maxPriceRef} type="number" placeholder="2.000.000"
                 defaultValue={filters.maxPrice ?? ''}
-                onBlur={(e) => onChange({ ...filters, maxPrice: e.target.value ? Number(e.target.value) : null })}
+                onBlur={(e) => onChange({ ...filters, maxPrice: e.target.value ? Number(e.target.value) : null, page: 1 })}
                 className="w-full mt-1 border border-zinc-300 rounded-lg px-2.5 py-1.5 text-sm text-zinc-900 bg-white outline-none focus:border-purple-500" />
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5 mt-3">
-            {['Até 50.000', '50k–200k', '200k–1M', 'Acima 1M'].map((r, i) => {
+            {['Até 50k', '50k–200k', '200k–1M', 'Acima 1M'].map((r, i) => {
               const ranges = [[null, 50000], [50000, 200000], [200000, 1000000], [1000000, null]];
               const [min, max] = ranges[i];
               const active = filters.minPrice === min && filters.maxPrice === max;
               return (
                 <button key={r}
-                  onClick={() => onChange({ ...filters, minPrice: min as number | null, maxPrice: max as number | null })}
+                  onClick={() => onChange({ ...filters, minPrice: min as number | null, maxPrice: max as number | null, page: 1 })}
                   className={`text-xs px-2 py-1 rounded-full border transition-colors font-semibold ${active ? 'bg-purple-600 border-purple-600 text-white' : 'border-zinc-300 text-zinc-600 hover:border-purple-500'}`}>
                   {r}
                 </button>
@@ -153,7 +165,7 @@ const FilterPanel: React.FC<{
         </FilterSection>
 
         {/* Brand */}
-        <FilterSection title="Marca" defaultOpen>
+        <FilterSection title="Marca" defaultOpen={false}>
           <div className="relative mb-2">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input value={brandSearch} onChange={e => setBrandSearch(e.target.value)}
@@ -167,7 +179,6 @@ const FilterPanel: React.FC<{
                   <div className="w-4 h-4 rounded border-2 border-zinc-300 flex items-center justify-center" />
                   <span className="text-sm text-zinc-700 group-hover:text-zinc-900">{brand}</span>
                 </div>
-                <span className="text-[10px] text-zinc-400">({Math.floor(Math.random() * 200) + 10})</span>
               </label>
             ))}
           </div>
@@ -177,7 +188,7 @@ const FilterPanel: React.FC<{
         <FilterSection title="Condição" defaultOpen={false}>
           <div className="flex gap-2 flex-wrap">
             {['Novo', 'Semi-novo', 'Usado'].map(c => (
-              <button key={c} onClick={() => onChange({ ...filters, condition: filters.condition === c ? null : c as ProductCondition })}
+              <button key={c} onClick={() => onChange({ ...filters, condition: filters.condition === c ? null : c as ProductCondition, page: 1 })}
                 className={`text-xs px-3 py-1.5 rounded-full border font-bold transition-colors ${filters.condition === c ? 'bg-purple-600 border-purple-600 text-white' : 'border-zinc-300 text-zinc-600 hover:border-purple-500'}`}>
                 {c}
               </button>
@@ -189,7 +200,7 @@ const FilterPanel: React.FC<{
         <FilterSection title="Vendedor" defaultOpen={false}>
           <label className="flex items-center gap-2 cursor-pointer">
             <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${filters.verified ? 'bg-purple-600 border-purple-600' : 'border-zinc-300'}`}
-              onClick={() => onChange({ ...filters, verified: !filters.verified })}>
+              onClick={() => onChange({ ...filters, verified: !filters.verified, page: 1 })}>
               {filters.verified && <Check size={10} className="text-white" />}
             </div>
             <span className="text-sm text-zinc-700">Vendedores Angolanos Verificados</span>
@@ -224,7 +235,6 @@ const RowCard: React.FC<{
     <div
       className="flex gap-4 bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md hover:border-purple-200 transition-all cursor-pointer group"
       onClick={() => onProductClick(p)}>
-      {/* Thumbnail */}
       <div className="relative shrink-0 w-32 sm:w-40 aspect-square overflow-hidden bg-zinc-50">
         <img src={p.image} alt={p.title} loading="lazy"
           className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-300" />
@@ -233,7 +243,6 @@ const RowCard: React.FC<{
         )}
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0 py-3 pr-3 flex flex-col justify-between">
         <div>
           <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">{p.category}</p>
@@ -290,33 +299,33 @@ const ReturnToTop: React.FC = () => {
 };
 
 const ProductListingView: React.FC<Props> = ({
-  products, filters, onChangeFilters, onBack,
+  products: initialFallbackProducts, filters, onChangeFilters, onBack,
   onProductClick, onAddToCart,
   wishlist = [], onToggleWishlist,
 }) => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [sort, setSort] = useState<string>(filters.sort || 'relevance');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchResult, setSearchResult] = useState<SearchResult>({
+    products: initialFallbackProducts,
+    totalCount: initialFallbackProducts.length,
+    page: filters.page || 1,
+    totalPages: 1,
+    isLoading: true,
+  });
 
-  const filtered = useMemo(() => {
-    let r = [...products];
-    if (filters.category) r = r.filter(p => p.category === filters.category);
-    if (filters.query) r = r.filter(p => p.title.toLowerCase().includes(filters.query.toLowerCase()) || p.category.toLowerCase().includes(filters.query.toLowerCase()));
-    if (filters.minPrice) r = r.filter(p => p.price >= filters.minPrice!);
-    if (filters.maxPrice) r = r.filter(p => p.price <= filters.maxPrice!);
-    if (filters.condition) r = r.filter(p => p.condition === (filters.condition as ProductCondition));
-    if (filters.verified) r = r.filter(p => p.verified);
-    if (filters.localOnly) r = r.filter(p => !p.isImport);
-    if (filters.importOnly) r = r.filter(p => p.isImport);
+  // Asynchronously execute server-side search via RPC whenever filters change
+  useEffect(() => {
+    let isMounted = true;
+    setSearchResult(prev => ({ ...prev, isLoading: true }));
 
-    switch (sort) {
-      case 'price_asc': r.sort((a, b) => a.price - b.price); break;
-      case 'price_desc': r.sort((a, b) => b.price - a.price); break;
-      case 'newest': r.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
-      case 'rating': r.sort((a, b) => (b.sellerRating || 0) - (a.sellerRating || 0)); break;
-    }
-    return r;
-  }, [products, filters, sort]);
+    searchProducts(filters).then(res => {
+      if (isMounted) {
+        setSearchResult(res);
+      }
+    });
+
+    return () => { isMounted = false; };
+  }, [filters]);
 
   const title = filters.category || (filters.query ? `"${filters.query}"` : 'Todos os produtos');
   const breadcrumb = filters.category ? ['Início', filters.category] : ['Início', 'Resultados'];
@@ -346,7 +355,9 @@ const ProductListingView: React.FC<Props> = ({
               </button>
               <h1 className="text-xl font-black text-zinc-900">{title}</h1>
             </div>
-            <p className="text-xs text-zinc-500 ml-9 mt-0.5">{filtered.length} resultados</p>
+            <p className="text-xs text-zinc-500 ml-9 mt-0.5">
+              {searchResult.isLoading ? 'Buscando produtos...' : `${searchResult.totalCount} resultados encontrados`}
+            </p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -358,7 +369,9 @@ const ProductListingView: React.FC<Props> = ({
             </button>
 
             {/* Sort */}
-            <select value={sort} onChange={e => setSort(e.target.value)}
+            <select
+              value={filters.sort || 'relevance'}
+              onChange={e => onChangeFilters({ ...filters, sort: e.target.value as any, page: 1 })}
               className="border border-zinc-300 rounded-lg px-3 py-2 text-sm font-bold text-zinc-700 bg-white outline-none focus:border-purple-500 cursor-pointer">
               {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -385,41 +398,102 @@ const ProductListingView: React.FC<Props> = ({
         <AppliedFilters filters={filters} onChange={onChangeFilters} />
 
         <div className="flex gap-6">
-          {/* Desktop Sidebar — scrolls independently, never takes page scroll */}
+          {/* Desktop Sidebar */}
           <aside className="hidden md:block w-64 shrink-0">
             <div
               className="bg-white rounded-xl border border-zinc-200 sticky top-[130px] overflow-hidden flex flex-col"
               style={{ maxHeight: 'calc(100vh - 150px)' }}>
-              <FilterPanel filters={filters} onChange={onChangeFilters} resultCount={filtered.length} />
+              <FilterPanel filters={filters} onChange={onChangeFilters} resultCount={searchResult.totalCount} />
             </div>
           </aside>
 
           {/* Product grid / list */}
           <div className="flex-1 min-w-0">
-            {filtered.length === 0 ? (
-              <div className="text-center py-20 text-zinc-400">
-                <p className="text-lg font-bold mb-2">Nenhum produto encontrado</p>
-                <p className="text-sm">Tente ajustar os filtros ou a pesquisa.</p>
-                <button onClick={onBack} className="mt-4 bg-purple-600 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-purple-700">
-                  Voltar
+            {searchResult.isLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl border border-zinc-200 h-64 animate-pulse p-3 flex flex-col justify-between">
+                    <div className="bg-zinc-200 rounded-lg h-36 w-full" />
+                    <div className="space-y-2">
+                      <div className="bg-zinc-200 h-4 rounded w-3/4" />
+                      <div className="bg-zinc-200 h-5 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : searchResult.products.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-2xl border border-zinc-200 p-8">
+                <p className="text-lg font-black text-zinc-900 mb-1">Nenhum produto encontrado</p>
+                <p className="text-sm text-zinc-500 mb-6">Tente ajustar a sua pesquisa ou remover alguns filtros.</p>
+                <button
+                  onClick={() => onChangeFilters({ query: '', category: null, minPrice: null, maxPrice: null, condition: null, verified: false, localOnly: false, importOnly: false, province: null, sort: 'relevance', page: 1, perPage: 24 })}
+                  className="bg-purple-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-purple-700 transition-colors">
+                  Limpar Todos os Filtros
                 </button>
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                {filtered.map(p => (
+                {searchResult.products.map(p => (
                   <ProductCard key={p.id} product={p} onAddToCart={onAddToCart} onProductClick={onProductClick}
                     wishlisted={wishlist.includes(p.id)} onToggleWishlist={onToggleWishlist} />
                 ))}
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {filtered.map(p => (
+                {searchResult.products.map(p => (
                   <RowCard key={p.id} product={p}
                     wishlisted={wishlist.includes(p.id)}
                     onProductClick={onProductClick}
                     onAddToCart={onAddToCart}
                     onToggleWishlist={onToggleWishlist} />
                 ))}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {searchResult.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8 py-4 border-t border-zinc-200">
+                <button
+                  disabled={searchResult.page <= 1}
+                  onClick={() => {
+                    onChangeFilters({ ...filters, page: searchResult.page - 1 });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg border border-zinc-300 text-xs font-bold text-zinc-700 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                  <ChevronLeft size={16} /> Anterior
+                </button>
+
+                <div className="flex items-center gap-1 px-2">
+                  {Array.from({ length: searchResult.totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === searchResult.totalPages || Math.abs(p - searchResult.page) <= 1)
+                    .map((p, idx, arr) => (
+                      <React.Fragment key={p}>
+                        {idx > 0 && arr[idx - 1] !== p - 1 && <span className="text-zinc-400 text-xs px-1">...</span>}
+                        <button
+                          onClick={() => {
+                            onChangeFilters({ ...filters, page: p });
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className={`w-8 h-8 rounded-lg text-xs font-black transition-colors ${
+                            searchResult.page === p
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-white border border-zinc-200 text-zinc-700 hover:border-purple-300'
+                          }`}>
+                          {p}
+                        </button>
+                      </React.Fragment>
+                    ))}
+                </div>
+
+                <button
+                  disabled={searchResult.page >= searchResult.totalPages}
+                  onClick={() => {
+                    onChangeFilters({ ...filters, page: searchResult.page + 1 });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg border border-zinc-300 text-xs font-bold text-zinc-700 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                  Próxima <ChevronRight size={16} />
+                </button>
               </div>
             )}
           </div>
@@ -431,7 +505,7 @@ const ProductListingView: React.FC<Props> = ({
         <>
           <div className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setShowMobileFilters(false)} />
           <div className="fixed bottom-0 left-0 right-0 h-[85vh] bg-white z-[70] rounded-t-2xl flex flex-col overflow-hidden shadow-2xl">
-            <FilterPanel filters={filters} onChange={onChangeFilters} resultCount={filtered.length} onClose={() => setShowMobileFilters(false)} />
+            <FilterPanel filters={filters} onChange={onChangeFilters} resultCount={searchResult.totalCount} onClose={() => setShowMobileFilters(false)} />
           </div>
         </>
       )}
