@@ -1,0 +1,98 @@
+**Here's how the Elara Product Detail Page (PDP) should look** — clean, trustworthy, mobile-first, and conversion-focused.
+
+### Overall Philosophy
+- Simple and trustworthy (avoid clutter)
+- Strong focus on images and key information
+- Easy to contact the seller (chat)
+- Clear trust signals
+- Good for Angola (Multicaixa mention, local delivery info)
+
+---
+
+### Mobile Product Page Layout (Most Important)
+
+```ascii
++---------------------------+
+| ← Back     Product Title  |   ← Top Bar
++---------------------------+
+|                           |
+|     [Main Product Image]  |   ← Large image gallery
+|     (Swipe for more)      |
+|                           |
++---------------------------+
+| Product Title             |
+| Brand / Seller Name       |
+| ★★★★☆ (4.5)  124 reviews  |
++---------------------------+
+| Price:  45,000 Kz         |   ← Big & clear
+| (or range if variants)    |
++---------------------------+
+| Variants / Options        |
+| Size: [S] [M] [L] [XL]    |
+| Color: [Black] [Blue] ... |
++---------------------------+
+| Delivery Info             |
+| ✓ Entrega em Luanda (2-3 dias)
+| ✓ Outras províncias (5-7 dias)
+| Multicaixa / Transferência|
++---------------------------+
+| Description               |
+| (Short + Read more)       |
++---------------------------+
+| Seller Info               |
+| [Seller Name] Verified    |
+| "Ver perfil do vendedor"  |
++---------------------------+
+| [CHAT WITH SELLER] Button |   ← Prominent
++---------------------------+
+| Reviews & Ratings         |
+| (Preview of top reviews)  |
++---------------------------+
+| You May Also Like         |
+| [Small Cards]             |
++---------------------------+
+```
+
+---
+
+### Desktop / Tablet Version Highlights
+
+- Left side: Large image gallery (zoom + thumbnails)
+- Right side: Sticky product info (title, price, variants, add to cart/chat)
+- Below the fold: Full description, specifications, seller info, full reviews
+
+---
+
+### Key Sections & Best Practices
+
+| Section                  | What to Show                                      | Why It Matters |
+|--------------------------|---------------------------------------------------|--------------|
+| **Image Gallery**        | Multiple high-quality photos + zoom              | Trust & decision making |
+| **Price**                | Clear, big, with currency (Kz)                    | Immediate clarity |
+| **Variants**             | Clean selectors (size, color, etc.)               | Reduce friction |
+| **Delivery Info**        | Local (Luanda vs provinces) + estimated time      | Very important in Angola |
+| **Seller Info**          | Name, verified badge, rating, link to profile     | Builds trust |
+| **Chat Button**          | Prominent "Falar com o Vendedor"                  | Core of light model |
+| **Description**          | Short first, then expandable                      | Mobile friendly |
+| **Reviews**              | Preview + full section                            | Social proof |
+| **Related Products**     | "Outros clientes também compraram"                | Increase order value |
+
+---
+
+### Extra Details That Make It Feel Premium
+
+- **Trust signals** near price (Verified Seller, Secure Chat)
+- **Stock status** ("Em stock" or "Últimas unidades")
+- **Share button**
+- **Add to Wishlist** heart icon
+- **Smooth image zoom** on desktop
+- **Fast loading** (optimize images)
+
+---
+
+Would you like me to:
+1. Create a more detailed ASCII wireframe for the product page?
+2. Give you a full prompt for your agent to implement this PDP?
+3. Focus on a specific part (e.g., image gallery or variants)?
+
+Let me know!

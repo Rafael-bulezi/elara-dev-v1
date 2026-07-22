@@ -1,0 +1,58 @@
+**Here's a clean ASCII wireframe** of a typical Amazon-style homepage (2026 version) adapted for Elara.
+
+```ascii
++-------------------------------------------------------------+
+|  [Elara Logo]   [Search Bar]   [Account] [Cart] [Lang]     |   ← Fixed Top Nav
++-------------------------------------------------------------+
+|                                                             |
+|  [HERO BANNER - Big Promo / Carousel]                      |   ← Hero Section
+|  "Entrega Rápida em Luanda"   [Shop Now Button]            |
+|                                                             |
++-------------------------------------------------------------+
+|  Categorias Principais                                      |   ← Category Grid
+|  [Phones] [Moda] [Casa] [Eletrónicos] [Bebés] ...          |
++-------------------------------------------------------------+
+|  Ofertas do Dia / Flash Deals                               |   ← Deals Row
+|  [Product Card] [Product Card] [Product Card] ...           |
++-------------------------------------------------------------+
+|  Recomendado para Si                                        |   ← Personalized
+|  [Product Card] [Product Card] [Product Card] ...           |
++-------------------------------------------------------------+
+|  Produtos Populares                                         |   ← Best Sellers
+|  [Product Card] [Product Card] [Product Card] ...           |
++-------------------------------------------------------------+
+|  Vendedores Verificados / Lojas de Confiança                |
+|  [Seller Card] [Seller Card] [Seller Card] ...              |
++-------------------------------------------------------------+
+|  Recém Adicionados                                          |
+|  [Product Card] [Product Card] [Product Card] ...           |
++-------------------------------------------------------------+
+|  Importados / Mixeiro                                       |   ← Local Feature
+|  "Peça produtos do exterior"   [Request Button]             |
++-------------------------------------------------------------+
+|  Trust Badges                                               |   ← Bottom Trust
+|  ✓ Entrega Segura   ✓ Pagamento Multicaixa   ✓ Verificado   |
++-------------------------------------------------------------+
+|  Footer Links + Legal                                       |
++-------------------------------------------------------------+
+```
+
+---
+
+### How the Sections Connect (Flow)
+
+- **Top Nav** → always accessible (search is the main entry)
+- **Hero** → grabs attention and pushes big promotions
+- **Categories** → quick browsing entry points
+- **Deals / Personalized** → drives urgency and relevance
+- **Popular / Verified** → builds trust and social proof
+- **Mixeiro / Import** → unique local differentiator
+- **Trust Badges** → reassurance before scrolling to footer
+
+---
+
+Would you like me to:
+1. Make a more detailed ASCII wireframe (with more sections or mobile version), or
+2. Create a prompt for your agent to build this structure in code?
+
+Just tell me.

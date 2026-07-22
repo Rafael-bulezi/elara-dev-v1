@@ -122,7 +122,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product, userProfile }: P
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-zinc-950/40 z-[100] flex items-start justify-center p-0 md:p-4 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 bg-zinc-950/40 z-[100] flex items-start justify-center p-0 md:p-4 pt-[100px] md:pt-4 backdrop-blur-md overflow-y-auto">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}

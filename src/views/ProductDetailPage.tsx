@@ -151,9 +151,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               ))}
             </div>
 
-            {/* Main image */}
+            {/* Main image — capped to viewport height so it never forces a scroll just to see the buy panel */}
             <div className="relative flex-1 bg-white md:rounded-2xl overflow-hidden"
-              style={{ aspectRatio: '1 / 1' }}
+              style={{ aspectRatio: '1 / 1', maxHeight: 'min(520px, calc(100vh - 160px))' }}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}>
 
@@ -486,6 +486,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-zinc-200 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         <BuyActions compact />
       </div>
+
+      {/* ── Return to top ── */}
+      <ReturnToTop />
     </div>
   );
 };
@@ -548,6 +551,24 @@ const RecsSection: React.FC<RecsSectionProps> = ({ title, subtitle, products, wi
         })}
       </div>
     </div>
+  );
+};
+
+/* ── Return to top button ── */
+const ReturnToTop: React.FC = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 500);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!show) return null;
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      className="fixed bottom-32 md:bottom-8 right-4 z-40 bg-white border border-zinc-200 shadow-lg rounded-full px-4 py-2 text-xs font-bold text-zinc-700 hover:bg-zinc-50 hover:border-purple-300 hover:text-purple-600 transition-all flex items-center gap-1.5">
+      ↑ Topo
+    </button>
   );
 };
 

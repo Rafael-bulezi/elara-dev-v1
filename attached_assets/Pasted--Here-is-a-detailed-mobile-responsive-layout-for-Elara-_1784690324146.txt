@@ -1,0 +1,72 @@
+**Here is a detailed mobile responsive layout** for Elara’s homepage, optimized for phones (the majority of users in Angola).
+
+### Mobile Homepage Structure (Portrait View)
+
+```ascii
++---------------------------+   ← Top Status Bar (time, battery)
+| [Elara Logo] [Search Icon]|
+| [Account] [Cart]          |   ← Collapsed Top Nav
++---------------------------+
+|                           |
+|   [HERO BANNER]           |   ← Full-width carousel
+|   Big Promo Image         |
+|   "Ofertas de Hoje"       |
+|   [Shop Now Button]       |
+|                           |
++---------------------------+
+| Categorias                |   ← Horizontal scroll
+| [Phones] [Moda] [Casa]    |
+| [Eletrónicos] ...         |
++---------------------------+
+| Ofertas do Dia            |   ← Horizontal scroll
+| [Card] [Card] [Card] ...  |
++---------------------------+
+| Recomendado para Si       |
+| [Card] [Card] [Card] ...  |
++---------------------------+
+| Produtos Populares        |
+| [Card] [Card] [Card] ...  |
++---------------------------+
+| Vendedores Verificados    |
+| [Seller Card] ...         |
++---------------------------+
+| Mixeiro / Importados      |
+| "Peça produtos do exterior"|
+| [Request Button]          |
++---------------------------+
+| Trust Signals             |
+| ✓ Entrega Rápida   ✓ Seguro
++---------------------------+
+| Footer                    |
++---------------------------+
+```
+
+### Key Mobile Behaviors & Responsive Rules
+
+| Element                  | Mobile Behavior                                      | Reason |
+|--------------------------|------------------------------------------------------|--------|
+| **Top Navigation**       | Logo + icons only, search becomes icon that expands | Saves vertical space |
+| **Hero Banner**          | Full width, taller image, big CTA button            | Grabs attention immediately |
+| **Categories**           | Horizontal scroll with icons + labels                | Easy one-handed browsing |
+| **Product Cards**        | Vertical stack, larger images, fewer per row         | Better readability on small screens |
+| **Carousels**            | Horizontal scroll with snap, visible partial cards   | Encourages exploration |
+| **Mixeiro Section**      | Prominent call-to-action card                        | Highlight local feature |
+| **Trust Badges**         | Compact row of icons                                 | Reassurance before checkout |
+| **Bottom Navigation**    | Fixed bottom bar (Home, Categories, Chat, Account)   | Fast access on mobile |
+
+### Additional Responsive Details
+
+- **Font sizes**: Bigger on mobile for readability
+- **Spacing**: Generous padding/touch targets (minimum 48px)
+- **Images**: Use responsive sizes (smaller on mobile)
+- **Navigation**: Hamburger menu for full categories if needed
+- **Scroll behavior**: Smooth, with lazy loading for performance
+- **Safe areas**: Respect iOS/Android notches and bottom gestures
+
+---
+
+This mobile layout keeps the same logical flow as desktop but prioritizes **speed and simplicity**.
+
+Would you like me to:
+1. Expand any specific section (e.g., how product cards look on mobile), or
+2. Give you a full prompt for your agent to implement this responsive structure?
