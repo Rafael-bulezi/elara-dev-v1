@@ -832,149 +832,154 @@ const App = () => {
       </main>
 
       <Footer />
-
-      <WishlistDrawer
-        isOpen={isWishlistOpen}
-        onClose={() => setIsWishlistOpen(false)}
-        items={wishlist}
-        onAddToCart={(p) => { addToCart(p); setIsWishlistOpen(false); }}
-        onRemove={(id) => setWishlist(prev => prev.filter(p => p.id !== id))}
-      />
-
-      <BottomNav 
-        activeTab={activeTab}
-        setActiveTab={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'home') navigateTo('home');
-          if (tab === 'messages') navigateTo('messages');
-        }}
-        cartCount={cart.reduce((acc, item) => acc + (item.cartQuantity || 1), 0)}
-        onOpenCart={() => setIsCartOpen(true)}
-        onOpenProfile={() => setIsProfileOpen(true)}
-        userProfile={userProfile}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
-        onSellProduct={() => {
-          if (!userProfile) {
-            setIsAuthModalOpen(true);
-          } else if (userProfile.role === 'seller') {
-            setIsProductModalOpen(true);
-          } else {
-            setCurrentView('seller-onboarding');
-            setIsProfileOpen(false);
-            setIsMobileMenuOpen(false);
-            window.scrollTo(0, 0);
-          }
-        }}
-        visible={navVisible}
-      />
-
-      <MobileMenu 
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onNavigate={(view) => navigateTo(view as any)}
-        onInstallClick={() => setForceShowInstall(true)}
-        onOpenImport={() => setIsImportModalOpen(true)}
-        appLogo={appLogo}
-        categories={categories}
-        onSelectCategory={handleSelectCategory}
-      />
-
-      <AuthModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
-
-      <CartDrawer 
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cart={cart}
-        onUpdateQuantity={updateCartQuantity}
-        onRemove={removeFromCart}
-        onCheckout={() => {
-          setIsCartOpen(false);
-          setIsCheckoutOpen(true);
-        }}
-      />
-
-      <ProfileDrawer 
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        userProfile={userProfile}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
-        onNavigate={navigateTo}
-        onStartSelling={handleStartSelling}
-        onEnterSellerDashboard={handleEnterSellerDashboard}
-        onExitSellerMode={handleExitSellerMode}
-        sellerMode={sellerMode}
-      />
-
-      {/* ProductDetailsModal kept for legacy — no longer opened by card click */}
-
-      <ProductFormModal 
-        isOpen={isProductModalOpen}
-        onClose={() => {
-          setIsProductModalOpen(false);
-          setEditingProduct(null);
-        }}
-        onSubmit={handleSaveProduct}
-        product={editingProduct}
-        userProfile={userProfile}
-      />
-
-      <CheckoutModal 
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        cart={cart}
-        userProfile={userProfile}
-        onOrderComplete={() => {
-          setCart([]);
-          setIsCheckoutOpen(false);
-          navigateTo('orders');
-          showNotification('Pedido realizado com sucesso!', 'success');
-        }}
-      />
-
-      <ImportRequestForm
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onSubmit={handleImportSubmit}
-        userProfile={userProfile}
-      />
-
-      {notification && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] animate-in fade-in slide-in-from-top-4">
-          <div className={`px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold text-sm ${
-            notification.type === 'success' 
-              ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
-              : 'bg-purple-500 text-white shadow-purple-500/20'
-          }`}>
-            {notification.type === 'success' ? <CheckCircle size={20} /> : <Bell size={20} />}
-            {notification.message}
-          </div>
-        </div>
-      )}
-
-      {/* Install Prompt */}
-      <InstallPrompt 
-        deferredPrompt={deferredPrompt} 
-        clearPrompt={() => {
-          setDeferredPrompt(null);
-          setForceShowInstall(false);
-        }}
-        forceShow={forceShowInstall}
-        appLogo={appLogo}
-      />
-      
-      {/* Onboarding — shown only on first visit */}
-      {showOnboarding && (
-        <OnboardingFlow
-          onComplete={handleOnboardingComplete}
-          onOpenAuth={() => { handleOnboardingComplete(); setIsAuthModalOpen(true); }}
-        />
-      )}
-      </div>
     </div>
+
+    {/* ═══════════════════════════════════════
+        Global overlays — rendered as siblings
+        of the main content so they sit above
+        the fixed navbar (z-50) with blur.
+    ═══════════════════════════════════════ */}
+    <WishlistDrawer
+      isOpen={isWishlistOpen}
+      onClose={() => setIsWishlistOpen(false)}
+      items={wishlist}
+      onAddToCart={(p) => { addToCart(p); setIsWishlistOpen(false); }}
+      onRemove={(id) => setWishlist(prev => prev.filter(p => p.id !== id))}
+    />
+
+    <BottomNav
+      activeTab={activeTab}
+      setActiveTab={(tab) => {
+        setActiveTab(tab);
+        if (tab === 'home') navigateTo('home');
+        if (tab === 'messages') navigateTo('messages');
+      }}
+      cartCount={cart.reduce((acc, item) => acc + (item.cartQuantity || 1), 0)}
+      onOpenCart={() => setIsCartOpen(true)}
+      onOpenProfile={() => setIsProfileOpen(true)}
+      userProfile={userProfile}
+      onOpenAuth={() => setIsAuthModalOpen(true)}
+      onSellProduct={() => {
+        if (!userProfile) {
+          setIsAuthModalOpen(true);
+        } else if (userProfile.role === 'seller') {
+          setIsProductModalOpen(true);
+        } else {
+          setCurrentView('seller-onboarding');
+          setIsProfileOpen(false);
+          setIsMobileMenuOpen(false);
+          window.scrollTo(0, 0);
+        }
+      }}
+      visible={navVisible}
+    />
+
+    <MobileMenu
+      isOpen={isMobileMenuOpen}
+      onClose={() => setIsMobileMenuOpen(false)}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onNavigate={(view) => navigateTo(view as any)}
+      onInstallClick={() => setForceShowInstall(true)}
+      onOpenImport={() => setIsImportModalOpen(true)}
+      appLogo={appLogo}
+      categories={categories}
+      onSelectCategory={handleSelectCategory}
+    />
+
+    <AuthModal
+      isOpen={isAuthModalOpen}
+      onClose={() => setIsAuthModalOpen(false)}
+    />
+
+    <CartDrawer
+      isOpen={isCartOpen}
+      onClose={() => setIsCartOpen(false)}
+      cart={cart}
+      onUpdateQuantity={updateCartQuantity}
+      onRemove={removeFromCart}
+      onCheckout={() => {
+        setIsCartOpen(false);
+        setIsCheckoutOpen(true);
+      }}
+    />
+
+    <ProfileDrawer
+      isOpen={isProfileOpen}
+      onClose={() => setIsProfileOpen(false)}
+      userProfile={userProfile}
+      onOpenAuth={() => setIsAuthModalOpen(true)}
+      onNavigate={navigateTo}
+      onStartSelling={handleStartSelling}
+      onEnterSellerDashboard={handleEnterSellerDashboard}
+      onExitSellerMode={handleExitSellerMode}
+      sellerMode={sellerMode}
+    />
+
+    {/* ProductDetailsModal kept for legacy — no longer opened by card click */}
+
+    <ProductFormModal
+      isOpen={isProductModalOpen}
+      onClose={() => {
+        setIsProductModalOpen(false);
+        setEditingProduct(null);
+      }}
+      onSubmit={handleSaveProduct}
+      product={editingProduct}
+      userProfile={userProfile}
+    />
+
+    <CheckoutModal
+      isOpen={isCheckoutOpen}
+      onClose={() => setIsCheckoutOpen(false)}
+      cart={cart}
+      userProfile={userProfile}
+      onOrderComplete={() => {
+        setCart([]);
+        setIsCheckoutOpen(false);
+        navigateTo('orders');
+        showNotification('Pedido realizado com sucesso!', 'success');
+      }}
+    />
+
+    <ImportRequestForm
+      isOpen={isImportModalOpen}
+      onClose={() => setIsImportModalOpen(false)}
+      onSubmit={handleImportSubmit}
+      userProfile={userProfile}
+    />
+
+    {notification && (
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] animate-in fade-in slide-in-from-top-4">
+        <div className={`px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold text-sm ${
+          notification.type === 'success'
+            ? 'bg-emerald-500 text-white shadow-emerald-500/20'
+            : 'bg-purple-500 text-white shadow-purple-500/20'
+        }`}>
+          {notification.type === 'success' ? <CheckCircle size={20} /> : <Bell size={20} />}
+          {notification.message}
+        </div>
+      </div>
+    )}
+
+    {/* Install Prompt */}
+    <InstallPrompt
+      deferredPrompt={deferredPrompt}
+      clearPrompt={() => {
+        setDeferredPrompt(null);
+        setForceShowInstall(false);
+      }}
+      forceShow={forceShowInstall}
+      appLogo={appLogo}
+    />
+
+    {/* Onboarding — shown only on first visit */}
+    {showOnboarding && (
+      <OnboardingFlow
+        onComplete={handleOnboardingComplete}
+        onOpenAuth={() => { handleOnboardingComplete(); setIsAuthModalOpen(true); }}
+      />
+    )}
+  </div>
   );
 };
 

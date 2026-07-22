@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, ShoppingCart, Zap, MessageCircle, Heart, Star,
   ShieldCheck, Truck, ChevronRight, Share2, RotateCcw,
-  ChevronLeft, CheckCircle, MapPin, Clock, Package,
+  ChevronLeft, CheckCircle, MapPin, Clock, Package, Tag, X,
 } from 'lucide-react';
 import { Product } from '../types';
 import { getAvatarUrl } from '../utils/avatar';
@@ -40,6 +40,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
   const [copied, setCopied] = useState(false);
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [offerAmount, setOfferAmount] = useState('');
+  const [offerNote, setOfferNote] = useState('');
+  const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
+  const [offerSent, setOfferSent] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   // Reset to first image when product changes
@@ -80,16 +85,21 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   /* ── Shared buy-panel content (used in both desktop sidebar and mobile footer) ── */
   const BuyActions = ({ compact = false }: { compact?: boolean }) => (
-    <div className={compact ? 'flex gap-2' : 'space-y-3'}>
+    <div className={compact ? 'grid grid-cols-3 gap-2' : 'grid grid-cols-1 sm:grid-cols-3 gap-3'}>
       <button
         onClick={() => { for (let i = 0; i < qty; i++) onAddToCart(product); }}
-        className={`${compact ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 border-2 border-purple-600 text-purple-700 font-black text-sm py-3 rounded-xl hover:bg-purple-50 active:bg-purple-100 transition-colors`}>
-        <ShoppingCart size={16} /> {compact ? 'Carrinho' : 'Adicionar ao Carrinho'}
+        className="flex items-center justify-center gap-2 border-2 border-purple-600 text-purple-700 font-black text-sm py-3 rounded-xl hover:bg-purple-50 active:bg-purple-100 transition-colors">
+        <ShoppingCart size={16} /> <span className={compact ? 'hidden' : ''}>Carrinho</span>
+      </button>
+      <button
+        onClick={() => setShowOfferModal(true)}
+        className="flex items-center justify-center gap-2 border-2 border-amber-400 text-amber-700 font-black text-sm py-3 rounded-xl hover:bg-amber-50 active:bg-amber-100 transition-colors">
+        <Tag size={16} /> <span className={compact ? 'hidden' : ''}>Fazer Proposta</span>
       </button>
       <button
         onClick={() => onBuyNow(product)}
-        className={`${compact ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-black text-sm py-3 rounded-xl transition-colors shadow-lg shadow-purple-200`}>
-        <Zap size={16} /> Comprar Agora
+        className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-black text-sm py-3 rounded-xl transition-colors shadow-lg shadow-purple-200">
+        <Zap size={16} /> <span className={compact ? 'hidden' : ''}>Comprar</span>
       </button>
     </div>
   );
@@ -138,7 +148,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           {/* ═══════════════════════════════════
               GALLERY  (left col on desktop)
           ═══════════════════════════════════ */}
-          <div className="lg:w-[54%] flex flex-col md:flex-row gap-0 md:gap-3 lg:sticky lg:top-24 lg:self-start">
+          <div className="lg:w-[54%] flex flex-col md:flex-row gap-0 md:gap-3">
 
             {/* Vertical thumb strip — desktop only */}
             <div className="hidden md:flex flex-col gap-2 shrink-0">
@@ -274,6 +284,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 Em até 3x de <span className="font-bold text-purple-700">Kz {installment.toLocaleString('pt-AO')}</span> sem juros
               </p>
             </div>
+
+            {/* Variations / specs selector */}
+            <VariationsSelector category={product.category} selected={selectedVariations} onChange={setSelectedVariations} />
 
             {/* Quantity */}
             <div className="flex items-center gap-4">
@@ -487,8 +500,188 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         <BuyActions compact />
       </div>
 
+      {/* ── Make offer modal ── */}
+      {showOfferModal && (
+        <MakeOfferModal
+          product={product}
+          initialAmount={Math.round(product.price * 0.85)}
+          onClose={() => { setShowOfferModal(false); setOfferSent(false); setOfferAmount(''); setOfferNote(''); }}
+          onSubmit={(amount, note) => {
+            setOfferSent(true);
+            setTimeout(() => setShowOfferModal(false), 1800);
+          }}
+          offerSent={offerSent}
+          offerAmount={offerAmount}
+          setOfferAmount={setOfferAmount}
+          offerNote={offerNote}
+          setOfferNote={setOfferNote}
+        />
+      )}
+
       {/* ── Return to top ── */}
       <ReturnToTop />
+    </div>
+  );
+};
+
+/* ── Variations / specs selector (colour, size, storage, etc.) ── */
+interface VariationsSelectorProps {
+  category: string;
+  selected: Record<string, string>;
+  onChange: (next: Record<string, string>) => void;
+}
+
+const VARIATION_MAP: Record<string, { label: string; options: string[] }[]> = {
+  Tecnologia: [
+    { label: 'Cor', options: ['Preto', 'Branco', 'Azul', 'Cinza'] },
+    { label: 'Armazenamento', options: ['128 GB', '256 GB', '512 GB'] },
+  ],
+  Moda: [
+    { label: 'Cor', options: ['Preto', 'Branco', 'Azul', 'Bege', 'Vermelho'] },
+    { label: 'Tamanho', options: ['P', 'M', 'G', 'GG', 'XL'] },
+  ],
+  Beleza: [
+    { label: 'Variação', options: ['Floral', 'Cítrico', 'Amadeirado', 'Neutro'] },
+    { label: 'Tamanho', options: ['50 ml', '100 ml', '200 ml'] },
+  ],
+  Casa: [
+    { label: 'Cor', options: ['Preto', 'Branco', 'Inox', 'Creme'] },
+    { label: 'Voltagem', options: ['220 V', '110 V'] },
+  ],
+  Esportes: [
+    { label: 'Tamanho', options: ['P', 'M', 'G', 'GG'] },
+    { label: 'Género', options: ['Homem', 'Mulher', 'Unissexo'] },
+  ],
+  Veículos: [
+    { label: 'Combustível', options: ['Gasolina', 'Gasóleo', 'Elétrico', 'Híbrido'] },
+    { label: 'Ano', options: ['2023', '2024', '2025'] },
+  ],
+  'Jóias & Acessórios': [
+    { label: 'Material', options: ['Ouro 18K', 'Prata 925', 'Aço Inoxidável'] },
+    { label: 'Tamanho', options: ['Único', 'Ajustável'] },
+  ],
+};
+
+const VariationsSelector: React.FC<VariationsSelectorProps> = ({ category, selected, onChange }) => {
+  const groups = VARIATION_MAP[category] || [
+    { label: 'Cor', options: ['Preto', 'Branco', 'Azul'] },
+    { label: 'Estilo', options: ['Padrão', 'Premium'] },
+  ];
+  return (
+    <div className="space-y-3">
+      {groups.map(g => (
+        <div key={g.label}>
+          <p className="text-xs font-bold text-zinc-500 mb-1.5">{g.label}</p>
+          <div className="flex flex-wrap gap-2">
+            {g.options.map(opt => {
+              const active = selected[g.label] === opt;
+              return (
+                <button
+                  key={opt}
+                  onClick={() => onChange({ ...selected, [g.label]: active ? '' : opt })}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                    active
+                      ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                      : 'bg-white border-zinc-200 text-zinc-700 hover:border-purple-300 hover:text-purple-600'
+                  }`}>
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ── Make offer modal ── */
+interface MakeOfferModalProps {
+  product: Product;
+  initialAmount: number;
+  onClose: () => void;
+  onSubmit: (amount: string, note: string) => void;
+  offerSent: boolean;
+  offerAmount: string;
+  setOfferAmount: (v: string) => void;
+  offerNote: string;
+  setOfferNote: (v: string) => void;
+}
+
+const MakeOfferModal: React.FC<MakeOfferModalProps> = ({
+  product, initialAmount, onClose, onSubmit,
+  offerSent, offerAmount, setOfferAmount, offerNote, setOfferNote,
+}) => {
+  useEffect(() => {
+    if (!offerAmount) setOfferAmount(initialAmount.toString());
+  }, [initialAmount, offerAmount, setOfferAmount]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-[110] flex items-center justify-center p-4 backdrop-blur-md">
+      <div className="bg-white rounded-2xl w-full max-w-[420px] overflow-hidden shadow-2xl">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-black text-zinc-900">Fazer Proposta</h2>
+            <button onClick={onClose} className="p-1.5 hover:bg-zinc-100 rounded-full text-zinc-500">
+              <X size={18} />
+            </button>
+          </div>
+
+          {offerSent ? (
+            <div className="text-center py-8">
+              <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle size={28} className="text-emerald-600" />
+              </div>
+              <p className="text-base font-bold text-zinc-900 mb-1">Proposta enviada!</p>
+              <p className="text-sm text-zinc-500">O vendedor responderá em breve.</p>
+            </div>
+          ) : (
+            <form onSubmit={(e) => { e.preventDefault(); onSubmit(offerAmount, offerNote); }} className="space-y-4">
+              <div className="bg-zinc-50 rounded-xl p-3 flex gap-3">
+                <img src={product.image} alt="" className="w-14 h-14 object-cover rounded-lg border border-zinc-200" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-purple-600 uppercase">{product.category}</p>
+                  <p className="text-sm font-bold text-zinc-900 truncate">{product.title}</p>
+                  <p className="text-xs text-zinc-400">Preço: Kz {product.price.toLocaleString('pt-AO')}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 mb-2">Sua proposta (Kz)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-400">Kz</span>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={offerAmount}
+                    onChange={e => setOfferAmount(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-200 text-zinc-900 font-bold outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20" />
+                </div>
+                <p className="text-xs text-zinc-400 mt-1.5">
+                  Sugestão: Kz {initialAmount.toLocaleString('pt-AO')} (≈ 85% do preço)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-zinc-500 mb-2">Mensagem (opcional)</label>
+                <textarea
+                  rows={3}
+                  value={offerNote}
+                  onChange={e => setOfferNote(e.target.value)}
+                  placeholder="Explique a sua proposta ou pergunte sobre o produto..."
+                  className="w-full p-3 rounded-xl border border-zinc-200 text-zinc-900 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 resize-none" />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                <Tag size={16} /> Enviar Proposta
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
