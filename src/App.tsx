@@ -711,6 +711,7 @@ const App = () => {
               onToggleWishlist={toggleWishlist}
               onProductClick={handleProductClick}
               wishlist={wishlistIds}
+              navVisible={navVisible}
             />
           )}
 
