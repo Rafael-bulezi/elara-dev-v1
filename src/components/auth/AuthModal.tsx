@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Loader2, Eye, EyeOff, Phone, Lock, User, ShoppingBag, ArrowRight, MessageCircle } from 'lucide-react';
+import { X, Loader2, Eye, EyeOff, Phone, Lock, User, ShoppingBag, ArrowRight, MessageCircle, Mail, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface AuthModalProps {
@@ -16,7 +16,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const [phone, setPhone] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Email or Phone
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -25,46 +25,148 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   const reset = () => { setError(''); setSuccess(''); };
 
+  const getTargetEmail = (input: string) => {
+    const trimmed = input.trim();
+    if (trimmed.includes('@')) return trimmed;
+    const cleanPhone = trimmed.replace(/\D/g, '');
+    return `${cleanPhone || 'user'}@elara.ao`;
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     reset();
+
     if (view === 'register' && password !== confirmPassword) {
       setError('As senhas não coincidem.'); return;
     }
     if (view === 'register' && password.length < 6) {
       setError('A senha deve ter pelo menos 6 caracteres.'); return;
     }
+
     setLoading(true);
     try {
-      const dummyEmail = `${phone.replace(/\D/g, '')}@elara.ao`;
+      const targetEmail = getTargetEmail(identifier);
+
       if (view === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email: dummyEmail, password });
-        if (error) throw error;
-        onClose();
-      } else {
-        // Use server-side signup to auto-confirm the email, since the
-        // dummy @elara.ao address cannot receive confirmation links.
-        const res = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: dummyEmail,
-            password,
-            fullName,
-            phone
-          })
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: targetEmail,
+          password
         });
 
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.error || 'Erro ao criar conta.');
+        if (signInErr) {
+          if (signInErr.message.includes('Invalid login credentials')) {
+            throw new Error('Telefone/Email ou senha incorretos.');
+          }
+          throw signInErr;
+        }
+        onClose();
+      } else {
+        // Register view
+        let registered = false;
 
-        // Auto-login after successful signup
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email: dummyEmail, password });
-        if (loginError) throw loginError;
+        // Try server-side admin endpoint first if available
+        try {
+          const res = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: targetEmail,
+              password,
+              fullName,
+              phone: identifier
+            })
+          });
+
+          if (res.ok) {
+            registered = true;
+          }
+        } catch {
+          // Server endpoint not available; fall back to client Supabase SDK
+        }
+
+        // Fallback to client-side Supabase signup
+        if (!registered) {
+          const { error: signUpErr } = await supabase.auth.signUp({
+            email: targetEmail,
+            password,
+            options: {
+              data: {
+                full_name: fullName,
+                phone: identifier,
+                role: 'buyer'
+              }
+            }
+          });
+
+          if (signUpErr) {
+            if (signUpErr.message.includes('User already registered')) {
+              throw new Error('Este número/email já está registado. Por favor faça login.');
+            }
+            throw signUpErr;
+          }
+        }
+
+        // Auto-login after signup
+        const { error: loginErr } = await supabase.auth.signInWithPassword({
+          email: targetEmail,
+          password
+        });
+
+        if (loginErr) {
+          setSuccess('Conta criada com sucesso! Por favor inicie sessão com a sua senha.');
+          setView('login');
+          return;
+        }
+
         onClose();
       }
     } catch (err) {
+      console.error('[AuthModal] error:', err);
       setError(err instanceof Error ? err.message : 'Erro na autenticação.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoSellerLogin = async () => {
+    reset();
+    setLoading(true);
+    try {
+      const demoEmail = 'vendedor.demo@elara.ao';
+      const demoPassword = 'Password123!';
+
+      // Try login first
+      let { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword
+      });
+
+      if (signInErr) {
+        // Create demo account if it doesn't exist yet
+        await supabase.auth.signUp({
+          email: demoEmail,
+          password: demoPassword,
+          options: {
+            data: {
+              full_name: 'Loja Demo Premium',
+              phone: '923000111',
+              role: 'seller'
+            }
+          }
+        });
+
+        const { error: retryErr } = await supabase.auth.signInWithPassword({
+          email: demoEmail,
+          password: demoPassword
+        });
+
+        if (retryErr) throw retryErr;
+      }
+
+      onClose();
+    } catch (err) {
+      console.error('[AuthModal] Demo login error:', err);
+      setError('Erro ao entrar com conta demo.');
     } finally {
       setLoading(false);
     }
@@ -73,11 +175,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const handleGoogle = async () => {
     reset(); setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error: googleErr } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
-      if (error) throw error;
+      if (googleErr) throw googleErr;
     } catch (err) {
       setError('Erro ao iniciar sessão com Google.');
     } finally {
@@ -86,7 +188,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   };
 
   const handleForgotWhatsApp = () => {
-    const msg = `Olá, esqueci a minha senha da conta Elara. O meu número é ${phone}.`;
+    const msg = `Olá, esqueci a minha senha da conta Elara. O meu número/email é ${identifier}.`;
     window.open(`https://wa.me/244900000000?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -115,10 +217,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
           {/* Alerts */}
           {error && (
-            <div className="mb-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium px-3 py-2.5 rounded-xl">{error}</div>
+            <div className="mb-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold px-3 py-2.5 rounded-xl">{error}</div>
           )}
           {success && (
-            <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-2.5 rounded-xl">{success}</div>
+            <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold px-3 py-2.5 rounded-xl">{success}</div>
           )}
 
           {view !== 'forgot' ? (
@@ -132,13 +234,17 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   </div>
                 )}
                 <div className="relative">
-                  <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                  <input type="tel" placeholder="Número de telefone (9XX XXX XXX)" value={phone} onChange={e => setPhone(e.target.value)}
+                  {identifier.includes('@') ? (
+                    <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  ) : (
+                    <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  )}
+                  <input type="text" placeholder="Telefone (9XX XXX XXX) ou Email" value={identifier} onChange={e => setIdentifier(e.target.value)}
                     className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-purple-400 focus:bg-white transition-colors" required />
                 </div>
                 <div className="relative">
                   <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                  <input type={showPass ? 'text' : 'password'} placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)}
+                  <input type={showPass ? 'text' : 'password'} placeholder="Senha (mínimo 6 caracteres)" value={password} onChange={e => setPassword(e.target.value)}
                     className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-10 pr-10 py-3 text-sm outline-none focus:border-purple-400 focus:bg-white transition-colors" required />
                   <button type="button" onClick={() => setShowPass(s => !s)}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
@@ -163,11 +269,24 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 )}
 
                 <button type="submit" disabled={loading}
-                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-black py-3.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 mt-1">
+                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-black py-3.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 mt-1 shadow-lg shadow-purple-200">
                   {loading ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
                   {loading ? 'Aguarde...' : view === 'login' ? 'Entrar' : 'Criar Conta'}
                 </button>
               </form>
+
+              {/* Demo Mode Instant Login */}
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={handleDemoSellerLogin}
+                  disabled={loading}
+                  className="w-full bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Sparkles size={14} className="text-amber-600" />
+                  Entrar como Vendedor (Demonstração Rápida)
+                </button>
+              </div>
 
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-zinc-200" /></div>
@@ -197,11 +316,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             /* Forgot password view */
             <div className="space-y-4">
               <p className="text-sm text-zinc-600 leading-relaxed">
-                Introduza o seu número de telefone e entraremos em contacto via WhatsApp para repor a sua senha.
+                Introduza o seu número de telefone ou email e entraremos em contacto via WhatsApp para repor a sua senha.
               </p>
               <div className="relative">
                 <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                <input type="tel" placeholder="Número de telefone" value={phone} onChange={e => setPhone(e.target.value)}
+                <input type="text" placeholder="Telefone ou Email" value={identifier} onChange={e => setIdentifier(e.target.value)}
                   className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-purple-400 transition-colors" />
               </div>
               <button onClick={handleForgotWhatsApp}
@@ -221,3 +340,4 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 };
 
 export default AuthModal;
+
