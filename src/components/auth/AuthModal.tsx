@@ -63,6 +63,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       } else {
         // Register view
         let registered = false;
+        let signUpSession = null;
 
         // Try server-side admin endpoint first if available
         try {
@@ -86,7 +87,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
         // Fallback to client-side Supabase signup
         if (!registered) {
-          const { error: signUpErr } = await supabase.auth.signUp({
+          const { data, error: signUpErr } = await supabase.auth.signUp({
             email: targetEmail,
             password,
             options: {
@@ -104,16 +105,26 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             }
             throw signUpErr;
           }
+          
+          signUpSession = data.session;
         }
 
-        // Auto-login after signup
+        // If email confirmation is ON, session will be null/undefined.
+        // Instead of trying to login and crashing, show the success state
+        if (!signUpSession) {
+          setSuccess('Conta criada! Enviámos um link de confirmação para o seu e-mail. Por favor, confirme para ativar a sua conta.');
+          setView('login'); // Switch view back to login so they can sign in after confirming
+          return;
+        }
+
+        // Auto-login after signup if session exists (e.g., if confirmation is off)
         const { error: loginErr } = await supabase.auth.signInWithPassword({
           email: targetEmail,
           password
         });
 
         if (loginErr) {
-          setSuccess('Conta criada com sucesso! Por favor inicie sessão com a sua senha.');
+          setSuccess('Conta criada com sucesso! Por favor confirme o seu e-mail e inicie sessão.');
           setView('login');
           return;
         }
