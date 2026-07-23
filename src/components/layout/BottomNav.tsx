@@ -76,14 +76,20 @@ const BottomNav = ({
         onClick={userProfile ? onOpenProfile : onOpenAuth} 
         className="flex flex-col items-center gap-1 text-zinc-400 transition-all duration-300 active:scale-105"
       >
-        <div className={`p-0.5 rounded-xl border-2 transition-colors ${userProfile ? 'border-zinc-200' : 'p-1.5'}`}>
+        <div className={`p-0.5 rounded-xl border-2 transition-colors ${userProfile ? 'border-purple-500 bg-purple-50' : 'p-1.5'}`}>
           {userProfile ? (
-            <img src={getAvatarUrl(userProfile.avatar, userProfile.name)} alt={userProfile.name} className="w-5 h-5 rounded-lg object-cover" />
+            userProfile.avatar && userProfile.avatar.trim() !== '' ? (
+              <img src={getAvatarUrl(userProfile.avatar, userProfile.name)} alt={userProfile.name} className="w-5 h-5 rounded-lg object-cover" />
+            ) : (
+              <div className="w-5 h-5 bg-gradient-to-tr from-purple-600 to-indigo-600 text-white rounded-lg flex items-center justify-center font-black text-[10px]">
+                {(userProfile.name || 'U').charAt(0).toUpperCase()}
+              </div>
+            )
           ) : (
             <User size={20} />
           )}
         </div>
-        <span className="text-[8px] font-black uppercase tracking-widest">{userProfile ? 'Perfil' : 'Entrar'}</span>
+        <span className="text-[8px] font-black uppercase tracking-widest text-zinc-700">{userProfile ? (userProfile.name || 'Perfil').split(' ')[0] : 'Entrar'}</span>
       </button>
     </div>
   </nav>

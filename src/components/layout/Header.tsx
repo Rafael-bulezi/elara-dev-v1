@@ -213,13 +213,22 @@ const Header: React.FC<HeaderProps> = ({
 
               {/* Account */}
               {userProfile ? (
-                <button onClick={onOpenProfile} className="hidden md:flex items-center gap-1.5 p-1 rounded-lg hover:bg-zinc-100 transition-colors">
-                  <div className="w-7 h-7 rounded-full overflow-hidden border border-zinc-200">
-                    <img src={getAvatarUrl(userProfile.avatar, userProfile.name)} alt={userProfile.name} className="w-full h-full object-cover" />
+                <button onClick={onOpenProfile} className="hidden md:flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-purple-50 border border-zinc-200 hover:border-purple-200 transition-all group">
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-purple-200 bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-sm shrink-0">
+                    {userProfile.avatar && userProfile.avatar.trim() !== '' ? (
+                      <img src={getAvatarUrl(userProfile.avatar, userProfile.name)} alt={userProfile.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{(userProfile.name || 'U').charAt(0).toUpperCase()}</span>
+                    )}
                   </div>
+                  <div className="hidden lg:flex flex-col text-left leading-tight pr-0.5">
+                    <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Olá,</span>
+                    <span className="text-xs font-black text-zinc-900 truncate max-w-[90px]">{(userProfile.name || 'Usuário').split(' ')[0]}</span>
+                  </div>
+                  <ChevronDown size={14} className="text-zinc-400 group-hover:text-purple-600 transition-colors" />
                 </button>
               ) : (
-                <button onClick={onOpenAuth} className="hidden md:flex items-center gap-1 text-zinc-700 hover:text-zinc-900 font-bold text-xs px-2 py-1.5">
+                <button onClick={onOpenAuth} className="hidden md:flex items-center gap-1 text-zinc-700 hover:text-zinc-900 font-bold text-xs px-2.5 py-1.5 rounded-lg hover:bg-zinc-100 transition-colors">
                   <User size={16} />
                   <span className="hidden lg:inline">Conta</span>
                 </button>

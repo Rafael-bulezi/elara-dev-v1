@@ -211,60 +211,65 @@ const App = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        // Fetch profile with a timeout to prevent hanging
-        const fetchProfile = async () => {
-          try {
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('*, seller_profiles(*)')
-              .eq('id', session.user.id)
-              .single();
+        const isAdmin = session.user.email === '7dark7cloud7@gmail.com';
+        const fallbackName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuário';
+        const fallbackAvatar = session.user.user_metadata?.avatar_url || '';
 
-            if (error && error.code === 'PGRST116') {
-              // Profile doesn't exist, create it
-              const isAdmin = session.user.email === '7dark7cloud7@gmail.com';
-              const newProfile = {
-                id: session.user.id,
-                full_name: session.user.user_metadata?.full_name || 'Usuário',
-                email: session.user.email || '',
-                avatar_url: session.user.user_metadata?.avatar_url || '',
-                role: isAdmin ? 'admin' : 'buyer',
-                seller_status: 'none'
-              };
-              await supabase.from('profiles').insert(newProfile);
-              setUserProfile({ 
-                uid: newProfile.id, 
-                name: newProfile.full_name, 
-                email: newProfile.email,
-                avatar: newProfile.avatar_url, 
-                role: newProfile.role as 'buyer' | 'seller' | 'admin',
-                sellerStatus: 'none'
-              });
-            } else if (profile) {
-              const sellerProfile = (profile.seller_profiles?.[0] || profile) as Record<string, unknown>;
-              setUserProfile({ 
-                uid: profile.id, 
-                name: profile.full_name, 
-                email: profile.email,
-                avatar: profile.avatar_url, 
-                role: profile.role as 'buyer' | 'seller' | 'admin',
-                sellerStatus: (profile.seller_status || sellerProfile.seller_status || 'none') as UserProfile['sellerStatus'],
-                shopName: (profile.shop_name || sellerProfile.shop_name) as string | undefined,
-                verificationLevel: (profile.verification_level || sellerProfile.verification_level) as UserProfile['verificationLevel'],
-                idDocumentUrl: (profile.id_document_url || sellerProfile.id_document_url) as string | undefined,
-                bankDetails: (profile.bank_details || sellerProfile.bank_details) as string | undefined,
-                mixeiroStatus: (profile.mixeiro_status || sellerProfile.mixeiro_status) as UserProfile['mixeiroStatus'],
-                mixeiroVerified: !!(profile.mixeiro_verified || sellerProfile.mixeiro_verified),
-                phone: profile.phone,
-                address: profile.address
-              } as UserProfile);
-            }
+        // 1. Immediately set userProfile from session data so UI updates instantly!
+        setUserProfile(prev => ({
+          uid: session.user.id,
+          name: prev?.name || fallbackName,
+          email: session.user.email || '',
+          avatar: prev?.avatar || fallbackAvatar,
+          role: (prev?.role || (isAdmin ? 'admin' : 'buyer')) as 'buyer' | 'seller' | 'admin',
+          sellerStatus: prev?.sellerStatus || 'none'
+        }));
 
-          } catch (err) {
-            console.error('Error in auth listener profile fetch:', err);
+        // 2. Fetch full profile from DB with graceful error handling
+        try {
+          // Query profiles directly (avoid requiring seller_profiles join table if it's missing)
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (error) {
+            console.warn('[Elara] Profile fetch warning:', error.message);
           }
-        };
-        fetchProfile();
+
+          if (!profile) {
+            // Profile row missing in public.profiles table -> create it
+            const newProfile = {
+              id: session.user.id,
+              full_name: fallbackName,
+              email: session.user.email || '',
+              avatar_url: fallbackAvatar,
+              role: isAdmin ? 'admin' : 'buyer',
+              seller_status: 'none'
+            };
+            await supabase.from('profiles').insert(newProfile);
+          } else {
+            setUserProfile({
+              uid: profile.id,
+              name: profile.full_name || fallbackName,
+              email: profile.email || session.user.email || '',
+              avatar: profile.avatar_url || fallbackAvatar,
+              role: (profile.role || (isAdmin ? 'admin' : 'buyer')) as 'buyer' | 'seller' | 'admin',
+              sellerStatus: (profile.seller_status || 'none') as UserProfile['sellerStatus'],
+              shopName: profile.shop_name as string | undefined,
+              verificationLevel: profile.verification_level as UserProfile['verificationLevel'],
+              idDocumentUrl: profile.id_document_url as string | undefined,
+              bankDetails: profile.bank_details as string | undefined,
+              mixeiroStatus: profile.mixeiro_status as UserProfile['mixeiroStatus'],
+              mixeiroVerified: !!profile.mixeiro_verified,
+              phone: profile.phone,
+              address: profile.address
+            } as UserProfile);
+          }
+        } catch (err) {
+          console.error('Error fetching profile detail:', err);
+        }
       } else {
         setUserProfile(null);
       }
