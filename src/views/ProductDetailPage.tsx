@@ -512,7 +512,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       </div>
 
       {/* ── Mobile sticky bottom CTA ── */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-zinc-200 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+      <div className={`md:hidden fixed left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-zinc-200 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] transition-all duration-300 ${navVisible ? 'bottom-16' : 'bottom-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))]'}`}>
         <BuyActions compact />
       </div>
 
