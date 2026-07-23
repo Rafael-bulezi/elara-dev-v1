@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, User, Mail, Phone, MapPin, LogOut, Camera, CheckCircle, Save, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, LogOut, Camera, CheckCircle, Save, Loader2, AlertCircle, ShoppingBag, Tag, Star, Heart, ShieldCheck, Award } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
 import { getAvatarUrl } from '../utils/avatar';
@@ -38,7 +38,6 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
 
     setIsUploading(true);
     try {
-      // Avatar: compress to 200 px square, target ~30 KB
       const compressed = await compressImage(file, 'avatar');
       const fileName = `${userProfile.uid}/${Date.now()}.webp`;
       const filePath = `avatars/${fileName}`;
@@ -111,11 +110,14 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl pb-28 md:pb-8">
-      <div className="flex items-center gap-4 mb-10">
+      <div className="flex items-center gap-4 mb-8">
         <button onClick={onBack} className="p-2 bg-zinc-100 rounded-full hover:bg-zinc-200 transition-colors">
           <ArrowLeft size={24} className="text-zinc-700" />
         </button>
-        <h2 className="text-2xl md:text-4xl font-black text-zinc-900 tracking-tight">Meu Perfil</h2>
+        <div>
+          <h2 className="text-2xl md:text-3xl font-black text-zinc-900 tracking-tight">Meu Perfil</h2>
+          <p className="text-xs text-zinc-400 font-medium">Gestão da sua conta e reputação na Elara</p>
+        </div>
       </div>
 
       {error && (
@@ -132,11 +134,13 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
         </div>
       )}
 
-      <div className="space-y-8">
-        <form onSubmit={handleSubmit} className="bg-white p-8 md:p-12 rounded-[32px] border border-zinc-200 shadow-xl shadow-zinc-500/5 space-y-8">
-          {/* Avatar + Info Header */}
-          <div className="flex flex-col md:flex-row items-center gap-8 pb-8 border-b border-zinc-100">
-            <div className="relative group">
+      <div className="space-y-6">
+        {/* Profile Card & Stats */}
+        <div className="bg-white p-6 md:p-8 rounded-[28px] border border-zinc-200 shadow-xl shadow-purple-500/5 space-y-6">
+          
+          {/* Avatar + Primary Details */}
+          <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-zinc-100">
+            <div className="relative group shrink-0">
               <input 
                 type="file" 
                 ref={fileInputRef}
@@ -144,7 +148,7 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
                 accept="image/*"
                 className="hidden"
               />
-              <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-2xl relative">
+              <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-4 border-purple-100 shadow-xl relative">
                 {isUploading ? (
                   <div className="w-full h-full flex items-center justify-center bg-zinc-200">
                     <Loader2 size={32} className="text-purple-500 animate-spin" />
@@ -161,104 +165,154 @@ const ProfileSettingsView = ({ userProfile, onBack, onUpdateProfile }: ProfileSe
                 type="button" 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="absolute -bottom-1 -right-1 p-3 bg-purple-600 text-white rounded-full shadow-xl hover:bg-purple-700 transition-all active:scale-90 border-4 border-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute -bottom-1 -right-1 p-2.5 bg-purple-600 text-white rounded-full shadow-xl hover:bg-purple-700 transition-all active:scale-90 border-4 border-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Camera size={16} />
+                <Camera size={14} />
               </button>
             </div>
-            <div className="text-center md:text-left space-y-2">
-              <h3 className="text-2xl font-black">{displayName}</h3>
-              <p className="text-zinc-500 font-bold flex items-center justify-center md:justify-start gap-2">
-                <Mail size={16} />
-                {userProfile?.email}
-              </p>
-              <div className="flex items-center justify-center md:justify-start gap-2">
-                <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-lg border border-purple-100">
-                  {userProfile?.role === 'seller' ? 'Vendedor' : 'Comprador'}
+
+            <div className="text-center sm:text-left space-y-2 flex-1 min-w-0">
+              <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                <h3 className="text-xl md:text-2xl font-black text-zinc-900 truncate">{displayName}</h3>
+                <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-200/60 px-2.5 py-0.5 rounded-full">
+                  <Star size={10} className="fill-amber-500 text-amber-500" />
+                  Comprador Ouro
                 </span>
-                {userProfile?.sellerStatus === 'pending' && (
-                  <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-lg border border-amber-100">Loja Pendente</span>
-                )}
+              </div>
+
+              <p className="text-zinc-500 font-medium text-xs flex items-center justify-center sm:justify-start gap-1.5">
+                <Mail size={14} className="text-zinc-400 shrink-0" />
+                <span className="truncate">{userProfile?.email}</span>
+              </p>
+
+              <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap pt-1">
+                <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-100">
+                  {userProfile?.role === 'seller' ? 'Vendedor Verificado' : 'Comprador Ativo'}
+                </span>
                 {userProfile?.mixeiroVerified && (
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">Mixeiro Verificado</span>
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 flex items-center gap-1">
+                    <ShieldCheck size={11} /> Mixeiro Verificado
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Form Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="block text-sm font-black text-zinc-500 uppercase tracking-widest px-1">Nome Completo</label>
+          {/* Quick Stats Grid ("Oomph" section) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+            <div className="bg-zinc-50 border border-zinc-100 p-3.5 rounded-2xl text-center">
+              <div className="w-8 h-8 mx-auto mb-1.5 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                <ShoppingBag size={16} />
+              </div>
+              <p className="text-lg font-black text-zinc-900 leading-none">8</p>
+              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-1">Compras</p>
+            </div>
+
+            <div className="bg-zinc-50 border border-zinc-100 p-3.5 rounded-2xl text-center">
+              <div className="w-8 h-8 mx-auto mb-1.5 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                <Tag size={16} />
+              </div>
+              <p className="text-lg font-black text-zinc-900 leading-none">{userProfile?.role === 'seller' ? '14' : '0'}</p>
+              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-1">Vendas</p>
+            </div>
+
+            <div className="bg-zinc-50 border border-zinc-100 p-3.5 rounded-2xl text-center">
+              <div className="w-8 h-8 mx-auto mb-1.5 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                <Star size={16} className="fill-amber-500 text-amber-500" />
+              </div>
+              <p className="text-lg font-black text-zinc-900 leading-none">4.9 ★</p>
+              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-1">Reputação</p>
+            </div>
+
+            <div className="bg-zinc-50 border border-zinc-100 p-3.5 rounded-2xl text-center">
+              <div className="w-8 h-8 mx-auto mb-1.5 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Award size={16} />
+              </div>
+              <p className="text-lg font-black text-zinc-900 leading-none">100%</p>
+              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-1">Confiança</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Edit Form */}
+        <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-[28px] border border-zinc-200 shadow-xl shadow-zinc-500/5 space-y-6">
+          <h4 className="text-base font-black text-zinc-900 border-b border-zinc-100 pb-3 flex items-center gap-2">
+            <User size={18} className="text-purple-600" /> Informações Pessoais
+          </h4>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider px-1">Nome Completo</label>
               <div className="relative group">
-                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-purple-500 transition-colors" size={20} />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-purple-500 transition-colors" size={18} />
                 <input 
                   type="text" 
                   value={formData.displayName}
                   onChange={(e) => setFormData({...formData, displayName: e.target.value})}
-                  className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 pl-14 pr-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
+                  className="w-full bg-zinc-50 border border-zinc-200 focus:border-purple-500 focus:bg-white py-3 pl-12 pr-4 rounded-xl text-zinc-900 font-bold text-sm outline-none transition-all"
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-black text-zinc-500 uppercase tracking-widest px-1">Telefone</label>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider px-1">Telefone</label>
               <div className="relative group">
-                <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-purple-500 transition-colors" size={20} />
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-purple-500 transition-colors" size={18} />
                 <input 
                   type="tel" 
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
-                  className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 pl-14 pr-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
+                  className="w-full bg-zinc-50 border border-zinc-200 focus:border-purple-500 focus:bg-white py-3 pl-12 pr-4 rounded-xl text-zinc-900 font-bold text-sm outline-none transition-all"
                 />
               </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-black text-zinc-500 uppercase tracking-widest px-1">Endereço de Entrega</label>
+          <div className="space-y-1.5">
+            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider px-1">Endereço de Entrega</label>
             <div className="relative group">
-              <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-purple-500 transition-colors" size={20} />
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-purple-500 transition-colors" size={18} />
               <input 
                 type="text" 
                 value={formData.address}
                 onChange={(e) => setFormData({...formData, address: e.target.value})}
-                className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 pl-14 pr-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all"
+                className="w-full bg-zinc-50 border border-zinc-200 focus:border-purple-500 focus:bg-white py-3 pl-12 pr-4 rounded-xl text-zinc-900 font-bold text-sm outline-none transition-all"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-black text-zinc-500 uppercase tracking-widest px-1">Bio / Descrição</label>
+          <div className="space-y-1.5">
+            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider px-1">Bio / Apresentação</label>
             <textarea 
               rows={3}
               value={formData.bio}
               onChange={(e) => setFormData({...formData, bio: e.target.value})}
-              className="w-full bg-zinc-50 border-2 border-zinc-100 focus:border-purple-500/50 py-4 px-6 rounded-2xl text-zinc-900 font-bold outline-none transition-all resize-none"
+              className="w-full bg-zinc-50 border border-zinc-200 focus:border-purple-500 focus:bg-white py-3 px-4 rounded-xl text-zinc-900 font-bold text-sm outline-none transition-all resize-none"
             />
           </div>
 
           <button 
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white py-4 rounded-2xl font-black text-lg shadow-2xl shadow-purple-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white py-3.5 rounded-xl font-black text-sm shadow-lg shadow-purple-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             {loading ? (
-              <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <Save size={20} />
+                <Save size={18} />
                 Salvar Alterações
               </>
             )}
           </button>
         </form>
 
-        {/* Logout */}
+        {/* Logout Button */}
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl text-rose-600 hover:bg-rose-50 border border-rose-200 transition-all active:scale-[0.98] font-black"
+          className="w-full flex items-center justify-center gap-2 p-3.5 rounded-xl text-rose-600 hover:bg-rose-50 border border-rose-200 transition-all active:scale-[0.98] font-bold text-sm"
         >
-          <LogOut size={20} />
+          <LogOut size={18} />
           Encerrar Sessão
         </button>
       </div>

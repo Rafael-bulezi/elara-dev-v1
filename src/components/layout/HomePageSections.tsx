@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowRight, Clock, Flame, Globe, Percent } from 'lucide-react';
+import React, { useRef } from 'react';
+import { ArrowRight, Clock, Flame, Globe, Percent, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../../types';
 import ProductCard from '../product/ProductCard';
 
@@ -12,15 +12,26 @@ interface CommonProps {
   onToggleWishlist: (p: Product) => void;
 }
 
-/* ─── 1. OFERTAS DO DIA ─── */
+/* ─── 1. OFERTAS DO DIA (Carousel) ─── */
 export const OfertasDoDia: React.FC<CommonProps> = ({
   products, onAddToCart, onProductClick, wishlist, onToggleWishlist,
 }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const deals = products.filter(p => p.emPromocao || (p.originalPrice && p.originalPrice > p.price));
-  const display = (deals.length >= 6 ? deals : products).slice(0, 6);
+  const display = (deals.length >= 6 ? deals : products).slice(0, 8);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const distance = 300;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -distance : distance,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   return (
-    <section className="py-6 md:py-8 bg-white border-b border-zinc-100">
+    <section className="py-6 md:py-8 bg-white border-b border-zinc-100 relative group">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -30,16 +41,28 @@ export const OfertasDoDia: React.FC<CommonProps> = ({
               <Clock size={10} /> Renova em 24h
             </span>
           </div>
-          <button className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1">
-            Ver todas <ArrowRight size={13} />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-1">
+              <button onClick={() => scroll('left')} className="p-1.5 rounded-full bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-600 transition-colors">
+                <ChevronLeft size={16} />
+              </button>
+              <button onClick={() => scroll('right')} className="p-1.5 rounded-full bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-600 transition-colors">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            <button className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1">
+              Ver todas <ArrowRight size={13} />
+            </button>
+          </div>
         </div>
 
-        {/* Horizontal scroll on mobile, grid on desktop */}
-        <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2 -mx-4 px-4 snap-x snap-mandatory
-                        md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-6 md:overflow-x-visible md:snap-none">
+        {/* Carousel strip */}
+        <div 
+          ref={scrollRef} 
+          className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 snap-x snap-mandatory scroll-smooth"
+        >
           {display.map(p => (
-            <div key={p.id} className="min-w-[155px] w-[155px] md:min-w-0 md:w-auto shrink-0 md:shrink snap-start">
+            <div key={p.id} className="min-w-[165px] w-[165px] md:min-w-[210px] md:w-[210px] shrink-0 snap-start">
               <ProductCard product={p} onAddToCart={onAddToCart} onProductClick={onProductClick}
                 wishlisted={wishlist.includes(p.id)} onToggleWishlist={onToggleWishlist} />
             </div>
@@ -111,26 +134,50 @@ export const CategoryShowcaseSection: React.FC<CommonProps & { onSelectCategory:
   </section>
 );
 
-/* ─── 3. STRIP ROW (horizontal scroll — mobile & desktop both scroll) ─── */
+/* ─── 3. STRIP ROW (Carousel with Left/Right Buttons) ─── */
 export const StripSection: React.FC<CommonProps & { category: string; onViewAll: () => void }> = ({
   products, onAddToCart, onProductClick, wishlist, onToggleWishlist, category, onViewAll,
 }) => {
-  const cats = products.filter(p => p.category === category).slice(0, 6);
-  if (cats.length === 0) return null;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const cats = products.filter(p => p.category === category).slice(0, 8);
+  const display = cats.length > 0 ? cats : products.slice(0, 8);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const distance = 320;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -distance : distance,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   return (
     <section className="py-6 md:py-8 bg-white border-b border-zinc-100">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base md:text-lg font-black text-zinc-900">{category}</h2>
-          <button onClick={onViewAll} className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1">
-            Ver mais <ArrowRight size={13} />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-1">
+              <button onClick={() => scroll('left')} className="p-1.5 rounded-full bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-600 transition-colors">
+                <ChevronLeft size={16} />
+              </button>
+              <button onClick={() => scroll('right')} className="p-1.5 rounded-full bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-600 transition-colors">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            <button onClick={onViewAll} className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1">
+              Ver mais <ArrowRight size={13} />
+            </button>
+          </div>
         </div>
-        <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2 -mx-4 px-4 snap-x snap-mandatory
-                        md:mx-0 md:px-0 md:grid md:grid-cols-5 md:overflow-x-visible md:snap-none">
-          {cats.map(p => (
-            <div key={p.id} className="min-w-[155px] w-[155px] md:min-w-0 md:w-auto shrink-0 md:shrink snap-start">
+
+        <div 
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 snap-x snap-mandatory scroll-smooth"
+        >
+          {display.map(p => (
+            <div key={p.id} className="min-w-[165px] w-[165px] md:min-w-[210px] md:w-[210px] shrink-0 snap-start">
               <ProductCard product={p} onAddToCart={onAddToCart} onProductClick={onProductClick}
                 wishlisted={wishlist.includes(p.id)} onToggleWishlist={onToggleWishlist} />
             </div>

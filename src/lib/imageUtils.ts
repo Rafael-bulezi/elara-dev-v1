@@ -102,20 +102,11 @@ export async function compressImage(file: File, variant: ImageVariant): Promise<
  */
 export function getTransformUrl(
   url: string | undefined | null,
-  width: number,
-  quality = 80
+  _width?: number,
+  _quality = 80
 ): string | undefined {
   if (!url) return undefined;
-
-  // Only transform Supabase storage object URLs
-  if (!url.includes('/storage/v1/object/public/')) return url;
-
-  // Replace /object/public/ with /render/image/public/
-  const renderUrl = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-
-  // Append (or merge) transform query params
-  const base = renderUrl.split('?')[0];
-  return `${base}?width=${width}&quality=${quality}&resize=contain&format=webp`;
+  return url;
 }
 
 /**

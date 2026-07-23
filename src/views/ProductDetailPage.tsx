@@ -291,14 +291,23 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   </button>
                 </div>
 
-                {/* Image */}
-                <img
-                  src={mediumUrl(images[activeImg])}
-                  alt={product.title}
-                  loading="eager"
-                  decoding="async"
-                  className="w-full h-full object-cover"
-                />
+                {/* Sliding Image Carousel */}
+                <div 
+                  className="flex w-full h-full transition-transform duration-500 ease-out"
+                  style={{ transform: `translateX(-${activeImg * 100}%)` }}
+                >
+                  {images.map((img, idx) => (
+                    <div key={idx} className="w-full h-full shrink-0">
+                      <img
+                        src={mediumUrl(img)}
+                        alt={`${product.title} ${idx + 1}`}
+                        loading="eager"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
 
                 {/* Prev / Next arrows */}
                 <button onClick={() => setActiveImg(i => (i - 1 + images.length) % images.length)}

@@ -292,25 +292,30 @@ const App = () => {
         setProducts(initialProducts);
       } else {
         if (data && data.length > 0) {
-          setProducts(((data || []) as Record<string, unknown>[]).map((p) => ({
-            id: p.id as string,
-            title: p.title as string,
-            description: p.description as string,
-            price: p.price as number,
-            image: (p.image_url || p.image) as string,
-            category: p.category as string,
-            condition: p.condition as string,
-            sellerId: p.seller_id as string,
-            sellerName: ((p.profiles as Record<string, unknown>)?.full_name || p.seller_name || 'Vendedor Desconhecido') as string,
-            sellerAvatar: ((p.profiles as Record<string, unknown>)?.avatar_url || p.seller_avatar || '') as string,
-            sellerPhone: ((p.profiles as Record<string, unknown>)?.phone || p.seller_phone || '') as string,
-            sellerRating: 5.0,
-            emPromocao: false,
-            status: p.status as Product['status'],
-            stock: p.stock as number,
-            isImport: p.is_import as boolean,
-            createdAt: new Date(p.created_at as string).getTime()
-          } as Product)));
+          setProducts(((data || []) as Record<string, unknown>[]).map((p, idx) => {
+            const rawImg = (p.image_url || p.image) as string;
+            const fallbackImg = initialProducts[idx % initialProducts.length]?.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800';
+            const validImg = (rawImg && rawImg.trim() !== '') ? rawImg : fallbackImg;
+            return {
+              id: p.id as string,
+              title: p.title as string,
+              description: p.description as string,
+              price: p.price as number,
+              image: validImg,
+              category: p.category as string,
+              condition: p.condition as string,
+              sellerId: p.seller_id as string,
+              sellerName: ((p.profiles as Record<string, unknown>)?.full_name || p.seller_name || 'Vendedor Desconhecido') as string,
+              sellerAvatar: ((p.profiles as Record<string, unknown>)?.avatar_url || p.seller_avatar || '') as string,
+              sellerPhone: ((p.profiles as Record<string, unknown>)?.phone || p.seller_phone || '') as string,
+              sellerRating: 5.0,
+              emPromocao: false,
+              status: p.status as Product['status'],
+              stock: p.stock as number,
+              isImport: p.is_import as boolean,
+              createdAt: new Date(p.created_at as string).getTime()
+            } as Product;
+          }));
         } else {
           setProducts(initialProducts);
         }
@@ -598,6 +603,9 @@ const App = () => {
           onOpenImport={() => setIsImportModalOpen(true)}
           onNavigate={navigateTo}
           appLogo={appLogo}
+          currentView={currentView}
+          categories={categories}
+          onSelectCategory={handleSelectCategory}
         />
 
         {/* Category strip — desktop only; on mobile it lives inside the mobile menu */}
