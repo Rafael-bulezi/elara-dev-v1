@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X, CheckCircle, ArrowLeft, ArrowRight, ShieldCheck, Truck,
   MapPin, Smartphone, Banknote, Copy, Check, Loader2, Package,
-  QrCode,
+  QrCode, Minus, Plus, Trash2, RefreshCw,
 } from 'lucide-react';
+import QRCode from 'qrcode';
 import { supabase } from '../../lib/supabase';
 import { Product, UserProfile } from '../../types';
 
@@ -13,6 +14,10 @@ interface CheckoutModalProps {
   onOrderComplete: () => void;
   cart: (Product & { cartQuantity?: number })[];
   userProfile: UserProfile | null;
+  // Optional: parent-controlled cart mutation. If omitted, the modal falls
+  // back to managing quantities/removals on a local working copy.
+  onUpdateQuantity?: (productId: string, quantity: number) => void;
+  onRemoveItem?: (productId: string) => void;
 }
 
 type PayMethod = 'multicaixa_express' | 'referencia' | 'cod';
@@ -25,13 +30,23 @@ const DELIVERY_OPTS = [
 ];
 
 const ORDER_ID = () => `#ELR-${Date.now().toString(36).toUpperCase().slice(-8)}`;
+const REFERENCE = () => String(Math.floor(10000000 + Math.random() * 90000000));
 
-const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: CheckoutModalProps) => {
+const CheckoutModal = ({
+  isOpen, onClose, onOrderComplete, cart, userProfile,
+  onUpdateQuantity, onRemoveItem,
+}: CheckoutModalProps) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [orderId] = useState(ORDER_ID);
+  const [reference] = useState(REFERENCE);
   const [copied, setCopied] = useState('');
   const [error, setError] = useState('');
+
+  // Local working copy of the cart so quantity/removal controls work even
+  // if the parent doesn't wire up onUpdateQuantity / onRemoveItem.
+  const [localCart, setLocalCart] = useState(cart);
+  useEffect(() => { setLocalCart(cart); }, [cart]);
 
   const [form, setForm] = useState({
     name: userProfile?.name || '',
@@ -43,15 +58,64 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
     payment: 'multicaixa_express' as PayMethod,
   });
 
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [qrLoading, setQrLoading] = useState(false);
+  const [expirySeconds, setExpirySeconds] = useState(30 * 60);
+
   useEffect(() => {
     if (isOpen) { setStep(1); setError(''); }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
-  const subtotal = cart.reduce((s, i) => s + i.price * (i.cartQuantity || 1), 0);
+  const subtotal = useMemo(
+    () => localCart.reduce((s, i) => s + i.price * (i.cartQuantity || 1), 0),
+    [localCart]
+  );
   const deliveryCost = DELIVERY_OPTS.find(d => d.id === form.delivery)?.price ?? 1500;
   const total = subtotal + deliveryCost;
+
+  // Generate the Multicaixa Express QR whenever we're on the payment step
+  // with that method selected, or the total changes.
+  useEffect(() => {
+    if (step !== 3 || form.payment !== 'multicaixa_express') return;
+    let cancelled = false;
+    setQrLoading(true);
+
+    // Payload mirrors what a real EMIS/Multicaixa Express QR would encode:
+    // merchant reference, order id and amount. Swap this string for your
+    // real payment gateway's payload format when integrating live.
+    const payload = JSON.stringify({
+      merchant: 'ELARA-MARKETPLACE',
+      order: orderId,
+      amount: total,
+      currency: 'AOA',
+      ref: reference,
+    });
+
+    QRCode.toDataURL(payload, {
+      width: 240,
+      margin: 1,
+      color: { dark: '#1f0a3d', light: '#ffffff' },
+    })
+      .then((url: string) => { if (!cancelled) setQrDataUrl(url); })
+      .catch(() => { if (!cancelled) setQrDataUrl(''); })
+      .finally(() => { if (!cancelled) setQrLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [step, form.payment, total, orderId, reference]);
+
+  // Countdown for the QR expiry, purely cosmetic/UX — regenerate on expiry.
+  useEffect(() => {
+    if (step !== 3 || form.payment !== 'multicaixa_express') return;
+    setExpirySeconds(30 * 60);
+    const id = setInterval(() => {
+      setExpirySeconds(s => (s <= 1 ? 30 * 60 : s - 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [step, form.payment]);
+
+  if (!isOpen) return null;
+
+  const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const copy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -59,10 +123,28 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
     setTimeout(() => setCopied(''), 2000);
   };
 
+  const changeQuantity = (item: Product & { cartQuantity?: number }, delta: number) => {
+    const nextQty = Math.max(1, (item.cartQuantity || 1) + delta);
+    if (onUpdateQuantity) {
+      onUpdateQuantity(item.id, nextQty);
+    } else {
+      setLocalCart(prev => prev.map(p => p.id === item.id ? { ...p, cartQuantity: nextQty } : p));
+    }
+  };
+
+  const removeItem = (item: Product & { cartQuantity?: number }) => {
+    if (onRemoveItem) {
+      onRemoveItem(item.id);
+    } else {
+      setLocalCart(prev => prev.filter(p => p.id !== item.id));
+    }
+  };
+
   const handleOrder = async () => {
     setLoading(true); setError('');
     try {
       if (!supabase) throw new Error('Supabase não está inicializado');
+      if (localCart.length === 0) throw new Error('O seu carrinho está vazio.');
 
       const orderData = {
         buyer_id: userProfile?.uid || null,
@@ -70,6 +152,7 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
         buyer_phone: form.phone,
         shipping_address: `${form.address}, ${form.neighborhood}, ${form.city}`,
         payment_method: form.payment,
+        payment_reference: form.payment === 'referencia' ? reference : null,
         delivery_option: form.delivery,
         total,
         status: 'pending' as const,
@@ -85,7 +168,7 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
       if (orderError) throw orderError;
 
       // Insert order items for real-time order tracking
-      const orderItems = cart.map(item => ({
+      const orderItems = localCart.map(item => ({
         order_id: orderRow.id,
         product_id: item.id,
         seller_id: item.sellerId,
@@ -132,6 +215,14 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
       })}
     </div>
   );
+
+  const canContinueFromStep1 = !!form.name && !!form.phone && !!form.address;
+  const canContinueFromStep2 = localCart.length > 0;
+
+  const footerDisabled =
+    loading ||
+    (step === 1 && !canContinueFromStep1) ||
+    (step === 2 && !canContinueFromStep2);
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
@@ -194,7 +285,7 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
                   <label className="text-xs font-bold text-zinc-500 block mb-1">Morada completa</label>
                   <input value={form.address} onChange={e => setForm(f => ({...f, address: e.target.value}))}
                     className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-purple-400 transition-colors"
-                    placeholder="Rua, número, referência" />
+                    placeholder="Rua, número, referência" required />
                 </div>
               </div>
 
@@ -221,39 +312,74 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
           {/* ── Step 2: Review ── */}
           {step === 2 && (
             <div className="space-y-4">
-              <div className="bg-zinc-50 rounded-2xl divide-y divide-zinc-200 overflow-hidden">
-                {cart.map(item => (
-                  <div key={item.id} className="flex items-center gap-3 p-3.5">
-                    <div className="w-14 h-14 bg-white rounded-xl overflow-hidden border border-zinc-200 shrink-0">
-                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-zinc-900 line-clamp-1">{item.title}</p>
-                      <p className="text-xs text-zinc-500">Qtd: {item.cartQuantity || 1}</p>
-                    </div>
-                    <span className="text-sm font-black text-zinc-900 shrink-0">Kz {(item.price * (item.cartQuantity || 1)).toLocaleString('pt-AO')}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-zinc-50 rounded-2xl p-4 space-y-2">
-                <div className="flex items-start gap-2 text-sm">
-                  <MapPin size={14} className="text-zinc-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="font-bold text-zinc-900">{form.name}</p>
-                    <p className="text-zinc-500 text-xs">{form.address}, {form.neighborhood}, {form.city}</p>
-                    <p className="text-zinc-500 text-xs">{form.phone}</p>
-                  </div>
+              {localCart.length === 0 ? (
+                <div className="text-center py-10">
+                  <Package size={32} className="text-zinc-300 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-zinc-500">O seu carrinho está vazio.</p>
+                  <button onClick={onClose} className="mt-4 text-xs font-black text-purple-600">Voltar à loja</button>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="bg-zinc-50 rounded-2xl divide-y divide-zinc-200 overflow-hidden">
+                    {localCart.map(item => (
+                      <div key={item.id} className="flex items-center gap-3 p-3.5">
+                        <div className="w-14 h-14 bg-white rounded-xl overflow-hidden border border-zinc-200 shrink-0">
+                          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-zinc-900 line-clamp-1">{item.title}</p>
+                          <p className="text-xs text-zinc-500">Kz {item.price.toLocaleString('pt-AO')} / un.</p>
 
-              <div className="bg-zinc-50 rounded-2xl p-4 space-y-2 text-sm">
-                <div className="flex justify-between text-zinc-600"><span>Subtotal</span><span className="font-bold">Kz {subtotal.toLocaleString('pt-AO')}</span></div>
-                <div className="flex justify-between text-zinc-600"><span>Entrega</span><span className="font-bold">{deliveryCost === 0 ? 'Grátis' : `Kz ${deliveryCost.toLocaleString('pt-AO')}`}</span></div>
-                <div className="flex justify-between text-zinc-900 font-black text-base border-t border-zinc-200 pt-2 mt-2">
-                  <span>Total</span><span>Kz {total.toLocaleString('pt-AO')}</span>
-                </div>
-              </div>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <div className="flex items-center bg-white border border-zinc-200 rounded-lg overflow-hidden">
+                              <button
+                                onClick={() => changeQuantity(item, -1)}
+                                disabled={(item.cartQuantity || 1) <= 1}
+                                className="w-6 h-6 flex items-center justify-center text-zinc-500 hover:bg-zinc-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                aria-label="Diminuir quantidade">
+                                <Minus size={11} />
+                              </button>
+                              <span className="w-7 text-center text-xs font-black text-zinc-900">{item.cartQuantity || 1}</span>
+                              <button
+                                onClick={() => changeQuantity(item, 1)}
+                                className="w-6 h-6 flex items-center justify-center text-zinc-500 hover:bg-zinc-100 transition-colors"
+                                aria-label="Aumentar quantidade">
+                                <Plus size={11} />
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => removeItem(item)}
+                              className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                              aria-label="Remover item">
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                        <span className="text-sm font-black text-zinc-900 shrink-0">Kz {(item.price * (item.cartQuantity || 1)).toLocaleString('pt-AO')}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-zinc-50 rounded-2xl p-4 space-y-2">
+                    <div className="flex items-start gap-2 text-sm">
+                      <MapPin size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-bold text-zinc-900">{form.name}</p>
+                        <p className="text-zinc-500 text-xs">{form.address}, {form.neighborhood}, {form.city}</p>
+                        <p className="text-zinc-500 text-xs">{form.phone}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-50 rounded-2xl p-4 space-y-2 text-sm">
+                    <div className="flex justify-between text-zinc-600"><span>Subtotal</span><span className="font-bold">Kz {subtotal.toLocaleString('pt-AO')}</span></div>
+                    <div className="flex justify-between text-zinc-600"><span>Entrega</span><span className="font-bold">{deliveryCost === 0 ? 'Grátis' : `Kz ${deliveryCost.toLocaleString('pt-AO')}`}</span></div>
+                    <div className="flex justify-between text-zinc-900 font-black text-base border-t border-zinc-200 pt-2 mt-2">
+                      <span>Total</span><span>Kz {total.toLocaleString('pt-AO')}</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -286,12 +412,26 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
               {/* Payment details */}
               {form.payment === 'multicaixa_express' && (
                 <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 text-center">
-                  <div className="w-28 h-28 bg-white rounded-xl mx-auto mb-3 flex items-center justify-center border border-purple-200">
-                    <QrCode size={64} className="text-purple-600" />
+                  <div className="w-40 h-40 bg-white rounded-xl mx-auto mb-3 flex items-center justify-center border border-purple-200 overflow-hidden">
+                    {qrLoading ? (
+                      <Loader2 size={28} className="text-purple-300 animate-spin" />
+                    ) : qrDataUrl ? (
+                      <img src={qrDataUrl} alt="Código QR Multicaixa Express" className="w-full h-full object-contain p-2" />
+                    ) : (
+                      <QrCode size={64} className="text-purple-200" />
+                    )}
                   </div>
                   <p className="text-sm font-bold text-zinc-900 mb-1">Kz {total.toLocaleString('pt-AO')}</p>
                   <p className="text-xs text-zinc-500">Abra o Multicaixa Express e escaneie o código</p>
-                  <p className="text-xs text-amber-600 font-bold mt-2">⏱ Expira em 30:00</p>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <p className="text-xs text-amber-600 font-bold">⏱ Expira em {formatTime(expirySeconds)}</p>
+                    <button
+                      onClick={() => setExpirySeconds(30 * 60)}
+                      className="flex items-center gap-1 text-[10px] font-bold text-purple-600 hover:text-purple-700"
+                      aria-label="Gerar novo código">
+                      <RefreshCw size={10} /> Renovar
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -306,8 +446,10 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
                   <div className="bg-white rounded-xl border border-blue-200 p-3">
                     <p className="text-[10px] text-zinc-400 font-bold uppercase">Referência</p>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-xl font-black text-zinc-900 tracking-widest">1 2 3 4 5 6 7 8</span>
-                      <button onClick={() => copy('12345678', 'ref')} className="flex items-center gap-1 text-xs text-blue-600 font-bold">
+                      <span className="text-xl font-black text-zinc-900 tracking-widest">
+                        {reference.split('').join(' ')}
+                      </span>
+                      <button onClick={() => copy(reference, 'ref')} className="flex items-center gap-1 text-xs text-blue-600 font-bold">
                         {copied === 'ref' ? <Check size={12} /> : <Copy size={12} />} Copiar
                       </button>
                     </div>
@@ -384,13 +526,13 @@ const CheckoutModal = ({ isOpen, onClose, onOrderComplete, cart, userProfile }: 
           <div className="px-5 py-4 border-t border-zinc-100 bg-white shrink-0">
             {step < 3 && (
               <div className="flex justify-between text-sm mb-3 text-zinc-500">
-                <span>Total ({cart.length} item{cart.length !== 1 ? 's' : ''})</span>
+                <span>Total ({localCart.length} item{localCart.length !== 1 ? 's' : ''})</span>
                 <span className="font-black text-zinc-900">Kz {total.toLocaleString('pt-AO')}</span>
               </div>
             )}
             <button
               onClick={step < 3 ? () => setStep(s => s + 1) : handleOrder}
-              disabled={loading || (step === 1 && (!form.name || !form.phone))}
+              disabled={footerDisabled}
               className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-4 rounded-2xl text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-purple-200">
               {loading ? <Loader2 size={16} className="animate-spin" /> : step === 3 ? <ShieldCheck size={16} /> : <ArrowRight size={16} />}
               {loading ? 'A processar...' : step === 3 ? 'Confirmar pedido' : 'Continuar'}
