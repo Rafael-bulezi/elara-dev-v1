@@ -93,7 +93,7 @@ const App = () => {
   const [sellerMode, setSellerMode] = useState(false);
   
   // Data State
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discoveryFilters, setDiscoveryFilters] = useState<DiscoveryFilters>({
     query: '',
@@ -284,44 +284,50 @@ const App = () => {
   // Products Listener
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*, profiles:seller_id(full_name, avatar_url, phone)')
-        .eq('status', 'approved');
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*, profiles:seller_id(full_name, avatar_url, phone)')
+          .eq('status', 'approved');
 
-      if (error) {
-        console.error('Error fetching products:', error);
-        console.warn('Falling back to mock products');
-        setProducts(initialProducts);
-      } else {
+        if (error) {
+          console.error('Error fetching products:', error);
+          setProducts(initialProducts);
+          return;
+        }
+
         if (data && data.length > 0) {
-          setProducts(((data || []) as Record<string, unknown>[]).map((p, idx) => {
+          const mapped = (data as Record<string, unknown>[]).map((p, idx) => {
             const rawImg = (p.image_url || p.image) as string;
-            const fallbackImg = initialProducts[idx % initialProducts.length]?.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800';
+            const fallbackImg = initialProducts[idx % initialProducts.length]?.image || '/mock-products/smartphone-black.jpeg';
             const validImg = (rawImg && rawImg.trim() !== '') ? rawImg : fallbackImg;
             return {
               id: p.id as string,
               title: p.title as string,
-              description: p.description as string,
-              price: p.price as number,
+              description: (p.description || '') as string,
+              price: Number(p.price || 0),
               image: validImg,
-              category: p.category as string,
-              condition: p.condition as string,
-              sellerId: p.seller_id as string,
+              category: (p.category || 'Tecnologia') as string,
+              condition: (p.condition || 'Novo') as string,
+              sellerId: (p.seller_id || '') as string,
               sellerName: ((p.profiles as Record<string, unknown>)?.full_name || p.seller_name || 'Vendedor Desconhecido') as string,
               sellerAvatar: ((p.profiles as Record<string, unknown>)?.avatar_url || p.seller_avatar || '') as string,
               sellerPhone: ((p.profiles as Record<string, unknown>)?.phone || p.seller_phone || '') as string,
               sellerRating: 5.0,
               emPromocao: false,
-              status: p.status as Product['status'],
-              stock: p.stock as number,
-              isImport: p.is_import as boolean,
-              createdAt: new Date(p.created_at as string).getTime()
+              status: (p.status || 'approved') as Product['status'],
+              stock: Number(p.stock || 1),
+              isImport: Boolean(p.is_import),
+              createdAt: p.created_at ? new Date(p.created_at as string).getTime() : Date.now()
             } as Product;
-          }));
+          });
+          setProducts(mapped);
         } else {
           setProducts(initialProducts);
         }
+      } catch (err) {
+        console.error('Unexpected error fetching products:', err);
+        setProducts(initialProducts);
       }
     };
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Search, ShoppingCart, Menu, MapPin, ChevronDown, Bell, Heart, User, PlusCircle, Globe, X, MessageCircle, ArrowLeft, Home, Cpu, Shirt, Sparkles, Home as HomeIcon, Dumbbell, Car, Gem, ShieldCheck } from 'lucide-react';
+import { Search, ShoppingCart, Menu, MapPin, ChevronDown, Bell, Heart, User, PlusCircle, Globe, X, MessageCircle, ArrowLeft, Home, Cpu, Shirt, Sparkles, Home as HomeIcon, Dumbbell, Car, Gem } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { getAvatarUrl } from '../../utils/avatar';
 
@@ -320,10 +320,8 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             )}
             
-            {/* Security Brand Lock Badge */}
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shrink-0" title="Pagamento & Compra Segura">
-              <ShieldCheck size={18} />
-            </div>
+            {/* Brand Logo Badge */}
+            <img src={appLogo || '/elara-logo.jpg'} alt="Elara" className="w-8 h-8 object-contain rounded-lg shrink-0" />
           </div>
 
           {/* Center: Title / Category Name or Brand */}
