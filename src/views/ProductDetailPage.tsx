@@ -3,6 +3,7 @@ import {
   ArrowLeft, ShoppingCart, Zap, MessageCircle, Heart, Star,
   ShieldCheck, Truck, ChevronRight, Share2, RotateCcw,
   ChevronLeft, CheckCircle, MapPin, Clock, Package, Tag, X,
+  Phone, Info, ExternalLink, Award,
 } from 'lucide-react';
 import { Product } from '../types';
 import { getAvatarUrl } from '../utils/avatar';
@@ -45,6 +46,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [offerNote, setOfferNote] = useState('');
   const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
   const [offerSent, setOfferSent] = useState(false);
+  const [isSellerHovered, setIsSellerHovered] = useState(false);
+  const [showSellerModal, setShowSellerModal] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   // Reset to first image when product changes
@@ -439,34 +442,128 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               <span>7 dias para devolver · Produto 100% protegido</span>
             </div>
 
-            {/* Seller */}
-            <div className="border border-zinc-200 rounded-2xl p-3.5 bg-white">
-              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">Vendedor</p>
+            {/* Seller Section with Desktop Hover Popover & Mobile Modal */}
+            <div 
+              className="relative border border-zinc-200 rounded-2xl p-3.5 bg-white transition-all hover:border-purple-200 hover:shadow-md"
+              onMouseEnter={() => setIsSellerHovered(true)}
+              onMouseLeave={() => setIsSellerHovered(false)}
+            >
+              <div className="flex items-center justify-between mb-2.5">
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Vendedor</p>
+                <button 
+                  onClick={() => setShowSellerModal(true)}
+                  className="flex items-center gap-1 text-[11px] font-bold text-purple-600 hover:text-purple-700 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-full transition-colors"
+                  title="Ver informações detalhadas do vendedor"
+                >
+                  <Info size={12} />
+                  <span>Ver Informações</span>
+                </button>
+              </div>
+
               <div className="flex items-center gap-3">
-                <button onClick={() => onViewSeller(product.sellerId)} className="shrink-0">
+                <button onClick={() => onViewSeller(product.sellerId)} className="shrink-0 relative group">
                   <img src={getAvatarUrl(product.sellerAvatar, product.sellerName)}
-                    alt={product.sellerName} className="w-10 h-10 rounded-full object-cover border border-zinc-200" />
+                    alt={product.sellerName} className="w-11 h-11 rounded-full object-cover border border-zinc-200 group-hover:scale-105 transition-transform" />
+                  {product.verified && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center border-2 border-white" title="Vendedor Verificado">
+                      <CheckCircle size={10} />
+                    </div>
+                  )}
                 </button>
                 <div className="flex-1 min-w-0">
                   <button onClick={() => onViewSeller(product.sellerId)}
-                    className="font-black text-sm text-zinc-900 hover:text-purple-600 transition-colors truncate block">
+                    className="font-black text-sm text-zinc-900 hover:text-purple-600 transition-colors truncate block text-left">
                     {product.sellerName}
                   </button>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <Star size={11} className="text-amber-400 fill-amber-400" />
-                    <span className="text-xs text-zinc-500">{Number(product.sellerRating || 4.8).toFixed(1)}</span>
-                    {product.verified && (
-                      <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 font-bold ml-1">
-                        <CheckCircle size={9} /> Verificado
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500">
+                    <span className="flex items-center gap-1 font-bold text-amber-500">
+                      <Star size={11} className="fill-amber-400" />
+                      {Number(product.sellerRating || 4.8).toFixed(1)}
+                    </span>
+                    <span>·</span>
+                    <span className="truncate">{product.sellerPhone || '923 000 000'}</span>
                   </div>
                 </div>
                 <button onClick={() => onContactSeller(product.sellerId)}
-                  className="shrink-0 flex items-center gap-1.5 text-xs font-bold text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
-                  <MessageCircle size={12} /> Mensagem
+                  className="shrink-0 flex items-center gap-1.5 text-xs font-bold text-purple-600 border border-purple-200 px-3 py-2 rounded-xl hover:bg-purple-50 active:scale-95 transition-all">
+                  <MessageCircle size={13} /> Mensagem
                 </button>
               </div>
+
+              {/* ── Desktop Hover Card Popover ── */}
+              {isSellerHovered && (
+                <div className="hidden md:block absolute bottom-full left-0 mb-3 w-80 bg-white/95 backdrop-blur-xl border border-purple-100 rounded-3xl p-5 shadow-[0_20px_50px_rgba(120,40,200,0.15)] z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <img src={getAvatarUrl(product.sellerAvatar, product.sellerName)}
+                        alt={product.sellerName} className="w-12 h-12 rounded-full object-cover border-2 border-purple-100" />
+                      <div>
+                        <h4 className="font-black text-sm text-zinc-900 leading-tight">{product.sellerName}</h4>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {product.verified ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                              <CheckCircle size={10} /> Vendedor Verificado
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-zinc-400">Membro Elara</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 my-3 p-3 bg-zinc-50 rounded-2xl text-center">
+                    <div>
+                      <p className="text-xs font-black text-zinc-900 flex items-center justify-center gap-1">
+                        <Star size={12} className="text-amber-400 fill-amber-400" />
+                        {Number(product.sellerRating || 4.8).toFixed(1)} / 5.0
+                      </p>
+                      <p className="text-[10px] text-zinc-500 font-bold">Classificação</p>
+                    </div>
+                    <div className="border-l border-zinc-200">
+                      <p className="text-xs font-black text-zinc-900 flex items-center justify-center gap-1">
+                        <Award size={12} className="text-purple-600" />
+                        128+
+                      </p>
+                      <p className="text-[10px] text-zinc-500 font-bold">Vendas concluídas</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-xs text-zinc-600 mb-4">
+                    <div className="flex items-center justify-between py-1 border-b border-zinc-100">
+                      <span className="flex items-center gap-1.5 text-zinc-500"><Phone size={13} className="text-purple-500" /> Telefone / WhatsApp</span>
+                      <a href={`tel:${product.sellerPhone || '923000000'}`} className="font-black text-purple-700 hover:underline">
+                        {product.sellerPhone || '923 000 000'}
+                      </a>
+                    </div>
+                    <div className="flex items-center justify-between py-1 border-b border-zinc-100">
+                      <span className="flex items-center gap-1.5 text-zinc-500"><MapPin size={13} className="text-purple-500" /> Localização</span>
+                      <span className="font-bold text-zinc-800">Luanda, Angola</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="flex items-center gap-1.5 text-zinc-500"><Clock size={13} className="text-purple-500" /> Tempo de resposta</span>
+                      <span className="font-bold text-emerald-600">Rápido (&lt; 30 min)</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <button 
+                      onClick={() => onViewSeller(product.sellerId)}
+                      className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <span>Ver Perfil</span>
+                      <ExternalLink size={12} />
+                    </button>
+                    <button 
+                      onClick={() => onContactSeller(product.sellerId)}
+                      className="flex-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <MessageCircle size={12} />
+                      <span>Mensagem</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Trust badges */}
@@ -523,6 +620,88 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           offerNote={offerNote}
           setOfferNote={setOfferNote}
         />
+      )}
+
+      {/* ── Seller Info Modal (Mobile & Click) ── */}
+      {showSellerModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-5 duration-300">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
+              <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
+                <Info size={18} className="text-purple-600" />
+                Informações do Vendedor
+              </h3>
+              <button onClick={() => setShowSellerModal(false)} className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-500 transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3.5 mb-4">
+              <img src={getAvatarUrl(product.sellerAvatar, product.sellerName)} alt={product.sellerName} className="w-14 h-14 rounded-full object-cover border-2 border-purple-100" />
+              <div>
+                <h4 className="font-black text-base text-zinc-900">{product.sellerName}</h4>
+                {product.verified ? (
+                  <span className="inline-flex items-center gap-1 text-xs font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full mt-1">
+                    <CheckCircle size={12} /> Vendedor Verificado
+                  </span>
+                ) : (
+                  <span className="text-xs text-zinc-400">Membro verificado Elara</span>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 p-3.5 bg-zinc-50 rounded-2xl text-center mb-4">
+              <div>
+                <p className="text-sm font-black text-zinc-900 flex items-center justify-center gap-1">
+                  <Star size={14} className="text-amber-400 fill-amber-400" />
+                  {Number(product.sellerRating || 4.8).toFixed(1)} / 5.0
+                </p>
+                <p className="text-xs text-zinc-500 font-bold mt-0.5">Avaliações dos Clientes</p>
+              </div>
+              <div className="border-l border-zinc-200">
+                <p className="text-sm font-black text-zinc-900 flex items-center justify-center gap-1">
+                  <Award size={14} className="text-purple-600" />
+                  128+
+                </p>
+                <p className="text-xs text-zinc-500 font-bold mt-0.5">Vendas Concluídas</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs text-zinc-600 mb-6">
+              <div className="flex items-center justify-between py-2 border-b border-zinc-100">
+                <span className="flex items-center gap-2 font-bold text-zinc-500"><Phone size={14} className="text-purple-500" /> Contacto Principal</span>
+                <a href={`tel:${product.sellerPhone || '923000000'}`} className="font-black text-purple-700 text-sm hover:underline">
+                  {product.sellerPhone || '923 000 000'}
+                </a>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-zinc-100">
+                <span className="flex items-center gap-2 font-bold text-zinc-500"><MapPin size={14} className="text-purple-500" /> Localização</span>
+                <span className="font-bold text-zinc-800 text-sm">Luanda, Angola</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-zinc-100">
+                <span className="flex items-center gap-2 font-bold text-zinc-500"><Clock size={14} className="text-purple-500" /> Resposta Média</span>
+                <span className="font-bold text-emerald-600 text-xs">Habitualmente &lt; 30 min</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => { setShowSellerModal(false); onViewSeller(product.sellerId); }}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-black py-3.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-purple-200"
+              >
+                <span>Ver Perfil Completo</span>
+                <ExternalLink size={14} />
+              </button>
+              <button 
+                onClick={() => { setShowSellerModal(false); onContactSeller(product.sellerId); }}
+                className="flex-1 border-2 border-zinc-200 hover:border-zinc-300 text-zinc-800 font-black py-3.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <MessageCircle size={14} />
+                <span>Mensagem</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Return to top ── */}
