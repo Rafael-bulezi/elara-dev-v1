@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Search, ShoppingCart, Menu, MapPin, ChevronDown, Bell, Heart, User, PlusCircle, Globe, X, MessageCircle, ArrowLeft, Home, Cpu, Shirt, Sparkles, Home as HomeIcon, Dumbbell, Car, Gem } from 'lucide-react';
+import { Search, ShoppingCart, Menu, MapPin, ChevronDown, Bell, Heart, User, PlusCircle, Globe, X, MessageCircle, ArrowLeft, Home, Cpu, Shirt, Sparkles, Home as HomeIcon, Dumbbell, Car, Gem, ShieldCheck } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { getAvatarUrl } from '../../utils/avatar';
 
@@ -303,44 +303,69 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         )}
 
-        {/* ── Row 1: Back/Logo/Actions ── */}
-        <div className="h-14 flex items-center px-3 gap-2 border-b border-zinc-100">
+        {/* ── Single Merged Mobile Header Strip (Top Navbar) ── */}
+        <div className="h-14 flex items-center px-3 gap-2 border-b border-zinc-200 bg-white/95 backdrop-blur-xl">
 
-          {/* Left: back arrow (non-home) OR search icon (home) */}
-          {!isHome ? (
-            <button onClick={() => onNavigate('home')}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-700 active:bg-zinc-200 shrink-0">
-              <ArrowLeft size={18} />
-            </button>
-          ) : (
-            <button onClick={openMobileSearch}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-500 active:bg-zinc-200 shrink-0">
-              <Search size={18} />
-            </button>
-          )}
+          {/* Left: Back Arrow (non-home) OR Search (home) + Security Lock Badge */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {!isHome ? (
+              <button onClick={() => onNavigate('home')}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-700 active:bg-zinc-200 shrink-0">
+                <ArrowLeft size={18} />
+              </button>
+            ) : (
+              <button onClick={openMobileSearch}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-600 active:bg-zinc-200 shrink-0">
+                <Search size={18} />
+              </button>
+            )}
+            
+            {/* Security Brand Lock Badge */}
+            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shrink-0" title="Pagamento & Compra Segura">
+              <ShieldCheck size={18} />
+            </div>
+          </div>
 
-          {/* Center: logo */}
-          <button onClick={() => onNavigate('home')} className="flex-1 flex items-center justify-center gap-1.5">
-            <img src={appLogo || '/elara-logo.jpg'} alt="Elara" className="w-7 h-7 object-contain rounded" />
-            <span className="text-lg font-black tracking-tight text-zinc-900">Elara</span>
+          {/* Center: Title / Category Name or Brand */}
+          <button onClick={() => onNavigate('home')} className="flex-1 flex items-center justify-center gap-1.5 overflow-hidden">
+            {!isHome ? (
+              <span className="text-sm font-black tracking-tight text-zinc-900 truncate uppercase">
+                {currentView === 'product' ? 'Produto' : currentView === 'category' ? 'Categoria' : currentView}
+              </span>
+            ) : (
+              <>
+                <img src={appLogo || '/elara-logo.jpg'} alt="Elara" className="w-6 h-6 object-contain rounded shrink-0" />
+                <span className="text-lg font-black tracking-tight text-zinc-900 truncate">Elara</span>
+              </>
+            )}
           </button>
 
-          {/* Right: cart + account/menu */}
-          <div className="flex items-center gap-0.5 shrink-0">
+          {/* Right: Wishlist Heart + Cart + Profile Avatar */}
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Wishlist / Favourites */}
+            <button onClick={onOpenWishlist} className="w-9 h-9 flex items-center justify-center rounded-full text-zinc-600 relative active:bg-zinc-100">
+              <Heart size={20} className={wishlistCount > 0 ? 'text-rose-500 fill-rose-500' : ''} />
+              {wishlistCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border border-white">
+                  {wishlistCount}
+                </span>
+              )}
+            </button>
+
             {/* Cart */}
-            <button onClick={onOpenCart} className="w-9 h-9 flex items-center justify-center rounded-full text-zinc-500 relative active:bg-zinc-100">
+            <button onClick={onOpenCart} className="w-9 h-9 flex items-center justify-center rounded-full text-zinc-600 relative active:bg-zinc-100">
               <ShoppingCart size={20} />
               {cartCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-purple-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white">
+                <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-purple-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border border-white">
                   {cartCount}
                 </span>
               )}
             </button>
 
-            {/* Account avatar or menu */}
+            {/* Profile Avatar or Menu */}
             {userProfile ? (
               <button onClick={onOpenProfile}
-                className="w-9 h-9 rounded-full overflow-hidden border-2 border-purple-200 bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0">
+                className="w-8 h-8 rounded-full overflow-hidden border-2 border-purple-200 bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm">
                 {userProfile.avatar && userProfile.avatar.trim() !== '' ? (
                   <img src={getAvatarUrl(userProfile.avatar, userProfile.name)} alt={userProfile.name} className="w-full h-full object-cover" />
                 ) : (
@@ -349,33 +374,12 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             ) : (
               <button onClick={toggleMobileMenu}
-                className="w-9 h-9 flex items-center justify-center rounded-full text-zinc-500 active:bg-zinc-100">
+                className="w-9 h-9 flex items-center justify-center rounded-full text-zinc-600 active:bg-zinc-100">
                 <Menu size={20} />
               </button>
             )}
           </div>
         </div>
-
-        {/* ── Row 2 (home only): Category pill scroll ── */}
-        {isHome && categories.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar px-3 py-2 border-b border-zinc-100 bg-white">
-            {/* Início pill */}
-            <button onClick={() => onNavigate('home')}
-              className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold bg-purple-600 text-white whitespace-nowrap">
-              <Home size={11} /> Início
-            </button>
-            {categories.filter(c => c.name.length <= 30).map(cat => (
-              <button key={cat.id}
-                onClick={() => onSelectCategory?.(cat.name)}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border border-zinc-200 bg-white text-zinc-700 whitespace-nowrap active:bg-purple-50 active:border-purple-400 active:text-purple-700 transition-all">
-                <span className={catColors[cat.name] || 'text-zinc-500'}>
-                  {catIconMap[cat.name]}
-                </span>
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
     </header>

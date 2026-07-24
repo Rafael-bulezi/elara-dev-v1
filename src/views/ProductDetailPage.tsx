@@ -204,22 +204,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   return (
     <div className="min-h-screen bg-zinc-50 pb-28 md:pb-12">
 
-      {/* ── Mobile top bar — hides with navbar ── */}
-      <div className={`md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-zinc-100 sticky z-30 transition-transform duration-300 ease-in-out ${navVisible ? 'translate-y-0 top-[56px]' : '-translate-y-[112px] top-[56px]'}`}>
-        <button onClick={onBack} className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-700 active:bg-zinc-200">
-          <ArrowLeft size={18} />
-        </button>
-        <p className="text-sm font-bold text-zinc-800 truncate mx-3 flex-1 text-center">{product.category}</p>
-        <div className="flex items-center gap-2">
-          <button onClick={() => onToggleWishlist(product)}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${wishlisted ? 'bg-rose-100 text-rose-500' : 'bg-zinc-100 text-zinc-500'}`}>
-            <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
-          </button>
-          <button onClick={handleShare} className="w-9 h-9 bg-zinc-100 rounded-full flex items-center justify-center text-zinc-500 active:bg-zinc-200">
-            {copied ? <CheckCircle size={16} className="text-green-500" /> : <Share2 size={16} />}
-          </button>
-        </div>
-      </div>
+
 
       {/* ── Desktop breadcrumb ── */}
       <div className="hidden md:block bg-white border-b border-zinc-100">
@@ -520,10 +505,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         </div>
       </div>
 
-      {/* ── Mobile sticky bottom CTA ── */}
-      <div className={`md:hidden fixed left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-zinc-200 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] transition-all duration-300 ${navVisible ? 'bottom-16' : 'bottom-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))]'}`}>
-        <BuyActions compact />
-      </div>
+
 
       {/* ── Make offer modal ── */}
       {showOfferModal && (

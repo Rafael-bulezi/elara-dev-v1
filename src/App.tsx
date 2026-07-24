@@ -7,6 +7,8 @@ import { UserProfile, Product, Chat, CartItem, BeforeInstallPromptEvent } from '
 import { categories, initialProducts } from './constants';
 import { CLOUD_LOGO } from './constants/logo';
 
+import { Zap, Tag, X, Heart, ShoppingCart } from 'lucide-react';
+
 // Components
 import Header from './components/layout/Header';
 import Hero from './components/layout/Hero';
@@ -85,6 +87,7 @@ const App = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'orders' | 'products' | 'settings' | 'seller' | 'admin' | 'messages' | 'chat' | 'quote' | 'category' | 'product' | 'seller-dashboard' | 'seller-onboarding'>('home');
   const [activeTab, setActiveTab] = useState('home');
   const [sellerMode, setSellerMode] = useState(false);
@@ -887,8 +890,78 @@ const App = () => {
           window.scrollTo(0, 0);
         }
       }}
+      onOpenActions={() => setIsQuickActionsOpen(true)}
+      isProductView={currentView === 'product'}
       visible={navVisible}
     />
+
+    {/* ── Quick Actions Bottom Sheet (Comprar / Acções) ── */}
+    {isQuickActionsOpen && (
+      <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-300 border-t sm:border border-zinc-200">
+          <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+            <h3 className="font-black text-lg text-zinc-900">
+              {currentView === 'product' && selectedProduct ? 'Opções de Compra' : 'Acções Rápidas'}
+            </h3>
+            <button onClick={() => setIsQuickActionsOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100">
+              <X size={20} />
+            </button>
+          </div>
+
+          {currentView === 'product' && selectedProduct ? (
+            <div className="space-y-3 pt-1">
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-widest truncate">{selectedProduct.title}</p>
+              <button 
+                onClick={() => {
+                  addToCart(selectedProduct);
+                  setIsCheckoutOpen(true);
+                  setIsQuickActionsOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-purple-500/20 active:scale-98 transition-all text-sm"
+              >
+                <Zap size={18} /> Comprar Agora ({selectedProduct.price.toLocaleString('pt-AO')} Kz)
+              </button>
+              <button 
+                onClick={() => {
+                  addToCart(selectedProduct);
+                  setIsQuickActionsOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-purple-50 border-2 border-purple-200 text-purple-700 font-black py-3 rounded-2xl active:scale-98 transition-all text-sm"
+              >
+                <ShoppingCart size={18} /> Adicionar ao Carrinho
+              </button>
+              <button 
+                onClick={() => {
+                  setIsQuickActionsOpen(false);
+                  const offerBtn = document.querySelector('button.border-amber-400') as HTMLButtonElement;
+                  if (offerBtn) offerBtn.click();
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-amber-50 border-2 border-amber-300 text-amber-800 font-black py-3 rounded-2xl active:scale-98 transition-all text-sm"
+              >
+                <Tag size={18} /> Fazer Proposta ao Vendedor
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3 pt-1">
+              <button 
+                onClick={() => { setIsCartOpen(true); setIsQuickActionsOpen(false); }}
+                className="w-full flex items-center justify-between p-4 bg-zinc-50 hover:bg-purple-50 border border-zinc-200 rounded-2xl font-bold text-zinc-900 transition-all text-sm"
+              >
+                <span className="flex items-center gap-3"><ShoppingCart size={20} className="text-purple-600" /> Ver Carrinho</span>
+                <span className="bg-purple-600 text-white text-xs font-black px-2.5 py-1 rounded-full">{cart.reduce((acc, item) => acc + (item.cartQuantity || 1), 0)}</span>
+              </button>
+              <button 
+                onClick={() => { setIsWishlistOpen(true); setIsQuickActionsOpen(false); }}
+                className="w-full flex items-center justify-between p-4 bg-zinc-50 hover:bg-rose-50 border border-zinc-200 rounded-2xl font-bold text-zinc-900 transition-all text-sm"
+              >
+                <span className="flex items-center gap-3"><Heart size={20} className="text-rose-500 fill-rose-500" /> Ver Meus Favoritos</span>
+                <span className="bg-rose-500 text-white text-xs font-black px-2.5 py-1 rounded-full">{wishlist.length}</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
 
     <MobileMenu
       isOpen={isMobileMenuOpen}
